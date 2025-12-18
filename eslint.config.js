@@ -22,6 +22,9 @@ export default [
         // browser globals
         window: 'readonly',
         document: 'readonly',
+        console: 'readonly',
+        confirm: 'readonly',
+        alert: 'readonly',
         // node globals
         process: 'readonly',
         __dirname: 'readonly',

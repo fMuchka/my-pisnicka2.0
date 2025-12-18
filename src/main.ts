@@ -1,5 +1,19 @@
 import { createApp } from 'vue'
-import './style.css'
+import { createPinia } from 'pinia'
+import { router } from './router'
 import App from './App.vue'
+import { registerSW } from 'virtual:pwa-register'
 
-createApp(App).mount('#app')
+// Register service worker for PWA
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm('New content available. Reload?')) {
+      updateSW(true)
+    }
+  },
+  onOfflineReady() {
+    console.log('App ready to work offline')
+  },
+})
+
+createApp(App).use(createPinia()).use(router).mount('#app')
