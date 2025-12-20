@@ -40,6 +40,7 @@ export default [
       ...typescript.configs.recommended.rules,
       ...prettierConfig.rules,
       'prettier/prettier': 'warn',
+      'vue/multi-word-component-names': 'off',
     },
   },
 ]
