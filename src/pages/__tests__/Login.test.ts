@@ -53,7 +53,7 @@ describe('Login Page', () => {
     const password = screen.getByLabelText(/password/i);
     await userEvent.type(email, 'host@host.com');
     await userEvent.type(password, 'secret123');
-    mockedLogin.mockResolvedValue({ uid: 'u1', email: 'host@host' });
+    mockedLogin.mockResolvedValue({ user: { uid: 'u1', email: 'host@host.com' } });
     await userEvent.click(screen.getByRole('button', { name: /login as host/i }));
     expect(loginWithEmailPassword).toHaveBeenCalledWith('host@host.com', 'secret123');
   });
@@ -76,7 +76,7 @@ describe('Login Page', () => {
     const password = screen.getByLabelText(/password/i);
     await userEvent.type(email, 'host@host.com');
     await userEvent.type(password, 'secret123');
-    mockedLogin.mockResolvedValue({ uid: 'u1', email: 'host@host' });
+    mockedLogin.mockResolvedValue({ user: { uid: 'u1', email: 'host@host.com' } });
     await userEvent.click(screen.getByRole('button', { name: /login as host/i }));
     expect(router.push).toHaveBeenCalledWith('/library');
   });

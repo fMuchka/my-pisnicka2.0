@@ -5,7 +5,7 @@
   import Button from './core/Button.vue';
   import { loginWithEmailPassword } from '../lib/authService';
 
-  const { onLogin } = defineProps<{ onLogin: () => void }>();
+  const emit = defineEmits<{ login: [] }>();
 
   const isEmailInvalid = ref(false);
   const isPasswordInvalid = ref(false);
@@ -38,8 +38,7 @@
       try {
         await loginWithEmailPassword(email.value, password.value);
         areCredentialsInvalid.value = false;
-
-        onLogin();
+        emit('login');
       } catch (_err) {
         // Handle rejected promise from mocked login in tests or network errors in runtime
         areCredentialsInvalid.value = true;
