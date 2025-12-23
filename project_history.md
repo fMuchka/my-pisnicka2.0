@@ -19,6 +19,18 @@
 - **Notes**: Outcomes, gotchas, or important context
 ```
 
+## 2025-12-24 | FEAT-AUTH-ITER1 | Authentication Iteration 1 (Email/Password)
+
+- **Feature**: Host email/password login flow with logout, reactive auth state (useAuth), guarded routes, localized Czech UI, and comprehensive unit/component/E2E tests
+- **Status**: ✅ Complete (follow-up: minor router guard tweak to call useAuth inside beforeEach)
+- **Branch**: feat/authentication-init
+- **PR**: 001
+- **Duration**: 2025-12-21 to 2025-12-24
+- **Decisions**:
+  - Dropped passwordless/magic-link; guest access will use PIN-based join flow in Iteration 2
+  - Localized all UI/aria labels to Czech; tests/e2e selectors updated accordingly
+- **Notes**: authService (email+logout), useAuth composable, Login page, and Playwright auth flow tests are in place; adjust router guard to avoid stale auth read
+
 ## 2025-12-20 | FEAT-SETUP | Project Setup MVP Phase 1
 
 - **Feature**: Established Vite + Vue 3 TS scaffold with strict TS, ESLint/Prettier, base folders, router + Pinia wiring, PWA plugin, and Firebase config/SDK bootstrap (Auth/Firestore/Hosting)
