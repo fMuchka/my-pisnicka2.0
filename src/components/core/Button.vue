@@ -1,31 +1,83 @@
 <script setup lang="ts">
-  const {
-    label,
-    variation = 'Primary',
-    onClick = () => {},
-  } = defineProps<{
-    label: string;
-    variation?: 'Primary' | 'Secondary';
-    onClick?: () => void;
-  }>();
+  import type { LucideProps } from 'lucide-vue-next';
+  import { computed, type EmitsOptions, type FunctionalComponent } from 'vue';
 
-  const getVariationClass = () => {
-    switch (variation) {
+  defineOptions({
+    inheritAttrs: false,
+  });
+
+  export type ButtonIcon = {
+    position: 'prepend' | 'append';
+    component: FunctionalComponent<
+      LucideProps,
+      Record<string, unknown[]>,
+      Record<string, unknown>,
+      EmitsOptions
+    >;
+  };
+
+  const props = withDefaults(
+    defineProps<{
+      label?: string;
+      colorVariation?: 'Primary' | 'Secondary';
+      styleVariation?: 'Filled' | 'Outlined' | 'Text';
+      icon?: ButtonIcon;
+    }>(),
+    {
+      label: '',
+      colorVariation: 'Primary',
+      styleVariation: 'Filled',
+      icon: undefined,
+    }
+  );
+
+  const variationClass = computed(() => {
+    switch (props.colorVariation) {
       case 'Primary':
         return 'primary';
 
       case 'Secondary':
         return 'secondary';
+
+      default:
+        return 'primary';
     }
-  };
+  });
+
+  const styledClass = computed(() => {
+    switch (props.styleVariation) {
+      case 'Filled':
+        return 'filled';
+
+      case 'Outlined':
+        return 'outlined';
+
+      case 'Text':
+        return 'text';
+
+      default:
+        return 'filled';
+    }
+  });
+
+  const hasIcon = computed(() => props.icon && props.icon.component);
+  const isPrependIcon = computed(() => props.icon?.position === 'prepend');
 </script>
 
 <template>
   <button
-    :class="`btn btn-${getVariationClass()}`"
-    @click="onClick()"
+    v-bind="$attrs"
+    :class="`btn btn-${variationClass} btn-${styledClass}`"
   >
-    {{ label }}
+    <component
+      :is="props.icon?.component"
+      v-if="hasIcon && isPrependIcon"
+    />
+    <span>{{ props.label }}</span>
+    <component
+      :is="props.icon?.component"
+      v-if="hasIcon && !isPrependIcon"
+    />
   </button>
 </template>
 
@@ -68,6 +120,42 @@
   }
 
   .btn-secondary:hover {
+    background: var(--bg-secondary);
+  }
+
+  .btn-filled.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--bg-tertiary);
+  }
+
+  .btn-outlined {
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+
+  .btn-outlined.btn-secondary {
+    color: var(--text-primary);
+    border: 1px solid var(--bg-tertiary);
+  }
+
+  .btn-outlined:hover {
+    background: var(--bg-secondary);
+  }
+
+  .btn-text {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid transparent;
+    padding: 8px 12px;
+  }
+
+  .btn-text.btn-secondary {
+    color: var(--text-primary);
+  }
+
+  .btn-text:hover {
     background: var(--bg-secondary);
   }
 
