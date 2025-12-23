@@ -70,7 +70,7 @@ describe('Login Page', () => {
     expect(errors).toHaveLength(2);
   });
 
-  it('redirects to /library on successful host login', async () => {
+  it('redirects to / on successful host login', async () => {
     render(Login);
     const email = screen.getByLabelText(/email/i);
     const password = screen.getByLabelText(/password/i);
@@ -78,6 +78,6 @@ describe('Login Page', () => {
     await userEvent.type(password, 'secret123');
     mockedLogin.mockResolvedValue({ user: { uid: 'u1', email: 'host@host.com' } });
     await userEvent.click(screen.getByRole('button', { name: /login as host/i }));
-    expect(router.push).toHaveBeenCalledWith('/library');
+    expect(router.push).toHaveBeenCalledWith('/');
   });
 });

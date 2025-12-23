@@ -2,10 +2,11 @@
   import { useRouter } from 'vue-router';
   import EmailPasswordLogin from '../components/EmailPasswordLogin.vue';
   import Button from '../components/core/Button.vue';
+  import Routes from '../router/Routes';
 
   const router = useRouter();
   const onLogin = () => {
-    router.push('/library');
+    router.push(Routes.Home);
   };
 </script>
 
@@ -25,7 +26,7 @@
     <Button
       label="Připojit se bez účtu"
       aria-label="continue as guest"
-      variation="Secondary"
+      colorVariation="Secondary"
     />
   </div>
 </template>
