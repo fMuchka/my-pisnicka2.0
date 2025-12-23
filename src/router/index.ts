@@ -10,9 +10,11 @@ export const router = createRouter({
   ],
 });
 
-const { isAuthenticated } = useAuth();
-
 router.beforeEach((to, _from, next) => {
-  if (to.path !== Routes.Login && !isAuthenticated.value) next({ path: Routes.Login });
-  else next();
+  const { isAuthenticated } = useAuth(); // ✅ Fresh check on each navigation
+  if (to.path !== Routes.Login && !isAuthenticated.value) {
+    next({ path: Routes.Login });
+  } else {
+    next();
+  }
 });
