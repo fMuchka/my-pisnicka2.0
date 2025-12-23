@@ -5,7 +5,7 @@ test.describe('Auth Flow', () => {
     await page.goto('/login');
     await page.getByLabel('Email').fill('host@host.com');
     await page.getByLabel('Heslo').fill('secret123');
-    await page.getByRole('button', { name: /login as host/i }).click();
+    await page.getByRole('button', { name: /přihlásit se/i }).click();
     await expect(page).toHaveURL(/\/$/);
   });
 
@@ -13,19 +13,19 @@ test.describe('Auth Flow', () => {
     await page.goto('/login');
     await page.getByLabel('Email').fill('host@host.com');
     await page.getByLabel('Heslo').fill('wrong');
-    await page.getByRole('button', { name: /login as host/i }).click();
-    await expect(page.getByLabel(/invalid credentials/i).first()).toBeVisible();
+    await page.getByRole('button', { name: /přihlásit se/i }).click();
+    await expect(page.getByLabel(/špatné údaje/i).first()).toBeVisible();
   });
 
   test('Logout button clears session and redirects to login', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('Email').fill('host@host.com');
     await page.getByLabel('Heslo').fill('secret123');
-    await page.getByRole('button', { name: /login as host/i }).click();
+    await page.getByRole('button', { name: /přihlásit se/i }).click();
     await expect(page).toHaveURL(/\/$/);
 
-    await page.getByRole('button', { name: /user options/i }).click();
-    await page.getByRole('button', { name: /log out/i }).click();
+    await page.getByRole('button', { name: /uživatelské možnosti/i }).click();
+    await page.getByRole('button', { name: /odhlásit se/i }).click();
     await expect(page).toHaveURL(/\/login$/);
   });
 

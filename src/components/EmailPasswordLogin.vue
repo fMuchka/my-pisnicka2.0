@@ -61,7 +61,7 @@
       />
       <Field.ErrorText
         class="error"
-        :aria-label="areCredentialsInvalid ? 'invalid credentials' : 'invalid email format'"
+        :aria-label="areCredentialsInvalid ? 'Špatné údaje' : 'Nesprávný formát'"
         >{{ areCredentialsInvalid ? 'Špatné údaje' : 'Nesprávný formát' }}</Field.ErrorText
       >
     </Field.Root>
@@ -88,14 +88,14 @@
       </PasswordInput.Root>
       <Field.ErrorText
         class="error"
-        :aria-label="areCredentialsInvalid ? 'invalid credentials' : 'password is required'"
+        :aria-label="areCredentialsInvalid ? 'Špatné údaje' : 'Heslo je prázdné'"
         >{{ areCredentialsInvalid ? 'Špatné údaje' : 'Heslo je prázdné' }}</Field.ErrorText
       >
     </Field.Root>
 
     <Button
       label="Přihlásit se"
-      aria-label="login as host"
+      aria-label="Přihlásit se"
       @click="handleConfirmClick"
     />
   </div>

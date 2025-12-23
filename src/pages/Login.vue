@@ -25,7 +25,7 @@
 
     <Button
       label="Připojit se bez účtu"
-      aria-label="continue as guest"
+      aria-label="Pokračovat bez účtu"
       colorVariation="Secondary"
     />
   </div>

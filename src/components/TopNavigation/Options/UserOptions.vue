@@ -26,7 +26,7 @@
       items: [
         {
           label: 'Odhlásit se',
-          ariaLabel: 'log out',
+          ariaLabel: 'odhlásit se',
           action: () => {
             auth.logout().then(() => {
               router.push(Routes.Login);
@@ -51,7 +51,7 @@
       <Button
         :icon="item"
         style-variation="Text"
-        aria-label="user options"
+        aria-label="Uživatelské možnosti"
       />
     </Menu.Trigger>
     <Menu.Positioner>
@@ -65,7 +65,7 @@
             :icon="menuItem.icon"
             :label="menuItem.label"
             style-variation="Text"
-            :aria-label="menuItem.ariaLabel"
+            :aria-label="menuItem.label"
             @click="menuItem.action"
           />
         </Menu.Item>
