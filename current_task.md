@@ -61,9 +61,9 @@ npm i -D @playwright/test
 ### Configure Vitest (vite.config.ts)
 
 ```ts
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
@@ -89,27 +89,27 @@ export default defineConfig({
       exclude: ['node_modules/', 'dist/', '**/*.config.*', '**/test-utils/**', '**/__mocks__/**'],
     },
   },
-})
+});
 ```
 
 ### Create vitest.setup.ts
 
 ```ts
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 // Mock Firebase for unit tests
 vi.mock('./src/lib/firebase', () => ({
   auth: {},
   db: {},
   app: {},
-}))
+}));
 ```
 
 ### Configure Playwright (playwright.config.ts)
 
 ```ts
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -134,7 +134,7 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
   },
-})
+});
 ```
 
 ### Add Test Scripts (package.json)
@@ -219,7 +219,7 @@ Tests to write:
 - Shows validation error for empty password
 - Calls `loginWithEmailPassword` when host login form submitted
 - Shows error message when login fails
-- Redirects to `/library` on successful host login
+- Redirects to `/` on successful host login
 
 #### 1.4 E2E Tests: Auth Flow (tests/e2e/auth.spec.ts)
 
@@ -228,7 +228,7 @@ Tests to write:
 - Host can log in with email/password and access library
 - Invalid credentials show error message
 - Logout button clears session and redirects to home
-- Protected route `/library` redirects to `/login` when not authenticated
+- Protected route `/` redirects to `/login` when not authenticated
 
 ### Developer Implements
 
@@ -246,7 +246,7 @@ Files to create/modify:
 - All E2E tests pass
 - Host can log in with email/password
 - Logout functionality works
-- Router guards protect `/library` route
+- Router guards protect `/` route
 
 ---
 
@@ -410,7 +410,7 @@ Tests to write:
 - `requireAuth` guard allows navigation when authenticated
 - `requireHost` guard redirects to `/` when user is guest
 - `requireHost` guard allows navigation when user is host
-- `redirectIfAuthenticated` guard redirects hosts to `/library`
+- `redirectIfAuthenticated` guard redirects hosts to `/`
 - `redirectIfAuthenticated` guard redirects guests to last session
 - Guards preserve `redirect` query param for post-login navigation
 
@@ -427,10 +427,10 @@ Tests to write:
 
 Tests to write:
 
-- Unauthenticated user cannot access `/library`
-- Guest cannot access `/library` (host-only)
-- Host accessing `/login` redirects to `/library`
-- Deep link with `?redirect=/library` works after login
+- Unauthenticated user cannot access `/`
+- Guest cannot access `/` (host-only)
+- Host accessing `/login` redirects to `/`
+- Deep link with `?redirect=/` works after login
 - Page reload maintains auth state
 - Auth state persists after browser close/reopen (session storage)
 
@@ -489,7 +489,7 @@ vi.mock('firebase/auth', () => ({
   sendSignInLinkToEmail: vi.fn(),
   signOut: vi.fn(),
   onAuthStateChanged: vi.fn(),
-}))
+}));
 ```
 
 ### E2E Tests: Firebase Emulator
