@@ -6,6 +6,6 @@
   "tabWidth": 2,
   "arrowParens": "always",
   "singleAttributePerLine": true,
-  "endOfLine": "lf",
+  "endOfLine": "crlf",
   "vueIndentScriptAndStyle": true
 }
