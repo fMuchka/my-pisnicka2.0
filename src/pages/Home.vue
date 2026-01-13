@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import TopNavigation from '../components/TopNavigation/TopNavigation.vue';
+  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
 </script>
 
 <template>
