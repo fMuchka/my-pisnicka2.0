@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { Settings } from 'lucide-vue-next';
   import Button from '../core/Button.vue';
-  import UserOptions from './Options/UserOptions.vue';
+  import UserOptions from './options/UserOptions.vue';
 </script>
 
 <template>
