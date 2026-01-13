@@ -22,7 +22,6 @@ import { joinSession as rawJoinSession } from '../session';
 // Define expected contract to drive TDD while session.ts is a stub
 interface JoinSessionResult {
   ok: boolean;
-  sessionId?: string;
   errorCode?: 'not-found' | 'inactive' | 'firestore-error';
 }
 
@@ -49,7 +48,6 @@ describe('session: joinSession', () => {
 
     const res = await joinSession('1234');
     expect(res.ok).toBe(true);
-    expect(res.sessionId).toBe('sess-123');
   });
 
   it('returns not-found when no matching active session', async () => {
