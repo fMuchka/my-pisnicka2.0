@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { getDocs } from 'firebase/firestore';
+import { joinSession as rawJoinSession, type JoinSessionResult } from '../session';
 
 // Mock Firestore SDK used by joinSession implementation
 vi.mock('firebase/firestore', () => {
@@ -15,15 +17,6 @@ vi.mock('firebase/firestore', () => {
 vi.mock('../firebase', () => ({
   db: {},
 }));
-
-import { getDocs } from 'firebase/firestore';
-import { joinSession as rawJoinSession } from '../session';
-
-// Define expected contract to drive TDD while session.ts is a stub
-interface JoinSessionResult {
-  ok: boolean;
-  errorCode?: 'not-found' | 'inactive' | 'firestore-error';
-}
 
 type JoinSessionFn = (pin: string) => Promise<JoinSessionResult>;
 
@@ -50,6 +43,23 @@ describe('session: joinSession', () => {
     expect(res.ok).toBe(true);
   });
 
+  it('returns inactive when pin exists and isActive=false', async () => {
+    const mockedGetDocs = getDocs as Mock;
+    mockedGetDocs.mockResolvedValue({
+      empty: false,
+      docs: [
+        {
+          id: 'sess-123',
+          data: () => ({ pin: '1234', isActive: false }),
+        },
+      ],
+    });
+
+    const res = await joinSession('1234');
+    expect(res.ok).toBe(false);
+    expect(res.errorCode).toBe('inactive');
+  });
+
   it('returns not-found when no matching active session', async () => {
     const mockedGetDocs = getDocs as Mock;
     mockedGetDocs.mockResolvedValue({ empty: true, docs: [] });
@@ -67,4 +77,14 @@ describe('session: joinSession', () => {
     expect(res.ok).toBe(false);
     expect(res.errorCode).toBe('firestore-error');
   });
+
+  it.each([['123'], ['ABCD'], ['1Q2B']])(
+    'returns invalid-format when pin is not 4 digit number',
+    async (input) => {
+      const res = await joinSession(input);
+
+      expect(res.ok).toBe(false);
+      expect(res.errorCode).toBe('invalid-format');
+    }
+  );
 });

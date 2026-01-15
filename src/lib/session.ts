@@ -7,9 +7,9 @@ type Session = {
   hostId: string;
 };
 
-interface JoinSessionResult {
+export interface JoinSessionResult {
   ok: boolean;
-  errorCode?: 'not-found' | 'inactive' | 'firestore-error';
+  errorCode?: 'not-found' | 'inactive' | 'firestore-error' | 'invalid-format';
 }
 
 /**
@@ -21,6 +21,7 @@ interface JoinSessionResult {
  *   - `ok: false` with `errorCode: 'not-found'` if no session exists with the given PIN
  *   - `ok: false` with `errorCode: 'inactive'` if the session exists but is not active
  *   - `ok: false` with `errorCode: 'firestore-error'` if a Firestore error occurs
+ *   - `ok: false` with `errorCode: 'invalid-format'` pin format is not valid
  *
  * @example
  * ```typescript
@@ -33,6 +34,7 @@ interface JoinSessionResult {
  * ```
  */
 export const joinSession = async (pin: string): Promise<JoinSessionResult> => {
+  if (isPinInvalid(pin) === true) return { ok: false, errorCode: 'invalid-format' };
   const q = query(collection(db, 'session'), where('pin', '==', pin));
 
   return getDocs(q)
@@ -55,4 +57,8 @@ export const joinSession = async (pin: string): Promise<JoinSessionResult> => {
     .catch(() => {
       return { ok: false, errorCode: 'firestore-error' };
     });
+};
+
+const isPinInvalid = (pin: string): boolean => {
+  return !/^\d{4}$/.test(pin);
 };
