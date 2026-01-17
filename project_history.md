@@ -19,6 +19,19 @@
 - **Notes**: Outcomes, gotchas, or important context
 ```
 
+## 2026-01-17 | FEAT-SESSION-PIN | Session PIN Validation & Join Flow
+
+- **Feature**: Firestore-backed 4-digit session PIN validation in Join page; loading state, inline error messaging, and navigation to Session view on success; minimal Security Rules for guest access
+- **Status**: ✅ Complete
+- **Branch**: feature/session-pin-join
+- **PR**: 002
+- **Duration**: 2026-01-17 to 2026-01-17
+- **Decisions**:
+  - Client-side Firestore query (free tier only; no Cloud Functions) validates PIN and `isActive` status
+  - Inline error message in Czech: "Parta s tímto PINem neexistuje." displayed under PIN input with `aria-live` region
+  - Security Rules minimally allow reads for active sessions while protecting non-active data
+- **Notes**: Firestore collection `sessions` with `{pin, isActive, hostId}` contract; PINInput component + Join page updates; unit/component/E2E tests cover validation flow; Firebase emulators used throughout dev/test cycle
+
 ## 2025-12-24 | FEAT-AUTH-ITER1 | Authentication Iteration 1 (Email/Password)
 
 - **Feature**: Host email/password login flow with logout, reactive auth state (useAuth), guarded routes, localized Czech UI, and comprehensive unit/component/E2E tests
