@@ -3,20 +3,27 @@
   import EmailPasswordLogin from '../components/EmailPasswordLogin.vue';
   import Button from '../components/core/Button.vue';
   import Routes from '../router/Routes';
+  import PageHeader from '../components/PageHeader.vue';
 
   const router = useRouter();
   const onLogin = () => {
     router.push(Routes.Home);
   };
+
+  const goToJoin = () => {
+    router.push(Routes.Join);
+  };
+
+  const TITLE = 'MyPísnička';
+  const TAG_LINE = 'S přáteli hraj a zpívej, bav se a zábavu sdílej';
 </script>
 
 <template>
-  <div class="login-container">
-    <header class="header">
-      <h1 class="app-name">MyPísnička</h1>
-      <p class="tagline">S přáteli hraj a zpívej, bav se a zábavu sdílej</p>
-    </header>
-
+  <div class="container">
+    <PageHeader
+      :title="TITLE"
+      :tagline="TAG_LINE"
+    />
     <EmailPasswordLogin @login="onLogin" />
 
     <div class="divider">
@@ -26,14 +33,15 @@
     <Button
       label="Připojit se bez účtu"
       aria-label="Pokračovat bez účtu"
-      colorVariation="Secondary"
+      color-variation="Secondary"
+      @click="() => goToJoin()"
     />
   </div>
 </template>
 
 <style scoped>
   /* Main container */
-  .login-container {
+  .container {
     max-width: 400px;
     margin: auto;
     width: 100%;
@@ -47,25 +55,6 @@
     padding: var(--space-md);
 
     place-content: center;
-  }
-
-  /* Header */
-  .header {
-    text-align: center;
-    margin-bottom: var(--space-2xl);
-  }
-
-  .app-name {
-    font-size: 28px;
-    font-weight: 600;
-    margin-bottom: var(--space-sm);
-    color: var(--text-primary);
-  }
-
-  .tagline {
-    font-size: 16px;
-    color: var(--text-secondary);
-    font-weight: 400;
   }
 
   /** Divider */
