@@ -35,7 +35,7 @@ export interface JoinSessionResult {
  */
 export const joinSession = async (pin: string): Promise<JoinSessionResult> => {
   if (isPinInvalid(pin) === true) return { ok: false, errorCode: 'invalid-format' };
-  const q = query(collection(db, 'session'), where('pin', '==', pin));
+  const q = query(collection(db, 'sessions'), where('pin', '==', pin));
 
   return getDocs(q)
     .then((s) => {
