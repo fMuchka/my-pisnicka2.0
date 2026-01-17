@@ -36,11 +36,10 @@ Free-tier Firebase only (no Cloud Functions). The Join page exists in [src/pages
 3. Update [src/pages/Join.vue](src/pages/Join.vue):
    - Show loading (disable button) while querying.
    - On failure, show inline error: "Parta s tímto PINem neexistuje." via an `aria-live` region.
-   - On success, save PIN in Pinia store and navigate.
-4. Add Pinia store `session` with `pin` state and `setPin(pin)` action in [src/stores/](src/stores/).
-5. Create `Session.vue` page and route entry; navigate after successful validation.
-6. Add minimal Security Rules to allow reading active sessions by guests.
-7. Tests:
+   - On success, navigate.
+4. Create `Session.vue` page and route entry; navigate after successful validation.
+5. Add minimal Security Rules to allow reading active sessions by guests.
+6. Tests:
    - Unit tests for `joinSession()` with mocked Firestore.
    - Component test for Join.vue interactions.
    - E2E test: full join flow with emulators.
@@ -58,7 +57,7 @@ Free-tier Firebase only (no Cloud Functions). The Join page exists in [src/pages
 - Join.vue calls `joinSession()` with concatenated `pin` digits.
 - Loading state toggles during query; button disabled.
 - Error message appears when invalid; cleared on input change.
-- Success stores PIN in Pinia and triggers navigation.
+- Success triggers navigation.
 
 ### E2E
 
@@ -80,13 +79,13 @@ Free-tier Firebase only (no Cloud Functions). The Join page exists in [src/pages
 
 ## Acceptance Criteria
 
-- [ ] Firestore query validates `pin` and `isActive` for `sessions`.
-- [ ] Loading state disables "Připojit" while querying.
-- [ ] Invalid/inactive PIN shows inline message: "Parta s tímto PINem neexistuje.".
-- [ ] Valid PIN stores in Pinia and navigates to Session view.
-- [ ] Security Rules allow reading active sessions while preventing other reads.
-- [ ] Unit, component, and E2E tests implemented and passing.
-- [ ] Works with Firebase emulators (no real Firebase calls during tests).
+- [x] Firestore query validates `pin` and `isActive` for `sessions`.
+- [x] Loading state disables "Připojit" while querying.
+- [x] Invalid/inactive PIN shows inline message: "Parta s tímto PINem neexistuje.".
+- [x] Valid PIN navigates to Session view.
+- [x] Security Rules allow reading active sessions while preventing other reads.
+- [x] Unit, component, and E2E tests implemented and passing.
+- [x] Works with Firebase emulators (no real Firebase calls during tests).
 
 ## Risks & Rollback
 
@@ -96,11 +95,11 @@ Free-tier Firebase only (no Cloud Functions). The Join page exists in [src/pages
 
 ## Definition of Done
 
-- [ ] All acceptance criteria met
-- [ ] Tests written and passing (Unit/Integration/E2E as applicable)
-- [ ] Accessibility checks pass (manual + automated)
-- [ ] Docs/notes updated (README/internal docs)
-- [ ] Peer review completed
+- [x] All acceptance criteria met
+- [x] Tests written and passing (Unit/Integration/E2E as applicable)
+- [x] Accessibility checks pass (manual + automated)
+- [x] Docs/notes updated (README/internal docs)
+- [x] Peer review completed
 
 ## Success Metrics (optional)
 
