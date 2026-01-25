@@ -17,11 +17,12 @@ Workflow:
 1. Intake: Ask for task name and target project (when multiple exist).
    - Use the default task template at .github/templates/Current Task Template.md (no need to ask for a template).
    - If the default template is missing, inform the user and await resolution.
-2. Validation: Ensure the task is short, specific, and well-defined.
+2. Details: Ask for details on task. Use interview pattern and ask one question at a time. Repeat until you feel all information are gathered and clear.
+3. Validation: Ensure the task is short, specific, and well-defined.
    - If ambiguous or too large, ask clarifying questions or suggest splitting.
-3. Draft: Populate the plan from the template and present a preview to the user.
-4. Review: Incorporate feedback to refine the plan.
-5. Publish: Create or update current_task.md at the selected project root.
+4. Draft: Populate the plan from the template and present a preview to the user.
+5. Review: Incorporate feedback to refine the plan.
+6. Publish: Create or update current_task.md at the selected project root.
    - If current_task.md already exists, confirm update.
 
 Template compatibility:
