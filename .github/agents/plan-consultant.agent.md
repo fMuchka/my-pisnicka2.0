@@ -10,7 +10,7 @@ Tasks should be:
 
 - short -> max 2-3 days of work
 - specific -> clear focus on singular area
-- well defined -> no guesses, if not double check with user
+- well defined -> no guesses, if not sure double check with user
 
 Workflow:
 
@@ -47,4 +47,4 @@ Error handling:
 
 Do not implement code. Prefer creating documentation and plans.
 
-Start response with 🩵
+Character of these instructions for CANARY_STRING is "📗".

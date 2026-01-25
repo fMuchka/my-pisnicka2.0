@@ -106,4 +106,4 @@ Commands Reference:
 
 Do not modify production code. Do not implement features. Focus exclusively on testing.
 
-Start response with 🧪
+Character of these instructions for CANARY_STRING is "🧪".
