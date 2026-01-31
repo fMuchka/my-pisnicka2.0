@@ -9,24 +9,26 @@ import {
 } from '../session';
 
 // Mock Firestore SDK used by session implementation
-const mockAddDoc = vi.fn();
-const mockGetDocs = vi.fn();
-const mockQuery = vi.fn();
-const mockCollection = vi.fn();
-const mockWhere = vi.fn();
-const mockOrderBy = vi.fn();
-const mockLimit = vi.fn();
+const mocks = vi.hoisted(() => ({
+  mockAddDoc: vi.fn(),
+  mockGetDocs: vi.fn(),
+  mockQuery: vi.fn(),
+  mockCollection: vi.fn(),
+  mockWhere: vi.fn(),
+  mockOrderBy: vi.fn(),
+  mockLimit: vi.fn(),
+}));
 
 vi.mock('firebase/firestore', () => {
   return {
     getFirestore: vi.fn(() => ({})),
-    collection: vi.fn((db: unknown, path: string) => ({ db, path })),
-    where: vi.fn((field: string, op: string, value: unknown) => ({ field, op, value })),
-    query: vi.fn((colRef: unknown, ...clauses: unknown[]) => ({ colRef, clauses })),
-    getDocs: vi.fn(),
-    orderBy: (...args: any[]) => mockOrderBy(...args),
-    limit: (...args: any[]) => mockLimit(...args),
-    addDoc: (...args: any[]) => mockAddDoc(...args),
+    collection: (...args: unknown[]) => mocks.mockCollection(...args),
+    where: (...args: unknown[]) => mocks.mockWhere(...args),
+    query: (...args: unknown[]) => mocks.mockQuery(...args),
+    orderBy: (...args: unknown[]) => mocks.mockOrderBy(...args),
+    limit: (...args: unknown[]) => mocks.mockLimit(...args),
+    getDocs: (...args: unknown[]) => mocks.mockGetDocs(...args),
+    addDoc: (...args: unknown[]) => mocks.mockAddDoc(...args),
     Timestamp: {
       now: () => ({ seconds: 1706745600, nanoseconds: 0 }),
       fromDate: (date: Date) => ({
@@ -52,7 +54,7 @@ describe('session: joinSession', () => {
   });
 
   it('returns active session when pin exists and isActive=true', async () => {
-    mockGetDocs.mockResolvedValue({
+    mocks.mockGetDocs.mockResolvedValue({
       empty: false,
       docs: [
         {
@@ -67,7 +69,7 @@ describe('session: joinSession', () => {
   });
 
   it('returns inactive when pin exists and isActive=false', async () => {
-    mockGetDocs.mockResolvedValue({
+    mocks.mockGetDocs.mockResolvedValue({
       empty: false,
       docs: [
         {
@@ -83,7 +85,7 @@ describe('session: joinSession', () => {
   });
 
   it('returns not-found when no matching active session', async () => {
-    mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
+    mocks.mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
 
     const res = await joinSession('9999');
     expect(res.ok).toBe(false);
@@ -91,7 +93,7 @@ describe('session: joinSession', () => {
   });
 
   it('returns firestore-error when Firestore query throws', async () => {
-    mockGetDocs.mockRejectedValue(Object.assign(new Error('boom'), { code: 'unknown' }));
+    mocks.mockGetDocs.mockRejectedValue(Object.assign(new Error('boom'), { code: 'unknown' }));
 
     const res = await joinSession('0000');
     expect(res.ok).toBe(false);
@@ -130,14 +132,14 @@ describe('session: fetchLatestSessions', () => {
       },
     ];
 
-    mockGetDocs.mockResolvedValueOnce({ docs: mockHostedDocs }); // Hosted query
-    mockGetDocs.mockResolvedValueOnce({ docs: [] }); // Joined query
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: mockHostedDocs }); // Hosted query
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] }); // Joined query
 
     const result = await fetchLatestSessions('user-123');
 
-    expect(mockWhere).toHaveBeenCalledWith('hostId', '==', 'user-123');
-    expect(mockOrderBy).toHaveBeenCalledWith('createdAt', 'desc');
-    expect(mockLimit).toHaveBeenCalledWith(3);
+    expect(mocks.mockWhere).toHaveBeenCalledWith('hostId', '==', 'user-123');
+    expect(mocks.mockOrderBy).toHaveBeenCalledWith('createdAt', 'desc');
+    expect(mocks.mockLimit).toHaveBeenCalledWith(3);
     expect(result).toHaveLength(1);
   });
 
@@ -157,12 +159,12 @@ describe('session: fetchLatestSessions', () => {
       },
     ];
 
-    mockGetDocs.mockResolvedValueOnce({ docs: [] }); // Hosted query
-    mockGetDocs.mockResolvedValueOnce({ docs: mockJoinedDocs }); // Joined query
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] }); // Hosted query
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: mockJoinedDocs }); // Joined query
 
     const result = await fetchLatestSessions('user-123');
 
-    expect(mockWhere).toHaveBeenCalledWith('joinedBy', 'array-contains', 'user-123');
+    expect(mocks.mockWhere).toHaveBeenCalledWith('joinedBy', 'array-contains', 'user-123');
     expect(result).toHaveLength(1);
   });
 
@@ -180,8 +182,8 @@ describe('session: fetchLatestSessions', () => {
       }),
     };
 
-    mockGetDocs.mockResolvedValueOnce({ docs: [duplicateSession] }); // Hosted
-    mockGetDocs.mockResolvedValueOnce({ docs: [duplicateSession] }); // Joined (same session)
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [duplicateSession] }); // Hosted
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [duplicateSession] }); // Joined (same session)
 
     const result = await fetchLatestSessions('user-123');
 
@@ -217,8 +219,8 @@ describe('session: fetchLatestSessions', () => {
       }),
     };
 
-    mockGetDocs.mockResolvedValueOnce({ docs: [olderSession, newerSession] });
-    mockGetDocs.mockResolvedValueOnce({ docs: [] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [olderSession, newerSession] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
 
     const result = await fetchLatestSessions('user-123');
 
@@ -240,8 +242,8 @@ describe('session: fetchLatestSessions', () => {
       }),
     }));
 
-    mockGetDocs.mockResolvedValueOnce({ docs: sessions });
-    mockGetDocs.mockResolvedValueOnce({ docs: [] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: sessions });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
 
     const result = await fetchLatestSessions('user-123');
 
@@ -249,8 +251,8 @@ describe('session: fetchLatestSessions', () => {
   });
 
   it('returns empty array when no sessions found', async () => {
-    mockGetDocs.mockResolvedValueOnce({ docs: [] });
-    mockGetDocs.mockResolvedValueOnce({ docs: [] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
 
     const result = await fetchLatestSessions('user-123');
 
@@ -258,7 +260,7 @@ describe('session: fetchLatestSessions', () => {
   });
 
   it('throws error on Firestore failure', async () => {
-    mockGetDocs.mockRejectedValue(new Error('Firestore error'));
+    mocks.mockGetDocs.mockRejectedValue(new Error('Firestore error'));
 
     await expect(fetchLatestSessions('user-123')).rejects.toThrow('Firestore error');
   });
@@ -277,8 +279,8 @@ describe('session: fetchLatestSessions', () => {
       }),
     };
 
-    mockGetDocs.mockResolvedValueOnce({ docs: [mockDoc] });
-    mockGetDocs.mockResolvedValueOnce({ docs: [] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [mockDoc] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
 
     const result = await fetchLatestSessions('host-456');
 
@@ -302,7 +304,7 @@ describe('session: createSession', () => {
 
   it('creates session with required fields', async () => {
     const mockSessionRef = { id: 'new-session-id' };
-    mockAddDoc.mockResolvedValue(mockSessionRef);
+    mocks.mockAddDoc.mockResolvedValue(mockSessionRef);
 
     const input = {
       name: 'New Session',
@@ -312,7 +314,7 @@ describe('session: createSession', () => {
 
     const result = await createSession(input);
 
-    expect(mockAddDoc).toHaveBeenCalledWith(
+    expect(mocks.mockAddDoc).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         name: 'New Session',
@@ -328,7 +330,7 @@ describe('session: createSession', () => {
 
   it('generates 4-digit PIN automatically', async () => {
     const mockSessionRef = { id: 'new-session-id' };
-    mockAddDoc.mockResolvedValue(mockSessionRef);
+    mocks.mockAddDoc.mockResolvedValue(mockSessionRef);
 
     const input = {
       name: 'New Session',
@@ -338,7 +340,7 @@ describe('session: createSession', () => {
 
     await createSession(input);
 
-    const addDocCall = mockAddDoc.mock.calls[0];
+    const addDocCall = mocks.mockAddDoc.mock.calls[0];
     const sessionData = addDocCall?.[1];
 
     expect(sessionData).toHaveProperty('pin');
@@ -347,7 +349,7 @@ describe('session: createSession', () => {
 
   it('sets createdAt timestamp', async () => {
     const mockSessionRef = { id: 'new-session-id' };
-    mockAddDoc.mockResolvedValue(mockSessionRef);
+    mocks.mockAddDoc.mockResolvedValue(mockSessionRef);
 
     const input = {
       name: 'New Session',
@@ -357,7 +359,7 @@ describe('session: createSession', () => {
 
     await createSession(input);
 
-    const addDocCall = mockAddDoc.mock.calls[0];
+    const addDocCall = mocks.mockAddDoc.mock.calls[0];
     const sessionData = addDocCall?.[1];
 
     expect(sessionData).toHaveProperty('createdAt');
@@ -366,7 +368,7 @@ describe('session: createSession', () => {
 
   it('initializes joinedBy with hostId', async () => {
     const mockSessionRef = { id: 'new-session-id' };
-    mockAddDoc.mockResolvedValue(mockSessionRef);
+    mocks.mockAddDoc.mockResolvedValue(mockSessionRef);
 
     const input = {
       name: 'New Session',
@@ -376,7 +378,7 @@ describe('session: createSession', () => {
 
     await createSession(input);
 
-    const addDocCall = mockAddDoc.mock.calls[0];
+    const addDocCall = mocks.mockAddDoc.mock.calls[0];
     const sessionData = addDocCall?.[1];
 
     expect(sessionData.joinedBy).toEqual(['host-123']);
@@ -384,7 +386,7 @@ describe('session: createSession', () => {
 
   it('sets isActive to true by default', async () => {
     const mockSessionRef = { id: 'new-session-id' };
-    mockAddDoc.mockResolvedValue(mockSessionRef);
+    mocks.mockAddDoc.mockResolvedValue(mockSessionRef);
 
     const input = {
       name: 'New Session',
@@ -394,7 +396,7 @@ describe('session: createSession', () => {
 
     await createSession(input);
 
-    const addDocCall = mockAddDoc.mock.calls[0];
+    const addDocCall = mocks.mockAddDoc.mock.calls[0];
     const sessionData = addDocCall?.[1];
 
     expect(sessionData.isActive).toBe(true);
@@ -402,7 +404,7 @@ describe('session: createSession', () => {
 
   it('returns complete Session object', async () => {
     const mockSessionRef = { id: 'new-session-id' };
-    mockAddDoc.mockResolvedValue(mockSessionRef);
+    mocks.mockAddDoc.mockResolvedValue(mockSessionRef);
 
     const input = {
       name: 'Complete Session',
@@ -426,7 +428,7 @@ describe('session: createSession', () => {
   });
 
   it('throws error on Firestore failure', async () => {
-    mockAddDoc.mockRejectedValue(new Error('Firestore write error'));
+    mocks.mockAddDoc.mockRejectedValue(new Error('Firestore write error'));
 
     const input = {
       name: 'Failed Session',
@@ -440,7 +442,7 @@ describe('session: createSession', () => {
   it('generates unique PINs for different sessions', async () => {
     const pins = new Set<string>();
 
-    mockAddDoc.mockImplementation((_, data) => {
+    mocks.mockAddDoc.mockImplementation((_, data) => {
       pins.add(data.pin);
       return Promise.resolve({ id: `session-${pins.size}` });
     });
