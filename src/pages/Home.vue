@@ -16,111 +16,153 @@
   >
     <!-- Sessions Section -->
     <section
-      class="section"
+      class="content-section"
       data-testid="home-sessions-section"
     >
       <div class="section-header">
-        <h2>Relace</h2>
-        <a
-          href="#"
-          class="view-all-link"
-        >
-          Zobrazit vše
-        </a>
+        <h2 class="section-title">Relace</h2>
+        <div class="header-actions">
+          <!-- Create Session Button with Tooltip -->
+          <Tooltip.Root :open-delay="300">
+            <Tooltip.Trigger as-child>
+              <Button
+                class="action-btn"
+                aria-label="Vytvořit novou relaci"
+                :icon="{ position: 'prepend', component: Plus }"
+              />
+            </Tooltip.Trigger>
+            <Teleport to="body">
+              <Tooltip.Positioner>
+                <Tooltip.Content class="tooltip-content">Vytvořit novou relaci</Tooltip.Content>
+              </Tooltip.Positioner>
+            </Teleport>
+          </Tooltip.Root>
+
+          <!-- Join Session Button with Tooltip -->
+          <Tooltip.Root :open-delay="300">
+            <Tooltip.Trigger as-child>
+              <Button
+                class="action-btn"
+                aria-label="Připojit se k relaci"
+                :icon="{ position: 'prepend', component: LinkIcon }"
+                color-variation="Secondary"
+              />
+            </Tooltip.Trigger>
+            <Teleport to="body">
+              <Tooltip.Positioner>
+                <Tooltip.Content class="tooltip-content">Připojit se k relaci</Tooltip.Content>
+              </Tooltip.Positioner>
+            </Teleport>
+          </Tooltip.Root>
+
+          <a
+            href="#"
+            class="view-all-link"
+          >
+            Zobrazit vše →
+          </a>
+        </div>
       </div>
 
-      <ul class="sessions-list">
+      <div class="sessions-list">
         <!-- Placeholder for 3 latest sessions -->
-        <li class="session-item">
-          <span class="session-name">Název relace 1</span>
-          <span class="session-date">před 2 hodinami</span>
-        </li>
-        <li class="session-item">
-          <span class="session-name">Název relace 2</span>
-          <span class="session-date">před 1 dnem</span>
-        </li>
-        <li class="session-item">
-          <span class="session-name">Název relace 3</span>
-          <span class="session-date">před 3 dny</span>
-        </li>
-      </ul>
-
-      <div class="section-actions">
-        <!-- Create Session Button with Tooltip -->
-        <Tooltip.Root :open-delay="300">
-          <Tooltip.Trigger as-child>
-            <Button
-              aria-label="Vytvořit novou relaci"
-              :icon="{ position: 'prepend', component: Plus }"
-            />
-          </Tooltip.Trigger>
-          <Teleport to="body">
-            <Tooltip.Positioner>
-              <Tooltip.Content class="tooltip-content"> Vytvořit novou relaci </Tooltip.Content>
-            </Tooltip.Positioner>
-          </Teleport>
-        </Tooltip.Root>
-
-        <!-- Join Session Button with Tooltip -->
-        <Tooltip.Root :open-delay="300">
-          <Tooltip.Trigger as-child>
-            <Button
-              aria-label="Připojit se k relaci"
-              :icon="{ position: 'prepend', component: LinkIcon }"
-              color-variation="Secondary"
-            />
-          </Tooltip.Trigger>
-          <Teleport to="body">
-            <Tooltip.Positioner>
-              <Tooltip.Content class="tooltip-content"> Připojit se k relaci </Tooltip.Content>
-            </Tooltip.Positioner>
-          </Teleport>
-        </Tooltip.Root>
+        <a
+          href="#"
+          class="session-item"
+        >
+          <div class="session-info">
+            <h3>Kytarová večeře</h3>
+            <div class="session-meta">před 2 hodinami</div>
+          </div>
+        </a>
+        <a
+          href="#"
+          class="session-item"
+        >
+          <div class="session-info">
+            <h3>Víkendové hraní</h3>
+            <div class="session-meta">před 1 dnem</div>
+          </div>
+        </a>
+        <a
+          href="#"
+          class="session-item fade-out"
+        >
+          <div class="session-info">
+            <h3>Plážový oheň</h3>
+            <div class="session-meta">před 3 dny</div>
+          </div>
+        </a>
       </div>
     </section>
 
     <!-- Songs Section -->
     <section
-      class="section"
+      class="content-section"
       data-testid="home-songs-section"
     >
       <div class="section-header">
-        <h2>Písničky</h2>
+        <h2 class="section-title">Písničky</h2>
         <a
           href="#"
           class="view-all-link"
         >
-          Zobrazit vše
+          Zobrazit vše →
         </a>
       </div>
 
-      <ul class="songs-list">
-        <!-- Placeholder for up to 6 songs -->
-        <li class="song-item">
-          <span class="song-title">Písnička 1</span>
-          <span class="song-artist">Umělec A</span>
-        </li>
-        <li class="song-item">
-          <span class="song-title">Písnička 2</span>
-          <span class="song-artist">Umělec A</span>
-        </li>
-        <li class="song-item">
-          <span class="song-title">Písnička 3</span>
-          <span class="song-artist">Umělec B</span>
-        </li>
-        <li class="song-item">
-          <span class="song-title">Písnička 4</span>
-          <span class="song-artist">Umělec B</span>
-        </li>
-        <li class="song-item">
-          <span class="song-title">Písnička 5</span>
-          <span class="song-artist">Umělec C</span>
-        </li>
-        <li class="song-item">
-          <span class="song-title">Písnička 6</span>
-          <span class="song-artist">Umělec C</span>
-        </li>
-      </ul>
+      <div class="song-tree">
+        <!-- Artist Group 1 -->
+        <div class="artist-group">
+          <div class="artist-name">Umělec A</div>
+          <div class="songs-in-artist">
+            <a
+              href="#"
+              class="song-item"
+              >Písnička 1</a
+            >
+            <a
+              href="#"
+              class="song-item"
+              >Písnička 2</a
+            >
+          </div>
+        </div>
+
+        <!-- Artist Group 2 -->
+        <div class="artist-group">
+          <div class="artist-name">Umělec B</div>
+          <div class="songs-in-artist">
+            <a
+              href="#"
+              class="song-item"
+              >Písnička 3</a
+            >
+            <a
+              href="#"
+              class="song-item"
+              >Písnička 4</a
+            >
+          </div>
+        </div>
+
+        <!-- Artist Group 3 -->
+        <div class="artist-group fade-out">
+          <div class="artist-name">Umělec C</div>
+          <div class="songs-in-artist">
+            <a
+              href="#"
+              class="song-item"
+              >Písnička 5</a
+            >
+            <a
+              href="#"
+              class="song-item"
+              >Písnička 6</a
+            >
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Create Session Dialog -->
@@ -182,55 +224,76 @@
 <style scoped>
   /* Main container */
   .container {
-    max-width: 400px;
-    margin: auto;
+    max-width: 800px;
+    margin: 0 auto;
     width: 100%;
-
     font-family: var(--font-body);
     background-color: var(--bg-primary);
     color: var(--text-primary);
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: var(--space-md);
-    gap: var(--space-lg);
+    padding: var(--space-xl) var(--space-md);
   }
 
-  /* Section Styles */
-  .section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
+  /* Content Sections */
+  .content-section {
+    background-color: white;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
   }
 
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: var(--space-md);
+    gap: var(--space-sm);
   }
 
-  .section-header h2 {
-    font-size: 1.5rem;
+  .section-title {
+    font-size: 20px;
     font-weight: 600;
     margin: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+  }
+
+  .action-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 150ms ease;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+  }
+
+  .action-btn:hover {
+    color: var(--accent);
+    background-color: var(--bg-secondary);
   }
 
   .view-all-link {
     color: var(--accent);
     text-decoration: none;
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 500;
+    transition: opacity 150ms ease;
   }
 
   .view-all-link:hover {
+    opacity: 0.8;
     text-decoration: underline;
   }
 
   /* Sessions List */
   .sessions-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
@@ -243,51 +306,89 @@
     padding: var(--space-md);
     background-color: var(--bg-secondary);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--bg-tertiary);
+    text-decoration: none;
+    color: inherit;
+    transition: all 150ms ease;
   }
 
-  .session-name {
+  .session-item:hover {
+    background-color: var(--bg-tertiary);
+  }
+
+  .session-info h3 {
+    font-size: 16px;
     font-weight: 500;
+    margin: 0 0 4px 0;
   }
 
-  .session-date {
-    font-size: 0.875rem;
+  .session-meta {
+    font-size: 14px;
     color: var(--text-secondary);
   }
 
-  /* Section Actions */
-  .section-actions {
+  /* Fade-out effect for preview items */
+  .fade-out {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Songs Tree View */
+  .song-tree {
     display: flex;
+    flex-direction: column;
     gap: var(--space-sm);
   }
 
-  /* Songs List */
-  .songs-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: var(--space-sm);
+  .artist-group {
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    transition: all 150ms ease;
+  }
+
+  .artist-group:hover {
+    background-color: var(--bg-tertiary);
+  }
+
+  .artist-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    padding: var(--space-sm) 0;
+    cursor: pointer;
+    transition: opacity 150ms ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .artist-name:hover {
+    opacity: 0.8;
+  }
+
+  .artist-name::before {
+    content: '❯ ';
+    margin-right: var(--space-xs);
+  }
+
+  .songs-in-artist {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding-left: var(--space-sm);
   }
 
   .song-item {
-    display: flex;
-    flex-direction: column;
-    padding: var(--space-md);
-    background-color: var(--bg-secondary);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--bg-tertiary);
-  }
-
-  .song-title {
-    font-weight: 500;
-    margin-bottom: var(--space-xs);
-  }
-
-  .song-artist {
-    font-size: 0.875rem;
+    font-size: 14px;
     color: var(--text-secondary);
+    padding: var(--space-xs) 0;
+    cursor: pointer;
+    transition: color 150ms ease;
+    text-decoration: none;
+    display: block;
+  }
+
+  .song-item:hover {
+    color: var(--accent);
   }
 
   /* Tooltip */
@@ -403,5 +504,12 @@
   .field-error {
     font-size: 0.75rem;
     color: var(--accent);
+  }
+
+  /* Responsive */
+  @media (min-width: 768px) {
+    .container {
+      padding: var(--space-2xl) var(--space-xl);
+    }
   }
 </style>
