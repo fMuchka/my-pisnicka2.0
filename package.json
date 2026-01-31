@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host",
     "firebase:login": "firebase login",
     "firebase:init": "firebase init",
     "deploy": "npm run build && firebase deploy --only hosting",

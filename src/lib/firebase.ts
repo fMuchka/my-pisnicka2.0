@@ -81,26 +81,20 @@ export const storage = getStorage(app);
  *
  * Automatically connects to local Firebase emulators based on environment:
  * - Always in test mode (unit & e2e with emulators)
- * - In dev mode on localhost (convenient for local development)
+ * - Always in dev mode (npm run dev or dev:host)
  * - When explicitly enabled via VITE_FIREBASE_EMULATOR env var
  * - Can be disabled with VITE_DISABLE_FIREBASE_EMULATOR=true
  *
- * This approach allows seamless switching between emulators and production Firebase
- * without code changes.
+ * Production builds (npm run build) have DEV=false, so emulators never connect.
+ * This allows mobile device testing via --host while maintaining production safety.
  */
 const explicitEmulatorFlag =
   import.meta.env.VITE_FIREBASE_EMULATOR === 'true' ||
   import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true';
 const explicitDisableFlag = import.meta.env.VITE_DISABLE_FIREBASE_EMULATOR === 'true';
 
-const runningOnLocalhost =
-  typeof window !== 'undefined' &&
-  window.location &&
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
 export const USE_FIREBASE_EMULATOR =
-  !explicitDisableFlag &&
-  (isTest || explicitEmulatorFlag || (import.meta.env.DEV && runningOnLocalhost));
+  !explicitDisableFlag && (isTest || explicitEmulatorFlag || import.meta.env.DEV);
 
 /**
  * Emulator Connection Initialization
@@ -115,12 +109,17 @@ let emulatorsConnected = false;
 if (USE_FIREBASE_EMULATOR && !emulatorsConnected) {
   emulatorsConnected = true;
 
+  // Use the same host as the app for emulators (enables mobile device testing)
+  // Falls back to localhost for non-browser environments (e.g., SSR, tests)
+  const defaultHost =
+    typeof window !== 'undefined' && window.location ? window.location.hostname : 'localhost';
+
   // Allow port override via env vars for flexibility in non-standard environments
-  const firestoreHost = import.meta.env.VITE_FIRESTORE_EMULATOR_HOST ?? 'localhost';
+  const firestoreHost = import.meta.env.VITE_FIRESTORE_EMULATOR_HOST ?? defaultHost;
   const firestorePort = Number(import.meta.env.VITE_FIRESTORE_EMULATOR_PORT ?? 8080);
-  const authHost = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST ?? 'localhost';
+  const authHost = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST ?? defaultHost;
   const authPort = Number(import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_PORT ?? 9099);
-  const storageHost = import.meta.env.VITE_FIREBASE_STORAGE_EMULATOR_HOST ?? 'localhost';
+  const storageHost = import.meta.env.VITE_FIREBASE_STORAGE_EMULATOR_HOST ?? defaultHost;
   const storagePort = Number(import.meta.env.VITE_FIREBASE_STORAGE_EMULATOR_PORT ?? 9199);
 
   try {
