@@ -102,9 +102,9 @@
               <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
             </Field.Label>
             <Field.Input
+              v-model="sessionName"
               class="field-input"
               placeholder="Např. Kytarová večeře"
-              v-model="sessionName"
               :aria-invalid="!isNameValid && sessionName.length > 0"
             />
             <Field.HelperText class="field-helper">
