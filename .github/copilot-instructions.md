@@ -102,4 +102,4 @@ See [project_history.md](project_history.md) for feature IDs, decisions, and mil
 
 ## Agent Communication
 
-1. Canary String - Each response is started using **CANARY_STRING** followed by " - ". This serves to confirm state of context. Character for this instruction file in **CANARY_STRING** is "🌍".
+1. Canary String - Each response is started using **CANARY_STRING** followed by " - ". This serves to confirm state of context. Character for this instruction file in **CANARY_STRING** is "🎵".
