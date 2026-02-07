@@ -2,7 +2,7 @@
   import { Dialog } from '@ark-ui/vue/dialog';
   import { Field } from '@ark-ui/vue';
   import { Tooltip } from '@ark-ui/vue/tooltip';
-  import { Plus, Link as LinkIcon } from 'lucide-vue-next';
+  import { Plus, UserPlus } from 'lucide-vue-next';
   import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
@@ -107,8 +107,7 @@
               <Button
                 class="action-btn"
                 aria-label="Připojit se k relaci"
-                :icon="{ position: 'prepend', component: LinkIcon }"
-                color-variation="Secondary"
+                :icon="{ position: 'prepend', component: UserPlus }"
               />
             </Tooltip.Trigger>
             <Teleport to="body">
