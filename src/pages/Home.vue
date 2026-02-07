@@ -8,6 +8,8 @@
   import { fetchLatestSessions, type Session } from '../lib/session';
   import { useAuth } from '../composables/useAuth';
   import { formatSessionAge } from '../lib/formatter';
+  import { useRouter } from 'vue-router';
+  import Routes from '../router/Routes';
 
   const isCreateDialogOpen = ref(false);
 
@@ -16,11 +18,17 @@
   };
 
   const { user } = useAuth();
+  const router = useRouter();
+
   const latestSessions = ref<Session[]>([]);
 
   onMounted(async () => {
     latestSessions.value = await fetchLatestSessions(user.value?.uid ?? '');
   });
+
+  const openSession = (session: Session) => {
+    router.push({ path: Routes.Session, query: { sessionId: session.id } });
+  };
 </script>
 
 <template>
@@ -86,6 +94,7 @@
           v-for="session in latestSessions"
           :key="session.id"
           class="session-item"
+          @click="() => openSession(session)"
         >
           <div class="session-info">
             <h3>{{ session.name }}</h3>
@@ -259,6 +268,7 @@
     text-decoration: none;
     color: inherit;
     transition: all 150ms ease;
+    cursor: pointer;
   }
 
   .session-item:hover {
