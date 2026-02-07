@@ -89,10 +89,10 @@ Free-tier Firebase only (no Cloud Functions). We will extend sessions and define
 
 ## Acceptance Criteria
 
-- [ ] Sessions: Shows 3 latest across hosted and joined, sorted by `createdAt` desc.
-- [ ] Create-session dialog: Saves session with required fields and refreshes list.
+- [x] Sessions: Shows 3 latest across hosted and joined, sorted by `createdAt` desc.
+- [x] Create-session dialog: Saves session with required fields and refreshes list.
 - [ ] Songs: Shows up to 6 songs from up to 3 artists deterministically (stable with same dataset).
-- [ ] Navigation: ➕ opens dialog; 🔗 routes to Join; “View all” links route to placeholder pages.
+- [x] Navigation: ➕ opens dialog; 🔗 routes to Join; “View all” links route to placeholder pages.
 - [ ] Firestore index for songs `(artist ASC, title ASC)` exists and app loads without index errors in emulator.
 - [ ] Basic read Security Rules allow sessions/songs metadata reads; writes restricted to authenticated users.
 
