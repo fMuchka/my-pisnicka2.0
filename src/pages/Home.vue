@@ -3,8 +3,69 @@
   import { Field } from '@ark-ui/vue';
   import { Tooltip } from '@ark-ui/vue/tooltip';
   import { Plus, Link as LinkIcon } from 'lucide-vue-next';
+  import { computed, ref, watch } from 'vue';
+  import { useRouter } from 'vue-router';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import Button from '../components/core/Button.vue';
+  import { createSession } from '../lib/session';
+  import { useAuth } from '../composables/useAuth';
+  import Routes from '../router/Routes';
+
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const isCreateDialogOpen = ref(false);
+  const sessionName = ref('');
+  const createError = ref<string | null>(null);
+  const isCreating = ref(false);
+
+  const trimmedName = computed(() => sessionName.value.trim());
+  const isNameValid = computed(() => trimmedName.value.length >= 3);
+  const isSubmitDisabled = computed(() => !isNameValid.value || isCreating.value);
+  const submitLabel = computed(() => (isCreating.value ? 'Vytvářím...' : 'Vytvořit'));
+
+  const openCreateDialog = () => {
+    createError.value = null;
+    isCreateDialogOpen.value = true;
+  };
+
+  const resetCreateDialog = () => {
+    sessionName.value = '';
+    createError.value = null;
+    isCreating.value = false;
+  };
+
+  watch(isCreateDialogOpen, (isOpen) => {
+    if (!isOpen) resetCreateDialog();
+  });
+
+  const handleCreateSession = async () => {
+    if (isSubmitDisabled.value) return;
+
+    const hostId = user.value?.uid;
+    if (!hostId) {
+      createError.value = 'Nejprve se přihlas.';
+      return;
+    }
+
+    isCreating.value = true;
+    createError.value = null;
+
+    try {
+      const created = await createSession({
+        name: trimmedName.value,
+        hostId,
+        hostDisplayName: user.value?.displayName ?? 'Host',
+      });
+
+      isCreateDialogOpen.value = false;
+      await router.push({ path: Routes.Session, query: { sessionId: created.id } });
+    } catch (error) {
+      createError.value = 'Nepodařilo se vytvořit partu. Zkus to prosím znovu.';
+    } finally {
+      isCreating.value = false;
+    }
+  };
 </script>
 
 <template>
@@ -29,6 +90,8 @@
                 class="action-btn"
                 aria-label="Vytvořit novou relaci"
                 :icon="{ position: 'prepend', component: Plus }"
+                type="button"
+                @click="openCreateDialog"
               />
             </Tooltip.Trigger>
             <Teleport to="body">
@@ -55,12 +118,12 @@
             </Teleport>
           </Tooltip.Root>
 
-          <a
-            href="#"
+          <Button
             class="view-all-link"
-          >
-            Zobrazit vše →
-          </a>
+            aria-label="Zobrazit vše"
+            color-variation="Primary"
+            :label="'Zobrazit vše'"
+          />
         </div>
       </div>
 
@@ -103,12 +166,12 @@
     >
       <div class="section-header">
         <h2 class="section-title">Písničky</h2>
-        <a
-          href="#"
+        <Button
           class="view-all-link"
-        >
-          Zobrazit vše →
-        </a>
+          aria-label="Zobrazit vše"
+          color-variation="Primary"
+          :label="'Zobrazit vše'"
+        />
       </div>
 
       <div class="song-tree">
@@ -166,7 +229,7 @@
     </section>
 
     <!-- Create Session Dialog -->
-    <Dialog.Root>
+    <Dialog.Root v-model:open="isCreateDialogOpen">
       <Teleport to="body">
         <Dialog.Backdrop class="dialog-backdrop" />
         <Dialog.Positioner class="dialog-positioner">
@@ -174,24 +237,37 @@
             class="dialog-content"
             data-testid="create-session-dialog"
           >
-            <Dialog.Title class="dialog-title"> Vytvořit novou relaci </Dialog.Title>
+            <Dialog.Title class="dialog-title">Vytvořit partu</Dialog.Title>
             <Dialog.Description class="dialog-description">
-              Zadejte název nové relace pro zahájení společného hraní.
+              Zadejte název nové party pro zahájení společného hraní.
             </Dialog.Description>
 
             <Field.Root class="field">
               <Field.Label class="field-label">
-                Název relace
+                Název party
                 <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
               </Field.Label>
               <Field.Input
                 class="field-input"
                 placeholder="Např. Kytarová večeře"
+                v-model="sessionName"
+                :aria-invalid="!isNameValid && sessionName.length > 0"
               />
               <Field.HelperText class="field-helper">
                 Název musí mít alespoň 3 znaky
               </Field.HelperText>
-              <Field.ErrorText class="field-error"> Název relace je povinný </Field.ErrorText>
+              <Field.ErrorText
+                v-if="!isNameValid && sessionName.length > 0"
+                class="field-error"
+              >
+                Název party musí mít alespoň 3 znaky
+              </Field.ErrorText>
+              <Field.ErrorText
+                v-else-if="createError"
+                class="field-error"
+              >
+                {{ createError }}
+              </Field.ErrorText>
             </Field.Root>
 
             <div class="dialog-actions">
@@ -200,11 +276,15 @@
                   label="Zrušit"
                   color-variation="Secondary"
                   style-variation="Outlined"
+                  type="button"
                 />
               </Dialog.CloseTrigger>
               <Button
-                label="Vytvořit"
+                :label="submitLabel"
                 data-testid="create-session-submit"
+                type="button"
+                :disabled="isSubmitDisabled"
+                @click="handleCreateSession"
               />
             </div>
 
@@ -280,7 +360,6 @@
   }
 
   .view-all-link {
-    color: var(--accent);
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;

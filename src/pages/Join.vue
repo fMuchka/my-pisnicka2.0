@@ -21,8 +21,8 @@
    * Allows UI to display user-friendly messages in Czech without hardcoding in components.
    */
   const ERROR_MESSAGES: Record<string, string> = {
-    'not-found': 'Parta s tímto PINem neexistuje.',
-    inactive: 'Parta je uzavřena nebo již skončila.',
+    'not-found': 'Relace s tímto PINem neexistuje.',
+    inactive: 'Relace je uzavřena nebo již skončila.',
     'invalid-format': 'PIN musí být 4-místné číslo.',
     'firestore-error':
       'Chyba připojení. Zkus to prosím později nebo se ujisti, že máš přístup k internetu.',

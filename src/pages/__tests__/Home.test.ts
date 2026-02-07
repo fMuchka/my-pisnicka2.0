@@ -77,7 +77,7 @@ describe('Home Page - Component Tests', () => {
     it('renders sessions section with heading', async () => {
       render(Home);
       expect(screen.getByTestId('home-sessions-section')).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: /parta|session/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /relace|session/i })).toBeInTheDocument();
     });
 
     it('renders songs section with heading', async () => {
@@ -139,7 +139,7 @@ describe('Home Page - Component Tests', () => {
       render(Home);
 
       await waitFor(() => {
-        expect(screen.getByText(/žádné parta|no session/i)).toBeInTheDocument();
+        expect(screen.getByText(/žádné relace|no session/i)).toBeInTheDocument();
       });
     });
 
@@ -288,7 +288,7 @@ describe('Home Page - Component Tests', () => {
       await user.click(createButton);
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/název party|session name/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/název relace|session name/i)).toBeInTheDocument();
         expect(screen.getByTestId('create-session-submit')).toBeInTheDocument();
       });
     });
@@ -297,7 +297,7 @@ describe('Home Page - Component Tests', () => {
       const user = userEvent.setup();
       const newSession: Session = {
         id: 'new-session-id',
-        name: 'Nová Parta',
+        name: 'Nová Relace',
         hostId: 'host-123',
         hostDisplayName: 'Test Host',
         isActive: true,
@@ -316,8 +316,8 @@ describe('Home Page - Component Tests', () => {
       await user.click(createButton);
 
       // Fill in session name
-      const nameInput = screen.getByLabelText(/název party|session name/i);
-      await user.type(nameInput, 'Nová Parta');
+      const nameInput = screen.getByLabelText(/název relace|session name/i);
+      await user.type(nameInput, 'Nová Relace');
 
       // Submit
       const submitButton = screen.getByTestId('create-session-submit');
@@ -325,7 +325,7 @@ describe('Home Page - Component Tests', () => {
 
       await waitFor(() => {
         expect(mockCreateSession).toHaveBeenCalledWith({
-          name: 'Nová Parta',
+          name: 'Nová Relace',
           hostId: 'host-123',
           hostDisplayName: 'Test Host',
         });
@@ -336,7 +336,7 @@ describe('Home Page - Component Tests', () => {
       const user = userEvent.setup();
       const newSession: Session = {
         id: 'new-session-id',
-        name: 'Nová Parta',
+        name: 'Nová Relace',
         hostId: 'host-123',
         hostDisplayName: 'Test Host',
         isActive: true,
@@ -352,7 +352,7 @@ describe('Home Page - Component Tests', () => {
 
       // Open and submit
       await user.click(screen.getByLabelText(/vytvořit|create/i));
-      await user.type(screen.getByLabelText(/název party|session name/i), 'Nová Parta');
+      await user.type(screen.getByLabelText(/název relace|session name/i), 'Nová Relace');
       await user.click(screen.getByTestId('create-session-submit'));
 
       await waitFor(() => {
@@ -361,7 +361,7 @@ describe('Home Page - Component Tests', () => {
         // Sessions list should be refreshed
         expect(mockFetchLatestSessions).toHaveBeenCalledTimes(2);
         // New session should appear
-        expect(screen.getByText('Nová Parta')).toBeInTheDocument();
+        expect(screen.getByText('Nová Relace')).toBeInTheDocument();
       });
     });
 
@@ -372,7 +372,7 @@ describe('Home Page - Component Tests', () => {
       render(Home);
 
       await user.click(screen.getByLabelText(/vytvořit|create/i));
-      await user.type(screen.getByLabelText(/název party|session name/i), 'Test');
+      await user.type(screen.getByLabelText(/název relace|session name/i), 'Test');
       await user.click(screen.getByTestId('create-session-submit'));
 
       await waitFor(() => {
@@ -437,7 +437,7 @@ describe('Home Page - Component Tests', () => {
       expect(headings.length).toBeGreaterThan(0);
 
       // Sections should use h2
-      const sessionsHeading = screen.getByRole('heading', { name: /parta|session/i });
+      const sessionsHeading = screen.getByRole('heading', { name: /relace|session/i });
       expect(sessionsHeading.tagName).toBe('H2');
 
       const songsHeading = screen.getByRole('heading', { name: /písn|song/i });
