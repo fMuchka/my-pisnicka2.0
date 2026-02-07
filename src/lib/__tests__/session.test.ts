@@ -305,6 +305,7 @@ describe('session: createSession', () => {
   it('creates session with required fields', async () => {
     const mockSessionRef = { id: 'new-session-id' };
     mocks.mockAddDoc.mockResolvedValue(mockSessionRef);
+    mocks.mockCollection.mockReturnValue({});
 
     const input = {
       name: 'New Session',
@@ -322,6 +323,8 @@ describe('session: createSession', () => {
         hostDisplayName: 'Test Host',
         isActive: true,
         joinedBy: ['host-123'],
+        pin: expect.stringMatching(/^\d{4}$/),
+        createdAt: expect.anything(),
       })
     );
 
