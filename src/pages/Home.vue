@@ -86,7 +86,7 @@
         </a>
         <a
           href="#"
-          class="session-item fade-out"
+          class="session-item"
         >
           <div class="session-info">
             <h3>Plážový oheň</h3>
@@ -147,7 +147,7 @@
         </div>
 
         <!-- Artist Group 3 -->
-        <div class="artist-group fade-out">
+        <div class="artist-group">
           <div class="artist-name">Umělec C</div>
           <div class="songs-in-artist">
             <a
