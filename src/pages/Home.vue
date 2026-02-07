@@ -29,6 +29,9 @@
   const openSession = (session: Session) => {
     router.push({ path: Routes.Session, query: { sessionId: session.id } });
   };
+
+  const goToJoinPage = () => router.push({ path: Routes.Join });
+  const goToSessionListPage = () => router.push({ path: Routes.SessionList });
 </script>
 
 <template>
@@ -71,6 +74,7 @@
                 class="action-btn"
                 aria-label="Připojit se k relaci"
                 :icon="{ position: 'prepend', component: UserPlus }"
+                @click="goToJoinPage"
               />
             </Tooltip.Trigger>
             <Teleport to="body">
@@ -85,6 +89,7 @@
             aria-label="Zobrazit vše"
             color-variation="Primary"
             :label="'Zobrazit vše'"
+            @click="goToSessionListPage"
           />
         </div>
       </div>
