@@ -17,10 +17,14 @@ vi.mock('firebase/auth', () => ({
   connectAuthEmulator: vi.fn(),
 }));
 
-vi.mock('firebase/firestore', () => ({
-  getFirestore: vi.fn(() => ({})),
-  connectFirestoreEmulator: vi.fn(),
-}));
+vi.mock('firebase/firestore', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('firebase/firestore')>();
+  return {
+    ...actual,
+    getFirestore: vi.fn(() => ({})),
+    connectFirestoreEmulator: vi.fn(),
+  };
+});
 
 vi.mock('firebase/storage', () => ({
   getStorage: vi.fn(() => ({})),

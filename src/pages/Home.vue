@@ -7,6 +7,7 @@
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import { fetchLatestSessions, type Session } from '../lib/session';
   import { useAuth } from '../composables/useAuth';
+  import { formatSessionAge } from '../lib/formatter';
 
   const isCreateDialogOpen = ref(false);
 
@@ -88,7 +89,7 @@
         >
           <div class="session-info">
             <h3>{{ session.name }}</h3>
-            <div class="session-meta">{{ session.createdAt }}</div>
+            <div class="session-meta">{{ formatSessionAge(session.createdAt) }}</div>
           </div>
         </div>
       </div>
