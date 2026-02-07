@@ -91,14 +91,14 @@
           class="dialog-content"
           data-testid="create-session-dialog"
         >
-          <Dialog.Title class="dialog-title">Vytvořit partu</Dialog.Title>
+          <Dialog.Title class="dialog-title">Vytvořit relaci</Dialog.Title>
           <Dialog.Description class="dialog-description">
-            Zadejte název nové party pro zahájení společného hraní.
+            Zadejte název nové relace pro zahájení společného hraní.
           </Dialog.Description>
 
           <Field.Root class="field">
             <Field.Label class="field-label">
-              Název party
+              Název relace
               <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
             </Field.Label>
             <Field.Input
@@ -114,7 +114,7 @@
               v-if="!isNameValid && sessionName.length > 0"
               class="field-error"
             >
-              Název party musí mít alespoň 3 znaky
+              Název relace musí mít alespoň 3 znaky
             </Field.ErrorText>
             <Field.ErrorText
               v-else-if="createError"
