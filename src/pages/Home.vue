@@ -1,16 +1,25 @@
 <script setup lang="ts">
   import { Tooltip } from '@ark-ui/vue/tooltip';
   import { Plus, UserPlus } from 'lucide-vue-next';
-  import { ref } from 'vue';
+  import { onMounted, ref } from 'vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import Button from '../components/core/Button.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
+  import { fetchLatestSessions, type Session } from '../lib/session';
+  import { useAuth } from '../composables/useAuth';
 
   const isCreateDialogOpen = ref(false);
 
   const openCreateDialog = () => {
     isCreateDialogOpen.value = true;
   };
+
+  const { user } = useAuth();
+  const latestSessions = ref<Session[]>([]);
+
+  onMounted(async () => {
+    latestSessions.value = await fetchLatestSessions(user.value?.uid ?? '');
+  });
 </script>
 
 <template>
@@ -72,34 +81,16 @@
       </div>
 
       <div class="sessions-list">
-        <!-- Placeholder for 3 latest sessions -->
-        <a
-          href="#"
+        <div
+          v-for="session in latestSessions"
+          :key="session.id"
           class="session-item"
         >
           <div class="session-info">
-            <h3>Kytarová večeře</h3>
-            <div class="session-meta">před 2 hodinami</div>
+            <h3>{{ session.name }}</h3>
+            <div class="session-meta">{{ session.createdAt }}</div>
           </div>
-        </a>
-        <a
-          href="#"
-          class="session-item"
-        >
-          <div class="session-info">
-            <h3>Víkendové hraní</h3>
-            <div class="session-meta">před 1 dnem</div>
-          </div>
-        </a>
-        <a
-          href="#"
-          class="session-item"
-        >
-          <div class="session-info">
-            <h3>Plážový oheň</h3>
-            <div class="session-meta">před 3 dny</div>
-          </div>
-        </a>
+        </div>
       </div>
     </section>
 
