@@ -34,7 +34,9 @@ Free-tier Firebase only (no Cloud Functions). We will extend sessions and define
 ## Schemas
 
 - Session: `{ id, name, hostId, hostDisplayName, isActive, pin, joinedBy: string[], createdAt: Timestamp }`
-- Song: `{ id, title, artist, chords?: string, createdAt?: Timestamp }`
+- Song: `{ id, title, artist, text?: string, chords?: string[], createdAt?: Timestamp }`
+  - `text`: WYSIWYG song text with chord notation (chords above lyrics or inline)
+  - `chords`: Array of unique chords (auto-extracted from text, can be manually edited)
 
 ## Implementation Plan
 

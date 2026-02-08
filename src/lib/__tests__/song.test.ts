@@ -22,7 +22,7 @@ vi.mock('firebase/firestore', async () => {
   };
 });
 
-vi.mock('./firebase', () => ({
+vi.mock('../firebase', () => ({
   db: {},
 }));
 
@@ -199,7 +199,7 @@ describe('Song Service - Unit Tests', () => {
       const mockDocs = [
         {
           id: 's1',
-          data: () => ({ title: 'Song A', artist: 'Artist A', chords: 'C G Am' }),
+          data: () => ({ title: 'Song A', artist: 'Artist A', chords: ['C', 'G', 'Am'] }),
         },
       ];
 
@@ -221,7 +221,7 @@ describe('Song Service - Unit Tests', () => {
       const mockDocs = [
         {
           id: 's1',
-          data: () => ({ title: 'Hádam', artist: 'Chinaski', chords: 'Am C G' }),
+          data: () => ({ title: 'Hádam', artist: 'Chinaski', chords: ['Am', 'C', 'G'] }),
         },
         {
           id: 's2',
@@ -238,13 +238,17 @@ describe('Song Service - Unit Tests', () => {
         id: 's1',
         title: 'Hádam',
         artist: 'Chinaski',
-        chords: 'Am C G',
+        text: undefined,
+        chords: ['Am', 'C', 'G'],
+        createdAt: undefined,
       });
       expect(result[1]).toEqual({
         id: 's2',
         title: 'Andělé',
         artist: 'Kabát',
+        text: undefined,
         chords: undefined,
+        createdAt: undefined,
       });
     });
 

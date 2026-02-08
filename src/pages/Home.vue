@@ -5,6 +5,7 @@
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import Button from '../components/core/Button.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
+  import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import { fetchLatestSessions, type Session } from '../lib/session';
   import { useAuth } from '../composables/useAuth';
   import { formatSessionAge } from '../lib/formatter';
@@ -12,9 +13,14 @@
   import Routes from '../router/Routes';
 
   const isCreateDialogOpen = ref(false);
+  const isCreateSongDialogOpen = ref(false);
 
   const openCreateDialog = () => {
     isCreateDialogOpen.value = true;
+  };
+
+  const openCreateSongDialog = () => {
+    isCreateSongDialogOpen.value = true;
   };
 
   const { user } = useAuth();
@@ -116,12 +122,30 @@
     >
       <div class="section-header">
         <h2 class="section-title">Písničky</h2>
-        <Button
-          class="view-all-link"
-          aria-label="Zobrazit vše"
-          color-variation="Primary"
-          :label="'Zobrazit vše'"
-        />
+        <div class="header-actions">
+          <Tooltip.Root :open-delay="300">
+            <Tooltip.Trigger as-child>
+              <Button
+                class="action-btn"
+                aria-label="Vytvořit novou píseň"
+                :icon="{ position: 'prepend', component: Plus }"
+                type="button"
+                @click="openCreateSongDialog"
+              />
+            </Tooltip.Trigger>
+            <Teleport to="body">
+              <Tooltip.Positioner>
+                <Tooltip.Content class="tooltip-content">Vytvořit novou píseň</Tooltip.Content>
+              </Tooltip.Positioner>
+            </Teleport>
+          </Tooltip.Root>
+          <Button
+            class="view-all-link"
+            aria-label="Zobrazit vše"
+            color-variation="Primary"
+            :label="'Zobrazit vše'"
+          />
+        </div>
       </div>
 
       <div class="song-tree">
@@ -182,6 +206,12 @@
     <CreateSessionDialog
       :open="isCreateDialogOpen"
       @update:open="isCreateDialogOpen = $event"
+    />
+
+    <!-- Create Song Dialog -->
+    <CreateSongDialog
+      :open="isCreateSongDialogOpen"
+      @update:open="isCreateSongDialogOpen = $event"
     />
   </div>
 </template>
