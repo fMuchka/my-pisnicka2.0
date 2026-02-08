@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue';
   import { Menu } from '@ark-ui/vue/menu';
-  import { ChevronDown, Plus, GripVertical, ChevronUp, Eye, Code } from 'lucide-vue-next';
+  import { ChevronDown, Plus, GripVertical, ChevronUp, Eye, Code, X } from 'lucide-vue-next';
   import { useSortable } from '@vueuse/integrations/useSortable';
   import Button from '../core/Button.vue';
   import type { LucideProps } from 'lucide-vue-next';
@@ -259,8 +259,8 @@
       <Button
         color-variation="Primary"
         style-variation="Text"
-        :aria-label="isVisualMode ? 'Přepnout na markdown' : 'Přepnout na vizuální režim'"
-        :label="isVisualMode ? 'Markdown' : 'Vizuální'"
+        :aria-label="isVisualMode ? 'Přepnout na text' : 'Přepnout na vizuální režim'"
+        :label="isVisualMode ? 'Textové' : 'Vizuální'"
         :icon="modeToggleIcon"
         @click="toggleMode"
       />
@@ -336,24 +336,19 @@
             <Button
               class="icon-btn"
               :aria-label="section.collapsed ? 'Rozbalit' : 'Sbalit'"
+              :icon="
+                section.collapsed
+                  ? { component: ChevronDown, position: 'prepend' }
+                  : { component: ChevronUp, position: 'prepend' }
+              "
               @click="toggleCollapse(section.id)"
-            >
-              <ChevronUp
-                v-if="!section.collapsed"
-                :size="16"
-              />
-              <ChevronDown
-                v-else
-                :size="16"
-              />
-            </Button>
+            />
             <Button
               class="icon-btn delete-btn"
               aria-label="Smazat sekci"
+              :icon="{ component: X, position: 'append' }"
               @click="deleteSection(section.id)"
-            >
-              ✕
-            </Button>
+            />
           </div>
         </div>
 
