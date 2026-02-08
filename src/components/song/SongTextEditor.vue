@@ -222,13 +222,17 @@
   }
 
   useSortable(sectionsListRef, sections, {
-    animation: 180,
+    animation: 100,
     handle: '.drag-handle',
     ghostClass: 'drag-ghost',
     chosenClass: 'drag-chosen',
     dragClass: 'drag-dragging',
     fallbackOnBody: true,
-    swapThreshold: 0.65,
+    swapThreshold: 0.3,
+    delay: 150,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 10,
+    forceFallback: true,
     onEnd: () => updateMarkdown(),
   });
 
