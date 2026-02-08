@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue';
+  import { ref, watch } from 'vue';
   import { Menu } from '@ark-ui/vue/menu';
   import { ChevronDown, Plus, GripVertical, ChevronUp, Eye, Code } from 'lucide-vue-next';
 
@@ -248,8 +248,8 @@
       <button
         class="toolbar-btn"
         :class="{ active: isVisualMode }"
-        @click="toggleMode"
         :aria-label="isVisualMode ? 'Přepnout na markdown' : 'Přepnout na vizuální režim'"
+        @click="toggleMode"
       >
         <Eye
           v-if="!isVisualMode"
@@ -265,8 +265,8 @@
       <button
         v-if="isVisualMode"
         class="toolbar-btn add-section"
-        @click="addSection"
         aria-label="Přidat sekci"
+        @click="addSection"
       >
         <Plus :size="16" />
         <span>Přidat sekci</span>
@@ -331,10 +331,10 @@
           </div>
 
           <div class="section-header-right">
-            <button
+            <Button
               class="icon-btn"
-              @click="toggleCollapse(section.id)"
               :aria-label="section.collapsed ? 'Rozbalit' : 'Sbalit'"
+              @click="toggleCollapse(section.id)"
             >
               <ChevronUp
                 v-if="!section.collapsed"
@@ -344,14 +344,14 @@
                 v-else
                 :size="16"
               />
-            </button>
-            <button
+            </Button>
+            <Button
               class="icon-btn delete-btn"
-              @click="deleteSection(section.id)"
               aria-label="Smazat sekci"
+              @click="deleteSection(section.id)"
             >
               ✕
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -362,10 +362,10 @@
         >
           <textarea
             :value="section.text"
-            @input="updateSectionText(section.id, ($event.target as HTMLTextAreaElement).value)"
             class="section-textarea"
             placeholder="Text a akordy..."
             rows="4"
+            @input="updateSectionText(section.id, ($event.target as HTMLTextAreaElement).value)"
           />
         </div>
       </div>
@@ -378,10 +378,10 @@
     >
       <textarea
         v-model="rawMarkdown"
-        @input="emit('update:modelValue', rawMarkdown)"
         class="markdown-textarea"
         :placeholder="placeholder"
         rows="12"
+        @input="emit('update:modelValue', rawMarkdown)"
       />
     </div>
   </div>
