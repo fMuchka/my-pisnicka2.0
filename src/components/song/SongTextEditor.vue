@@ -154,10 +154,7 @@
     Object.keys(sectionTypes).forEach((type) => {
       const t = type as SectionType;
       const currentMax = counts[t];
-      // Can add next number or any number up to currentMax + 1
-      for (let i = 1; i <= currentMax + 1; i++) {
-        options.push({ type: t, number: i });
-      }
+      options.push({ type: t, number: currentMax + 1 });
     });
 
     return options;
