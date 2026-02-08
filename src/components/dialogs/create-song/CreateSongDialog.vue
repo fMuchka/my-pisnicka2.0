@@ -3,6 +3,7 @@
   import { Field } from '@ark-ui/vue';
   import { computed, ref, watch } from 'vue';
   import Button from '../../core/Button.vue';
+  import SongTextEditor from '../../song/SongTextEditor.vue';
 
   interface Props {
     open?: boolean;
@@ -144,14 +145,12 @@
             <!-- Text Field (Optional) -->
             <Field.Root class="field">
               <Field.Label class="field-label"> Text s akordy </Field.Label>
-              <Field.Textarea
+              <SongTextEditor
                 v-model="songText"
-                class="field-textarea"
-                placeholder="G                D                Am&#10;  Mama take this badge off of me&#10;G         D               C&#10;  I can't use it anymore"
-                rows="8"
+                placeholder="[Verse 1]&#10;G                D                Am&#10;  Mama take this badge off of me&#10;[Chorus]&#10;G         D               C&#10;  I can't use it anymore"
               />
               <Field.HelperText class="field-helper">
-                Volitelné - akordy nad textem nebo inline
+                Vytvořte sekce (Verse, Chorus, Bridge) a přidejte text s akordy
               </Field.HelperText>
             </Field.Root>
 

@@ -1,0 +1,593 @@
+<script setup lang="ts">
+  import { computed, ref, watch } from 'vue';
+  import { Menu } from '@ark-ui/vue/menu';
+  import { ChevronDown, Plus, GripVertical, ChevronUp, Eye, Code } from 'lucide-vue-next';
+
+  interface Props {
+    modelValue: string;
+    placeholder?: string;
+  }
+
+  interface Emits {
+    (e: 'update:modelValue', value: string): void;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    placeholder: 'Začněte psát text písně...',
+  });
+
+  const emit = defineEmits<Emits>();
+
+  // Toggle between visual and markdown mode
+  const isVisualMode = ref(true);
+
+  // Section type definitions with colors
+  const sectionTypes = {
+    verse: { label: 'Verse', color: '#7dd3fc', borderColor: '#0284c7' },
+    chorus: { label: 'Chorus', color: '#bef264', borderColor: '#65a30d' },
+    bridge: { label: 'Bridge', color: '#fdba74', borderColor: '#ea580c' },
+    intro: { label: 'Intro', color: '#c4b5fd', borderColor: '#7c3aed' },
+    outro: { label: 'Outro', color: '#fda4af', borderColor: '#e11d48' },
+  } as const;
+
+  type SectionType = keyof typeof sectionTypes;
+
+  interface Section {
+    id: string;
+    type: SectionType;
+    number: number;
+    text: string;
+    collapsed: boolean;
+  }
+
+  const sections = ref<Section[]>([]);
+  const draggedSection = ref<string | null>(null);
+
+  // Parse markdown to sections
+  function parseMarkdown(markdown: string): Section[] {
+    if (!markdown.trim()) return [];
+
+    const lines = markdown.split('\n');
+    const parsed: Section[] = [];
+    let currentSection: Section | null = null;
+    let sectionCounter = 0;
+
+    for (const line of lines) {
+      const match = line.match(/^\[([A-Za-z]+)\s*(\d+)?\]$/);
+      if (match) {
+        // Save previous section if exists
+        if (currentSection) {
+          parsed.push(currentSection);
+        }
+
+        const type = match[1]?.toLowerCase() as SectionType;
+        const number = match[2] ? parseInt(match[2], 10) : 1;
+
+        currentSection = {
+          id: `section-${sectionCounter++}`,
+          type: type in sectionTypes ? type : 'verse',
+          number,
+          text: '',
+          collapsed: false,
+        };
+      } else if (currentSection) {
+        currentSection.text += (currentSection.text ? '\n' : '') + line;
+      }
+    }
+
+    // Add last section
+    if (currentSection) {
+      parsed.push(currentSection);
+    }
+
+    return parsed;
+  }
+
+  // Serialize sections back to markdown
+  function serializeToMarkdown(secs: Section[]): string {
+    return secs
+      .map((section) => {
+        const header = `[${sectionTypes[section.type].label} ${section.number}]`;
+        return `${header}\n${section.text}`;
+      })
+      .join('\n\n');
+  }
+
+  // Initialize sections from modelValue
+  watch(
+    () => props.modelValue,
+    (newValue) => {
+      if (!isVisualMode.value) return; // Don't parse when in markdown mode
+      sections.value = parseMarkdown(newValue);
+    },
+    { immediate: true }
+  );
+
+  // Emit updated markdown when sections change
+  function updateMarkdown() {
+    const markdown = serializeToMarkdown(sections.value);
+    emit('update:modelValue', markdown);
+  }
+
+  // Raw markdown editing
+  const rawMarkdown = ref(props.modelValue);
+  watch(
+    () => props.modelValue,
+    (newValue) => {
+      rawMarkdown.value = newValue;
+    }
+  );
+
+  function toggleMode() {
+    if (isVisualMode.value) {
+      // Switching to markdown mode
+      rawMarkdown.value = serializeToMarkdown(sections.value);
+    } else {
+      // Switching to visual mode
+      emit('update:modelValue', rawMarkdown.value);
+      sections.value = parseMarkdown(rawMarkdown.value);
+    }
+    isVisualMode.value = !isVisualMode.value;
+  }
+
+  // Get valid section options based on existing sections
+  function getValidSectionOptions(
+    excludeId?: string
+  ): Array<{ type: SectionType; number: number }> {
+    const options: Array<{ type: SectionType; number: number }> = [];
+    const counts: Record<SectionType, number> = {
+      verse: 0,
+      chorus: 0,
+      bridge: 0,
+      intro: 0,
+      outro: 0,
+    };
+
+    // Count existing sections
+    sections.value.forEach((section) => {
+      if (section.id !== excludeId) {
+        counts[section.type] = Math.max(counts[section.type], section.number);
+      }
+    });
+
+    // Generate valid options
+    Object.keys(sectionTypes).forEach((type) => {
+      const t = type as SectionType;
+      const currentMax = counts[t];
+      // Can add next number or any number up to currentMax + 1
+      for (let i = 1; i <= currentMax + 1; i++) {
+        options.push({ type: t, number: i });
+      }
+    });
+
+    return options;
+  }
+
+  // Add new section
+  function addSection() {
+    const validOptions = getValidSectionOptions();
+    const firstOption = validOptions[0];
+    if (!firstOption) return;
+
+    const newSection: Section = {
+      id: `section-${Date.now()}`,
+      type: firstOption.type,
+      number: firstOption.number,
+      text: '',
+      collapsed: false,
+    };
+
+    sections.value.push(newSection);
+    updateMarkdown();
+  }
+
+  // Change section type
+  function changeSectionType(sectionId: string, type: SectionType, number: number) {
+    const section = sections.value.find((s) => s.id === sectionId);
+    if (section) {
+      section.type = type;
+      section.number = number;
+      updateMarkdown();
+    }
+  }
+
+  // Toggle section collapse
+  function toggleCollapse(sectionId: string) {
+    const section = sections.value.find((s) => s.id === sectionId);
+    if (section) {
+      section.collapsed = !section.collapsed;
+    }
+  }
+
+  // Drag & drop handlers
+  function onDragStart(sectionId: string) {
+    draggedSection.value = sectionId;
+  }
+
+  function onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  function onDrop(targetId: string) {
+    if (!draggedSection.value || draggedSection.value === targetId) return;
+
+    const draggedIdx = sections.value.findIndex((s) => s.id === draggedSection.value);
+    const targetIdx = sections.value.findIndex((s) => s.id === targetId);
+
+    if (draggedIdx === -1 || targetIdx === -1) return;
+
+    const [removed] = sections.value.splice(draggedIdx, 1);
+    if (removed) {
+      sections.value.splice(targetIdx, 0, removed);
+    }
+
+    draggedSection.value = null;
+    updateMarkdown();
+  }
+
+  // Update section text
+  function updateSectionText(sectionId: string, text: string) {
+    const section = sections.value.find((s) => s.id === sectionId);
+    if (section) {
+      section.text = text;
+      updateMarkdown();
+    }
+  }
+
+  // Delete section
+  function deleteSection(sectionId: string) {
+    sections.value = sections.value.filter((s) => s.id !== sectionId);
+    updateMarkdown();
+  }
+</script>
+
+<template>
+  <div class="song-text-editor">
+    <!-- Toolbar -->
+    <div class="editor-toolbar">
+      <button
+        class="toolbar-btn"
+        :class="{ active: isVisualMode }"
+        @click="toggleMode"
+        :aria-label="isVisualMode ? 'Přepnout na markdown' : 'Přepnout na vizuální režim'"
+      >
+        <Eye
+          v-if="!isVisualMode"
+          :size="16"
+        />
+        <Code
+          v-else
+          :size="16"
+        />
+        <span>{{ isVisualMode ? 'Markdown' : 'Vizuální' }}</span>
+      </button>
+
+      <button
+        v-if="isVisualMode"
+        class="toolbar-btn add-section"
+        @click="addSection"
+        aria-label="Přidat sekci"
+      >
+        <Plus :size="16" />
+        <span>Přidat sekci</span>
+      </button>
+    </div>
+
+    <!-- Visual Mode -->
+    <div
+      v-if="isVisualMode"
+      class="visual-editor"
+    >
+      <div
+        v-if="sections.length === 0"
+        class="empty-state"
+      >
+        <p>Žádné sekce. Klikněte na "Přidat sekci" pro začátek.</p>
+      </div>
+
+      <div
+        v-for="section in sections"
+        :key="section.id"
+        class="section-block"
+        :style="{
+          backgroundColor: sectionTypes[section.type].color,
+          borderColor: sectionTypes[section.type].borderColor,
+        }"
+        draggable="true"
+        @dragstart="onDragStart(section.id)"
+        @dragover="onDragOver"
+        @drop="onDrop(section.id)"
+      >
+        <!-- Section Header -->
+        <div class="section-header">
+          <div class="section-header-left">
+            <GripVertical
+              :size="20"
+              class="drag-handle"
+            />
+
+            <Menu.Root>
+              <Menu.Trigger class="section-title-btn">
+                <span class="section-title">
+                  {{ sectionTypes[section.type].label }} {{ section.number }}
+                </span>
+                <ChevronDown :size="16" />
+              </Menu.Trigger>
+
+              <Menu.Positioner>
+                <Menu.Content class="menu-content">
+                  <Menu.Item
+                    v-for="option in getValidSectionOptions(section.id)"
+                    :key="`${option.type}-${option.number}`"
+                    :value="`${option.type}-${option.number}`"
+                    class="menu-item"
+                    @select="() => changeSectionType(section.id, option.type, option.number)"
+                  >
+                    {{ sectionTypes[option.type].label }} {{ option.number }}
+                  </Menu.Item>
+                </Menu.Content>
+              </Menu.Positioner>
+            </Menu.Root>
+          </div>
+
+          <div class="section-header-right">
+            <button
+              class="icon-btn"
+              @click="toggleCollapse(section.id)"
+              :aria-label="section.collapsed ? 'Rozbalit' : 'Sbalit'"
+            >
+              <ChevronUp
+                v-if="!section.collapsed"
+                :size="16"
+              />
+              <ChevronDown
+                v-else
+                :size="16"
+              />
+            </button>
+            <button
+              class="icon-btn delete-btn"
+              @click="deleteSection(section.id)"
+              aria-label="Smazat sekci"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <!-- Section Content -->
+        <div
+          v-if="!section.collapsed"
+          class="section-content"
+        >
+          <textarea
+            :value="section.text"
+            @input="updateSectionText(section.id, ($event.target as HTMLTextAreaElement).value)"
+            class="section-textarea"
+            placeholder="Text a akordy..."
+            rows="4"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Markdown Mode -->
+    <div
+      v-else
+      class="markdown-editor"
+    >
+      <textarea
+        v-model="rawMarkdown"
+        @input="emit('update:modelValue', rawMarkdown)"
+        class="markdown-textarea"
+        :placeholder="placeholder"
+        rows="12"
+      />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+  .song-text-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+  }
+
+  /* Toolbar */
+  .editor-toolbar {
+    display: flex;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+  }
+
+  .toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+  }
+
+  .toolbar-btn:hover {
+    background-color: var(--bg-secondary);
+  }
+
+  .toolbar-btn.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+  .toolbar-btn.add-section {
+    margin-left: auto;
+  }
+
+  /* Visual Editor */
+  .visual-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .empty-state {
+    padding: var(--space-lg);
+    text-align: center;
+    color: var(--text-secondary);
+    border: 2px dashed var(--border-primary);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Section Block */
+  .section-block {
+    border: 3px solid;
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    cursor: move;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .section-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+  }
+
+  .section-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .section-header-right {
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  .drag-handle {
+    cursor: grab;
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .section-title-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.125rem;
+    transition: background-color 0.2s;
+  }
+
+  .section-title-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .section-title {
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+
+  .icon-btn {
+    padding: var(--space-xs);
+    background: rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+  }
+
+  .icon-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .delete-btn:hover {
+    background: rgba(220, 38, 38, 0.2);
+    color: #dc2626;
+  }
+
+  /* Section Content */
+  .section-content {
+    margin-top: var(--space-sm);
+  }
+
+  .section-textarea {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+    font-size: 1rem;
+    resize: vertical;
+    background: rgba(255, 255, 255, 0.5);
+    min-height: 80px;
+  }
+
+  .section-textarea:focus {
+    outline: 2px solid rgba(0, 0, 0, 0.3);
+    outline-offset: 1px;
+  }
+
+  /* Markdown Editor */
+  .markdown-textarea {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+    font-size: 1rem;
+    resize: vertical;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 300px;
+  }
+
+  .markdown-textarea:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  /* Menu Dropdown */
+  .menu-content {
+    background: white;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    z-index: 1000;
+  }
+
+  .menu-item {
+    padding: var(--space-xs) var(--space-sm);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s;
+  }
+
+  .menu-item:hover {
+    background-color: var(--bg-secondary);
+  }
+</style>
