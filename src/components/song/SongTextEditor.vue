@@ -1,7 +1,21 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue';
+  import { ref, computed, watch } from 'vue';
   import { Menu } from '@ark-ui/vue/menu';
   import { ChevronDown, Plus, GripVertical, ChevronUp, Eye, Code } from 'lucide-vue-next';
+  import { useSortable } from '@vueuse/integrations/useSortable';
+  import Button from '../core/Button.vue';
+  import type { LucideProps } from 'lucide-vue-next';
+  import type { EmitsOptions, FunctionalComponent } from 'vue';
+
+  type ButtonIcon = {
+    position: 'prepend' | 'append';
+    component: FunctionalComponent<
+      LucideProps,
+      Record<string, unknown[]>,
+      Record<string, unknown>,
+      EmitsOptions
+    >;
+  };
 
   interface Props {
     modelValue: string;
@@ -20,6 +34,17 @@
 
   // Toggle between visual and markdown mode
   const isVisualMode = ref(true);
+
+  // Button icons
+  const modeToggleIcon = computed<ButtonIcon>(() => ({
+    position: 'prepend',
+    component: isVisualMode.value ? Code : Eye,
+  }));
+
+  const addSectionIcon = computed<ButtonIcon>(() => ({
+    position: 'prepend',
+    component: Plus,
+  }));
 
   // Section type definitions with colors
   const sectionTypes = {
@@ -41,7 +66,7 @@
   }
 
   const sections = ref<Section[]>([]);
-  const draggedSection = ref<string | null>(null);
+  const sectionsListRef = ref<HTMLElement | null>(null);
 
   // Parse markdown to sections
   function parseMarkdown(markdown: string): Section[] {
@@ -196,31 +221,16 @@
     }
   }
 
-  // Drag & drop handlers
-  function onDragStart(sectionId: string) {
-    draggedSection.value = sectionId;
-  }
-
-  function onDragOver(event: DragEvent) {
-    event.preventDefault();
-  }
-
-  function onDrop(targetId: string) {
-    if (!draggedSection.value || draggedSection.value === targetId) return;
-
-    const draggedIdx = sections.value.findIndex((s) => s.id === draggedSection.value);
-    const targetIdx = sections.value.findIndex((s) => s.id === targetId);
-
-    if (draggedIdx === -1 || targetIdx === -1) return;
-
-    const [removed] = sections.value.splice(draggedIdx, 1);
-    if (removed) {
-      sections.value.splice(targetIdx, 0, removed);
-    }
-
-    draggedSection.value = null;
-    updateMarkdown();
-  }
+  useSortable(sectionsListRef, sections, {
+    animation: 180,
+    handle: '.drag-handle',
+    ghostClass: 'drag-ghost',
+    chosenClass: 'drag-chosen',
+    dragClass: 'drag-dragging',
+    fallbackOnBody: true,
+    swapThreshold: 0.65,
+    onEnd: () => updateMarkdown(),
+  });
 
   // Update section text
   function updateSectionText(sectionId: string, text: string) {
@@ -242,37 +252,31 @@
   <div class="song-text-editor">
     <!-- Toolbar -->
     <div class="editor-toolbar">
-      <button
-        class="toolbar-btn"
-        :class="{ active: isVisualMode }"
+      <Button
+        color-variation="Primary"
+        style-variation="Text"
         :aria-label="isVisualMode ? 'Přepnout na markdown' : 'Přepnout na vizuální režim'"
+        :label="isVisualMode ? 'Markdown' : 'Vizuální'"
+        :icon="modeToggleIcon"
         @click="toggleMode"
-      >
-        <Eye
-          v-if="!isVisualMode"
-          :size="16"
-        />
-        <Code
-          v-else
-          :size="16"
-        />
-        <span>{{ isVisualMode ? 'Markdown' : 'Vizuální' }}</span>
-      </button>
+      />
 
-      <button
+      <Button
         v-if="isVisualMode"
-        class="toolbar-btn add-section"
+        color-variation="Primary"
+        style-variation="Text"
+        class="add-section-btn"
         aria-label="Přidat sekci"
+        :label="'Přidat sekci'"
+        :icon="addSectionIcon"
         @click="addSection"
-      >
-        <Plus :size="16" />
-        <span>Přidat sekci</span>
-      </button>
+      />
     </div>
 
     <!-- Visual Mode -->
     <div
       v-if="isVisualMode"
+      ref="sectionsListRef"
       class="visual-editor"
     >
       <div
@@ -286,14 +290,11 @@
         v-for="section in sections"
         :key="section.id"
         class="section-block"
+        :data-id="section.id"
         :style="{
           backgroundColor: sectionTypes[section.type].color,
           borderColor: sectionTypes[section.type].borderColor,
         }"
-        draggable="true"
-        @dragstart="onDragStart(section.id)"
-        @dragover="onDragOver"
-        @drop="onDrop(section.id)"
       >
         <!-- Section Header -->
         <div class="section-header">
@@ -395,36 +396,14 @@
   /* Toolbar */
   .editor-toolbar {
     display: flex;
-    gap: var(--space-xs);
-    padding: var(--space-xs);
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
     background-color: var(--bg-secondary);
     border-radius: var(--radius-sm);
   }
 
-  .toolbar-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-sm);
-    border: 1px solid var(--border-primary);
-    background-color: var(--bg-primary);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-  }
-
-  .toolbar-btn:hover {
-    background-color: var(--bg-secondary);
-  }
-
-  .toolbar-btn.active {
-    background-color: var(--color-primary);
-    color: white;
-    border-color: var(--color-primary);
-  }
-
-  .toolbar-btn.add-section {
+  .add-section-btn {
     margin-left: auto;
   }
 
@@ -448,7 +427,6 @@
     border: 3px solid;
     border-radius: var(--radius-md);
     padding: var(--space-md);
-    cursor: move;
     transition:
       transform 0.2s,
       box-shadow 0.2s;
@@ -480,6 +458,24 @@
   .drag-handle {
     cursor: grab;
     color: rgba(0, 0, 0, 0.4);
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .drag-ghost {
+    opacity: 0.5;
+    box-shadow: none;
+    filter: grayscale(0.1);
+  }
+
+  .drag-chosen {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .drag-dragging {
+    cursor: grabbing;
   }
 
   .section-title-btn {
