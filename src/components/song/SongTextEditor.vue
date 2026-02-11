@@ -49,12 +49,12 @@
   // Section type definitions with colors (CSS variables)
   const sectionTypes = {
     verse: {
-      label: 'Sloka',
+      label: 'Verse',
       color: 'var(--section-verse-bg)',
       borderColor: 'var(--section-verse-border)',
     },
     chorus: {
-      label: 'Refrén',
+      label: 'Chorus',
       color: 'var(--section-chorus-bg)',
       borderColor: 'var(--section-chorus-border)',
     },
