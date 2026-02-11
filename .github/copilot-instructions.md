@@ -100,6 +100,4 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 
 See [project_history.md](project_history.md) for feature IDs, decisions, and milestones (e.g., `FEAT-AUTH-ITER1`, `FEAT-SETUP`).
 
-## Agent Communication
-
-1. Canary String - Each response is started using **CANARY_STRING** followed by " - ". This serves to confirm state of context. Character for this instruction file in **CANARY_STRING** is "🎵".
+Character for this instruction file in **CANARY_STRING** is "🎵".
