@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { Tooltip } from '@ark-ui/vue/tooltip';
   import { Plus, UserPlus } from 'lucide-vue-next';
-  import { onMounted, ref } from 'vue';
+  import { onMounted, ref, watch } from 'vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import Button from '../components/core/Button.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
@@ -29,6 +29,24 @@
 
   const latestSessions = ref<Session[]>([]);
   const latestSongs = ref<Song[]>([]);
+
+  const displaySongs = ref<{ [key: string]: Song[] }>({});
+
+  watch(latestSongs, (songs) => {
+    if (songs.length > 0) {
+      const temp: { [key: string]: Song[] } = {};
+      latestSongs.value.forEach((song) => {
+        const { artist } = song;
+        if (temp[artist] == null) {
+          temp[artist] = [];
+        }
+
+        temp[artist].push(song);
+      });
+
+      displaySongs.value = temp;
+    }
+  });
 
   onMounted(async () => {
     latestSessions.value = await fetchLatestSessions(user.value?.uid ?? '');
@@ -154,17 +172,19 @@
       <div class="song-tree">
         <!-- Artist Group 1 -->
         <div
-          v-for="item in latestSongs"
-          :key="item.id"
+          v-for="(item, key) of displaySongs"
+          :key="key"
           class="artist-group"
         >
-          <div class="artist-name">{{ item.artist }}</div>
+          <div class="artist-name">{{ key }}</div>
           <div class="songs-in-artist">
-            <a
-              href="#"
+            <div
+              v-for="song in item"
+              :key="song.id"
               class="song-item"
-              >{{ item.title }}</a
             >
+              {{ song.title }}
+            </div>
           </div>
         </div>
       </div>
