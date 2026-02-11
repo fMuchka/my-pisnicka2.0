@@ -18,6 +18,16 @@
     --text-chord: #292524;
     --accent: #dc2626;
     --accent-light: #ef4444;
+    --section-verse-bg: #e7ece3;
+    --section-verse-border: #8ea27f;
+    --section-chorus-bg: #f1e6d6;
+    --section-chorus-border: #c19b6c;
+    --section-bridge-bg: #efe1d7;
+    --section-bridge-border: #b77a64;
+    --section-intro-bg: #e3e8ee;
+    --section-intro-border: #7c8ea6;
+    --section-outro-bg: #f1dfe2;
+    --section-outro-border: #b36b72;
 
     /* Typography */
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -54,6 +64,16 @@
     --text-chord: #e7e5e4;
     --accent: #ef4444;
     --accent-light: #f87171;
+    --section-verse-bg: #2b312a;
+    --section-verse-border: #7c8f6f;
+    --section-chorus-bg: #3a3328;
+    --section-chorus-border: #b58a56;
+    --section-bridge-bg: #3b2f2a;
+    --section-bridge-border: #a96f5b;
+    --section-intro-bg: #2c3138;
+    --section-intro-border: #6f829b;
+    --section-outro-bg: #3a2c2f;
+    --section-outro-border: #a36067;
   }
 
   * {

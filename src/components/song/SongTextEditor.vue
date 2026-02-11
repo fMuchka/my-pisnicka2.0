@@ -46,13 +46,33 @@
     component: Plus,
   }));
 
-  // Section type definitions with colors
+  // Section type definitions with colors (CSS variables)
   const sectionTypes = {
-    verse: { label: 'Verse', color: '#7dd3fc', borderColor: '#0284c7' },
-    chorus: { label: 'Chorus', color: '#bef264', borderColor: '#65a30d' },
-    bridge: { label: 'Bridge', color: '#fdba74', borderColor: '#ea580c' },
-    intro: { label: 'Intro', color: '#c4b5fd', borderColor: '#7c3aed' },
-    outro: { label: 'Outro', color: '#fda4af', borderColor: '#e11d48' },
+    verse: {
+      label: 'Verse',
+      color: 'var(--section-verse-bg)',
+      borderColor: 'var(--section-verse-border)',
+    },
+    chorus: {
+      label: 'Chorus',
+      color: 'var(--section-chorus-bg)',
+      borderColor: 'var(--section-chorus-border)',
+    },
+    bridge: {
+      label: 'Bridge',
+      color: 'var(--section-bridge-bg)',
+      borderColor: 'var(--section-bridge-border)',
+    },
+    intro: {
+      label: 'Intro',
+      color: 'var(--section-intro-bg)',
+      borderColor: 'var(--section-intro-border)',
+    },
+    outro: {
+      label: 'Outro',
+      color: 'var(--section-outro-bg)',
+      borderColor: 'var(--section-outro-border)',
+    },
   } as const;
 
   type SectionType = keyof typeof sectionTypes;
