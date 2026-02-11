@@ -11,6 +11,7 @@
   import { formatSessionAge } from '../lib/formatter';
   import { useRouter } from 'vue-router';
   import Routes from '../router/Routes';
+  import { fetchHomeSongs, type Song } from '../lib/song';
 
   const isCreateDialogOpen = ref(false);
   const isCreateSongDialogOpen = ref(false);
@@ -27,9 +28,11 @@
   const router = useRouter();
 
   const latestSessions = ref<Session[]>([]);
+  const latestSongs = ref<Song[]>([]);
 
   onMounted(async () => {
     latestSessions.value = await fetchLatestSessions(user.value?.uid ?? '');
+    latestSongs.value = await fetchHomeSongs();
   });
 
   const openSession = (session: Session) => {
@@ -150,52 +153,17 @@
 
       <div class="song-tree">
         <!-- Artist Group 1 -->
-        <div class="artist-group">
-          <div class="artist-name">Umělec A</div>
+        <div
+          v-for="item in latestSongs"
+          :key="item.id"
+          class="artist-group"
+        >
+          <div class="artist-name">{{ item.artist }}</div>
           <div class="songs-in-artist">
             <a
               href="#"
               class="song-item"
-              >Písnička 1</a
-            >
-            <a
-              href="#"
-              class="song-item"
-              >Písnička 2</a
-            >
-          </div>
-        </div>
-
-        <!-- Artist Group 2 -->
-        <div class="artist-group">
-          <div class="artist-name">Umělec B</div>
-          <div class="songs-in-artist">
-            <a
-              href="#"
-              class="song-item"
-              >Písnička 3</a
-            >
-            <a
-              href="#"
-              class="song-item"
-              >Písnička 4</a
-            >
-          </div>
-        </div>
-
-        <!-- Artist Group 3 -->
-        <div class="artist-group">
-          <div class="artist-name">Umělec C</div>
-          <div class="songs-in-artist">
-            <a
-              href="#"
-              class="song-item"
-              >Písnička 5</a
-            >
-            <a
-              href="#"
-              class="song-item"
-              >Písnička 6</a
+              >{{ item.title }}</a
             >
           </div>
         </div>
