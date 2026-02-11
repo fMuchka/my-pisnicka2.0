@@ -97,83 +97,73 @@
           data-testid="create-song-dialog"
         >
           <Dialog.Title class="dialog-title">Vytvořit píseň</Dialog.Title>
-          <Dialog.Description class="dialog-description">
-            Zadejte název písně, umělce a volitelně text s akordy.
-          </Dialog.Description>
 
-          <div class="form-fields">
-            <!-- Title Field -->
-            <Field.Root class="field">
-              <Field.Label class="field-label">
-                Název písně
-                <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
-              </Field.Label>
-              <Field.Input
-                v-model="songTitle"
-                class="field-input"
-                placeholder="Např. Knockin' on Heaven's Door"
-                :aria-invalid="!isTitleValid && songTitle.length > 0"
-              />
+          <div class="dialog-body">
+            <Dialog.Description class="dialog-description">
+              Zadejte název písně, umělce a volitelně text s akordy.
+            </Dialog.Description>
+
+            <div class="form-fields">
+              <!-- Title Field -->
+              <Field.Root class="field">
+                <Field.Label class="field-label">
+                  Název písně
+                  <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
+                </Field.Label>
+                <Field.Input
+                  v-model="songTitle"
+                  class="field-input"
+                  placeholder="Např. Knockin' on Heaven's Door"
+                  :aria-invalid="!isTitleValid && songTitle.length > 0"
+                />
+                <Field.ErrorText
+                  v-if="!isTitleValid && songTitle.length > 0"
+                  class="field-error"
+                >
+                  Název písně je povinný
+                </Field.ErrorText>
+              </Field.Root>
+
+              <!-- Artist Field -->
+              <Field.Root class="field">
+                <Field.Label class="field-label">
+                  Umělec
+                  <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
+                </Field.Label>
+                <Field.Input
+                  v-model="songArtist"
+                  class="field-input"
+                  placeholder="Např. Bob Dylan"
+                  :aria-invalid="!isArtistValid && songArtist.length > 0"
+                />
+                <Field.ErrorText
+                  v-if="!isArtistValid && songArtist.length > 0"
+                  class="field-error"
+                >
+                  Umělec je povinný
+                </Field.ErrorText>
+              </Field.Root>
+
+              <!-- Text Field (Optional) -->
+              <Field.Root class="field">
+                <Field.Label class="field-label"> Text s akordy </Field.Label>
+                <SongTextEditor
+                  v-model="songText"
+                  placeholder="[Verse 1]&#10;G                D                Am&#10;  Mama take this badge off of me&#10;[Chorus]&#10;G         D               C&#10;  I can't use it anymore"
+                />
+                <Field.HelperText class="field-helper">
+                  Vytvořte sekce (Verse, Chorus, Bridge) a přidejte text s akordy
+                </Field.HelperText>
+              </Field.Root>
+
+              <!-- General Error -->
               <Field.ErrorText
-                v-if="!isTitleValid && songTitle.length > 0"
+                v-if="createError"
                 class="field-error"
               >
-                Název písně je povinný
+                {{ createError }}
               </Field.ErrorText>
-            </Field.Root>
-
-            <!-- Artist Field -->
-            <Field.Root class="field">
-              <Field.Label class="field-label">
-                Umělec
-                <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
-              </Field.Label>
-              <Field.Input
-                v-model="songArtist"
-                class="field-input"
-                placeholder="Např. Bob Dylan"
-                :aria-invalid="!isArtistValid && songArtist.length > 0"
-              />
-              <Field.ErrorText
-                v-if="!isArtistValid && songArtist.length > 0"
-                class="field-error"
-              >
-                Umělec je povinný
-              </Field.ErrorText>
-            </Field.Root>
-
-            <!-- Text Field (Optional) -->
-            <Field.Root class="field">
-              <Field.Label class="field-label"> Text s akordy </Field.Label>
-              <SongTextEditor
-                v-model="songText"
-                placeholder="[Verse 1]&#10;G                D                Am&#10;  Mama take this badge off of me&#10;[Chorus]&#10;G         D               C&#10;  I can't use it anymore"
-              />
-              <Field.HelperText class="field-helper">
-                Vytvořte sekce (Verse, Chorus, Bridge) a přidejte text s akordy
-              </Field.HelperText>
-            </Field.Root>
-
-            <!-- Chords List Field (Optional) -->
-            <Field.Root class="field">
-              <Field.Label class="field-label"> Seznam akordů </Field.Label>
-              <Field.Input
-                v-model="songChords"
-                class="field-input"
-                placeholder="G D Am C"
-              />
-              <Field.HelperText class="field-helper">
-                Volitelné - oddělené mezerami (např. G D Am C)
-              </Field.HelperText>
-            </Field.Root>
-
-            <!-- General Error -->
-            <Field.ErrorText
-              v-if="createError"
-              class="field-error"
-            >
-              {{ createError }}
-            </Field.ErrorText>
+            </div>
           </div>
 
           <div class="dialog-actions">
@@ -221,17 +211,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: var(--space-md);
     z-index: 1000;
   }
 
   .dialog-content {
     background-color: var(--bg-primary);
     border-radius: var(--radius-md);
-    padding: var(--space-lg);
-    max-width: 500px;
+    padding: var(--space-md);
+    max-width: 480px;
     width: 90%;
+    max-height: 85vh;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     position: relative;
+    overflow-y: auto;
   }
 
   .dialog-title {
@@ -244,6 +237,11 @@
     font-size: 0.875rem;
     color: var(--text-secondary);
     margin-bottom: var(--space-lg);
+  }
+
+  .dialog-body {
+    overflow-y: auto;
+    min-height: 0;
   }
 
   .dialog-close {

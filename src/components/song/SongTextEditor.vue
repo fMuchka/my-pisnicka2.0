@@ -417,7 +417,7 @@
     display: flex;
     justify-content: space-between;
     gap: var(--space-sm);
-    padding: var(--space-sm);
+    padding: var(--space-xs);
     background-color: var(--bg-secondary);
     border-radius: var(--radius-sm);
   }
@@ -430,6 +430,8 @@
   .visual-editor {
     display: flex;
     flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
     gap: var(--space-md);
   }
 
