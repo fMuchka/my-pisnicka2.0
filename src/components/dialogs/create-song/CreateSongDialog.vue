@@ -4,6 +4,7 @@
   import { computed, ref, watch } from 'vue';
   import Button from '../../core/Button.vue';
   import SongTextEditor from '../../song/SongTextEditor.vue';
+  import { createSong } from '../../../lib/song';
 
   interface Props {
     open?: boolean;
@@ -63,23 +64,24 @@
     createError.value = null;
 
     try {
-      // Mock: Just simulate creation for now
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       const chordsList = songChords.value
         .trim()
         .split(/[\s,]+/)
         .filter((c) => c.length > 0);
 
-      console.log('Creating song:', {
+      const createdSong = await createSong({
         title: trimmedTitle.value,
         artist: trimmedArtist.value,
         text: songText.value.trim() || undefined,
         chords: chordsList.length > 0 ? chordsList : [],
       });
 
+      console.log(createdSong);
+
       isOpen.value = false;
     } catch (_error) {
+      console.log(_error);
+
       createError.value = 'Nepodařilo se vytvořit píseň. Zkus to prosím znovu.';
     } finally {
       isCreating.value = false;

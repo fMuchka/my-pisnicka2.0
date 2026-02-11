@@ -1,4 +1,4 @@
-import { collection, query, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, Timestamp, addDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 /**
@@ -19,6 +19,13 @@ export interface Song {
   text?: string; // WYSIWYG song text with chord notation (chords above lyrics or inline)
   chords?: string[]; // Array of unique chords (auto-extracted from text, can be manually edited)
   createdAt?: Timestamp; // Firestore Timestamp
+}
+
+export interface CreateSongInput {
+  title: string;
+  artist: string;
+  text?: string;
+  chords?: string[];
 }
 
 /**
@@ -84,3 +91,20 @@ export async function fetchHomeSongs(): Promise<Song[]> {
 
   return selectHomeSongs(allSongs);
 }
+
+export const createSong = async (input: CreateSongInput): Promise<Song> => {
+  const songData: Omit<Song, 'id'> = {
+    title: input.title,
+    artist: input.artist,
+    chords: input.chords,
+    text: input.text,
+    createdAt: Timestamp.now(),
+  };
+
+  const songRef = await addDoc(collection(db, 'songs'), songData);
+
+  return {
+    id: songRef.id,
+    ...songData,
+  };
+};
