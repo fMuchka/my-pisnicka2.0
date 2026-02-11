@@ -74,7 +74,7 @@
 
       isOpen.value = false;
       await router.push({ path: Routes.Session, query: { sessionId: created.id } });
-    } catch (error) {
+    } catch (_error) {
       createError.value = 'Nepodařilo se vytvořit relaci. Zkus to prosím znovu.';
     } finally {
       isCreating.value = false;
