@@ -1,11 +1,9 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { getDocs, Timestamp } from 'firebase/firestore';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   joinSession as rawJoinSession,
   type JoinSessionResult,
   fetchLatestSessions,
   createSession,
-  type Session,
 } from '../session';
 
 // Mock Firestore SDK used by session implementation
@@ -100,7 +98,7 @@ describe('session: joinSession', () => {
     expect(res.errorCode).toBe('firestore-error');
   });
 
-  it.each([['123'], ['ABCD'], ['1Q2B']])(
+  it.each([['123'], ['ABCD'], ['1Q2B'], [''], ['12345']])(
     'returns invalid-format when pin is not 4 digit number',
     async (input) => {
       const res = await joinSession(input);
@@ -228,6 +226,43 @@ describe('session: fetchLatestSessions', () => {
     expect(result[1]?.id).toBe('session-old');
   });
 
+  it('sorts by nanoseconds when seconds are identical', async () => {
+    const session1 = {
+      id: 'session-1',
+      data: () => ({
+        name: 'Session 1',
+        hostId: 'user-123',
+        hostDisplayName: 'Test User',
+        isActive: true,
+        pin: '1111',
+        joinedBy: ['user-123'],
+        createdAt: { seconds: 1706745600, nanoseconds: 500000000 },
+      }),
+    };
+
+    const session2 = {
+      id: 'session-2',
+      data: () => ({
+        name: 'Session 2',
+        hostId: 'user-123',
+        hostDisplayName: 'Test User',
+        isActive: true,
+        pin: '2222',
+        joinedBy: ['user-123'],
+        createdAt: { seconds: 1706745600, nanoseconds: 800000000 },
+      }),
+    };
+
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [session1, session2] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
+
+    const result = await fetchLatestSessions('user-123');
+
+    // Session 2 has higher nanoseconds, should appear first
+    expect(result[0]?.id).toBe('session-2');
+    expect(result[1]?.id).toBe('session-1');
+  });
+
   it('limits result to 3 sessions', async () => {
     const sessions = Array.from({ length: 5 }, (_, i) => ({
       id: `session-${i}`,
@@ -248,6 +283,100 @@ describe('session: fetchLatestSessions', () => {
     const result = await fetchLatestSessions('user-123');
 
     expect(result).toHaveLength(3);
+  });
+
+  it('limits to 3 when merging 6 distinct sessions', async () => {
+    // Mock 3 hosted sessions
+    const hostedSessions = [
+      {
+        id: 'session-h1',
+        data: () => ({
+          name: 'Hosted 1',
+          hostId: 'user-123',
+          hostDisplayName: 'Test User',
+          isActive: true,
+          pin: '0001',
+          joinedBy: ['user-123'],
+          createdAt: { seconds: 1706745600, nanoseconds: 0 },
+        }),
+      },
+      {
+        id: 'session-h2',
+        data: () => ({
+          name: 'Hosted 2',
+          hostId: 'user-123',
+          hostDisplayName: 'Test User',
+          isActive: true,
+          pin: '0002',
+          joinedBy: ['user-123'],
+          createdAt: { seconds: 1706745500, nanoseconds: 0 },
+        }),
+      },
+      {
+        id: 'session-h3',
+        data: () => ({
+          name: 'Hosted 3',
+          hostId: 'user-123',
+          hostDisplayName: 'Test User',
+          isActive: true,
+          pin: '0003',
+          joinedBy: ['user-123'],
+          createdAt: { seconds: 1706745400, nanoseconds: 0 },
+        }),
+      },
+    ];
+
+    // Mock 3 joined sessions (different IDs, older timestamps)
+    const joinedSessions = [
+      {
+        id: 'session-j1',
+        data: () => ({
+          name: 'Joined 1',
+          hostId: 'other-host',
+          hostDisplayName: 'Other Host',
+          isActive: true,
+          pin: '0004',
+          joinedBy: ['user-123', 'other-host'],
+          createdAt: { seconds: 1706745300, nanoseconds: 0 },
+        }),
+      },
+      {
+        id: 'session-j2',
+        data: () => ({
+          name: 'Joined 2',
+          hostId: 'other-host',
+          hostDisplayName: 'Other Host',
+          isActive: true,
+          pin: '0005',
+          joinedBy: ['user-123', 'other-host'],
+          createdAt: { seconds: 1706745200, nanoseconds: 0 },
+        }),
+      },
+      {
+        id: 'session-j3',
+        data: () => ({
+          name: 'Joined 3',
+          hostId: 'other-host',
+          hostDisplayName: 'Other Host',
+          isActive: true,
+          pin: '0006',
+          joinedBy: ['user-123', 'other-host'],
+          createdAt: { seconds: 1706745100, nanoseconds: 0 },
+        }),
+      },
+    ];
+
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: hostedSessions });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: joinedSessions });
+
+    const result = await fetchLatestSessions('user-123');
+
+    // Should limit to 3 newest sessions
+    expect(result).toHaveLength(3);
+    // The 3 hosted sessions are newest, so they should be returned
+    expect(result[0]?.id).toBe('session-h1');
+    expect(result[1]?.id).toBe('session-h2');
+    expect(result[2]?.id).toBe('session-h3');
   });
 
   it('returns empty array when no sessions found', async () => {
@@ -294,6 +423,30 @@ describe('session: fetchLatestSessions', () => {
       joinedBy: ['host-456', 'guest-789'],
       createdAt: { seconds: 1706745600, nanoseconds: 0 },
     });
+  });
+
+  it('handles missing joinedBy field gracefully', async () => {
+    const mockDoc = {
+      id: 'session-no-joined',
+      data: () => ({
+        name: 'Session Without JoinedBy',
+        hostId: 'host-123',
+        hostDisplayName: 'Host Name',
+        isActive: true,
+        pin: '5555',
+        // joinedBy field is intentionally omitted
+        createdAt: { seconds: 1706745600, nanoseconds: 0 },
+      }),
+    };
+
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [mockDoc] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
+
+    const result = await fetchLatestSessions('host-123');
+
+    // Should default to empty array when joinedBy is missing
+    expect(result[0]).toBeDefined();
+    expect(result[0]?.joinedBy).toEqual([]);
   });
 });
 

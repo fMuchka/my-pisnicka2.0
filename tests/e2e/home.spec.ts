@@ -2,12 +2,12 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Home Screen - E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to login and authenticate as host
+    // Navigate to login and authenticate as test user
     await page.goto('/login');
 
-    // Login as host (email contains @host)
-    await page.getByLabel('Email').fill('testhost@host.cz');
-    await page.getByLabel('Heslo').fill('testpassword123');
+    // Login as test user
+    await page.getByLabel('Email').fill('test@test.com');
+    await page.getByLabel('Heslo').fill('test123');
     await page.getByRole('button', { name: /přihlásit se/i }).click();
 
     // Wait for redirect to home
