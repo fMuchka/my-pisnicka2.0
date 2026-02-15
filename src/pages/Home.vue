@@ -1,9 +1,11 @@
 <script setup lang="ts">
   import { Tooltip } from '@ark-ui/vue/tooltip';
   import { Plus, UserPlus } from 'lucide-vue-next';
-  import { onMounted, ref, watch } from 'vue';
+  import { onMounted, ref, watch, computed } from 'vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import Button from '../components/core/Button.vue';
+  import ErrorMessage from '../components/core/ErrorMessage.vue';
+  import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import { fetchLatestSessions, type Session } from '../lib/session';
@@ -29,6 +31,23 @@
 
   const latestSessions = ref<Session[]>([]);
   const latestSongs = ref<Song[]>([]);
+  const sessionsError = ref<string | null>(null);
+  const songsError = ref<string | null>(null);
+  const sessionsLoading = ref(true);
+  const songsLoading = ref(true);
+
+  // Compute which section is actively loading - ensures only one shows at a time
+  const loadingSection = computed(() => {
+    // Show sessions loading if sessions has no data and no error, OR if songs isn't ready yet
+    if (sessionsLoading.value && latestSessions.value.length === 0) {
+      return 'sessions';
+    }
+    // Show songs loading if sessions is done and songs has no data and no error
+    if (!sessionsLoading.value && songsLoading.value && latestSongs.value.length === 0) {
+      return 'songs';
+    }
+    return null;
+  });
 
   const displaySongs = ref<{ [key: string]: Song[] }>({});
 
@@ -48,9 +67,31 @@
     }
   });
 
-  onMounted(async () => {
-    latestSessions.value = await fetchLatestSessions(user.value?.uid ?? '');
-    latestSongs.value = await fetchHomeSongs();
+  onMounted(() => {
+    const fetchAndSongsSessionsAsync = async () => {
+      try {
+        sessionsError.value = null;
+        latestSessions.value = await fetchLatestSessions(user.value?.uid ?? '');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Chyba při načítání relací';
+        sessionsError.value = `Chyba při načítání relací. ${errorMessage}`;
+      } finally {
+        sessionsLoading.value = false;
+      }
+
+      // After sessions is done, fetch songs
+      try {
+        songsError.value = null;
+        latestSongs.value = await fetchHomeSongs();
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Chyba při načítání písní';
+        songsError.value = `Chyba při načítání písní. ${errorMessage}`;
+      } finally {
+        songsLoading.value = false;
+      }
+    };
+
+    fetchAndSongsSessionsAsync();
   });
 
   const openSession = (session: Session) => {
@@ -113,19 +154,43 @@
 
           <Button
             class="view-all-link"
-            aria-label="Zobrazit vše"
+            aria-label="Zobrazit všechny relace"
             color-variation="Primary"
-            :label="'Zobrazit vše'"
+            :label="'Zobrazit všechny relace'"
             @click="goToSessionListPage"
           />
         </div>
       </div>
 
-      <div class="sessions-list">
+      <!-- Loading State -->
+      <LoadingSpinner
+        v-if="loadingSection === 'sessions'"
+        label="Načítání relací..."
+      />
+
+      <!-- Error State -->
+      <ErrorMessage
+        v-else-if="sessionsError"
+        :message="sessionsError"
+      />
+
+      <!-- Sessions List -->
+      <div
+        v-else
+        class="sessions-list"
+        role="list"
+      >
+        <div
+          v-if="latestSessions.length === 0"
+          class="empty-state"
+        >
+          Žádné relace
+        </div>
         <div
           v-for="session in latestSessions"
           :key="session.id"
           class="session-item"
+          role="listitem"
           @click="() => openSession(session)"
         >
           <div class="session-info">
@@ -162,18 +227,35 @@
           </Tooltip.Root>
           <Button
             class="view-all-link"
-            aria-label="Zobrazit vše"
+            aria-label="Zobrazit všechny písně"
             color-variation="Primary"
-            :label="'Zobrazit vše'"
+            :label="'Zobrazit všechny písně'"
           />
         </div>
       </div>
 
-      <div class="song-tree">
+      <!-- Loading State -->
+      <LoadingSpinner
+        v-if="loadingSection === 'songs'"
+        label="Načítání písní..."
+      />
+
+      <!-- Error State -->
+      <ErrorMessage
+        v-else-if="songsError"
+        :message="songsError"
+      />
+
+      <!-- Songs List -->
+      <div
+        v-else
+        class="song-tree"
+      >
         <!-- Artist Group 1 -->
         <div
           v-for="(item, key) of displaySongs"
           :key="key"
+          role="list"
           class="artist-group"
         >
           <div class="artist-name">{{ key }}</div>
@@ -181,6 +263,7 @@
             <div
               v-for="song in item"
               :key="song.id"
+              role="listitem"
               class="song-item"
             >
               {{ song.title }}

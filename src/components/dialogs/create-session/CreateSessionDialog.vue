@@ -96,7 +96,10 @@
             Zadejte název nové relace pro zahájení společného hraní.
           </Dialog.Description>
 
-          <Field.Root class="field">
+          <Field.Root
+            class="field"
+            :invalid="(!isNameValid && sessionName.length > 0) || createError != null"
+          >
             <Field.Label class="field-label">
               Název relace
               <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
@@ -117,8 +120,9 @@
               Název relace musí mít alespoň 3 znaky
             </Field.ErrorText>
             <Field.ErrorText
-              v-else-if="createError"
+              v-if="createError"
               class="field-error"
+              :aria-label="createError"
             >
               {{ createError }}
             </Field.ErrorText>
@@ -144,7 +148,7 @@
 
           <Dialog.CloseTrigger
             class="dialog-close"
-            aria-label="Zavřít dialog"
+            aria-label="Zavřít dialog relace"
           >
             ✕
           </Dialog.CloseTrigger>
