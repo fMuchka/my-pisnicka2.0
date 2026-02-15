@@ -27,3 +27,5 @@ emulator-data
 dev-dist/*
 test-results
 playwright-report
+
+firestore.rules
