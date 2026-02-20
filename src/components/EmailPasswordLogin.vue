@@ -7,6 +7,9 @@
 
   const emit = defineEmits<{ login: [] }>();
 
+  // TODO: Consolidate these three redundant boolean refs into a single validation object
+  // See: https://vuejs.org/guide/essentials/reactivity-fundamentals.html#ref-vs-reactive
+  // Pattern: const validation = ref<{ email: string|null; password: string|null; credentials: string|null }>()
   const isEmailInvalid = ref(false);
   const isPasswordInvalid = ref(false);
   const areCredentialsInvalid = ref(false);
@@ -59,6 +62,8 @@
         placeholder="jindra@skalitze.cz"
         class="form-input"
       />
+      <!-- TODO: Remove redundant aria-label (visible text is already announced) -->
+      <!-- See: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label -->
       <Field.ErrorText
         class="error"
         :aria-label="areCredentialsInvalid ? 'Špatné údaje' : 'Nesprávný formát'"
@@ -69,8 +74,9 @@
     <Field.Root :invalid="isPasswordInvalid || areCredentialsInvalid">
       <PasswordInput.Root class="form-group">
         <PasswordInput.Label class="form-label">Heslo</PasswordInput.Label>
-        <PasswordInput.Control class="password-control">
-          <PasswordInput.Input
+        <PasswordInput.Control class="password-control">          <!-- TODO: Replace manual binding with v-model for cleaner code and better TypeScript safety -->
+          <!-- See: https://vuejs.org/guide/components/v-model.html -->
+          <!-- Change to: v-model=\"password\" and remove @input handler -->          <PasswordInput.Input
             :value="password"
             placeholder="*****"
             class="form-input"
@@ -86,6 +92,7 @@
           </PasswordInput.VisibilityTrigger>
         </PasswordInput.Control>
       </PasswordInput.Root>
+      <!-- TODO: Remove redundant aria-label here too -->
       <Field.ErrorText
         class="error"
         :aria-label="areCredentialsInvalid ? 'Špatné údaje' : 'Heslo je prázdné'"

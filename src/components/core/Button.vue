@@ -114,6 +114,10 @@
     outline-offset: 2px;
   }
 
+  /* TODO: Add focus-visible styles to secondary & text variants for keyboard accessibility */
+  /* See: https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible */
+  /* Add: .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } */
+
   .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
