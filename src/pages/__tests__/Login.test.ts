@@ -36,7 +36,7 @@ describe('Login Page', () => {
     await userEvent.type(email, 'not-an-email');
     await userEvent.type(password, 'password123');
     await userEvent.click(screen.getByRole('button', { name: /přihlásit se/i }));
-    expect(screen.getByLabelText(/nesprávný formát/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Nesprávný formát/i)).toBeInTheDocument();
   });
 
   it('shows validation error for empty password', async () => {

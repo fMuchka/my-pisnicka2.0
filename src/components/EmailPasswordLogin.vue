@@ -68,8 +68,6 @@
         placeholder="jindra@skalitze.cz"
         class="form-input"
       />
-      <!-- READABILITY: Remove redundant aria-label (visible text is already announced) -->
-      <!-- See: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label -->
       <Field.ErrorText
         class="error"
         :aria-label="validationChecks.credentials ? 'Špatné údaje' : 'Nesprávný formát'"
@@ -81,9 +79,6 @@
       <PasswordInput.Root class="form-group">
         <PasswordInput.Label class="form-label">Heslo</PasswordInput.Label>
         <PasswordInput.Control class="password-control">
-          <!-- PATTERN: Replace manual binding with v-model for cleaner code and better TypeScript safety -->
-          <!-- See: https://vuejs.org/guide/components/v-model.html -->
-          <!-- Change to: v-model=\"password\" and remove @input handler -->
           <PasswordInput.Input
             :value="password"
             placeholder="*****"
@@ -100,7 +95,6 @@
           </PasswordInput.VisibilityTrigger>
         </PasswordInput.Control>
       </PasswordInput.Root>
-      <!-- READABILITY: Remove redundant aria-label here too -->
       <Field.ErrorText
         class="error"
         :aria-label="validationChecks.credentials ? 'Špatné údaje' : 'Heslo je prázdné'"
