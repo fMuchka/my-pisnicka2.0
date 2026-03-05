@@ -51,7 +51,8 @@
     return null;
   });
 
-  // TODO: Replace this watch → computed pattern for better reactivity and automatic cleanup
+  // PATTERN: Replace this watch → computed pattern for library best practice
+  // PERF: Improves reactivity and automatic cleanup
   // See: https://vuejs.org/guide/essentials/computed.html#basic-example
   // Convert to: const displaySongs = computed(() => { /* grouping logic */ })
   const displaySongs = ref<{ [key: string]: Song[] }>({});
@@ -72,7 +73,7 @@
     }
   });
 
-  // TODO: Extract this data fetching logic into a composable useHomeData()
+  // PATTERN: Extract this data fetching logic into a composable useHomeData()
   // See: https://vuejs.org/guide/reusability/composables.html
   // This will improve testability and allow reuse in other components
   onMounted(() => {
