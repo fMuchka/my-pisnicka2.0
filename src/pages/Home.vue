@@ -45,16 +45,11 @@
     return null;
   });
 
-  // PATTERN: Replace this watch → computed pattern for library best practice
-  // PERF: Improves reactivity and automatic cleanup
-  // See: https://vuejs.org/guide/essentials/computed.html#basic-example
-  // Convert to: const displaySongs = computed(() => { /* grouping logic */ })
-  const displaySongs = ref<{ [key: string]: Song[] }>({});
-
-  watch(latestSongs, (songs) => {
+  const displaySongs = computed<{ [key: string]: Song[] }>(() => {
+    const songs = latestSongs.value;
     if (songs.length > 0) {
       const temp: { [key: string]: Song[] } = {};
-      latestSongs.value.forEach((song) => {
+      songs.forEach((song) => {
         const { artist } = song;
         if (temp[artist] == null) {
           temp[artist] = [];
@@ -62,9 +57,10 @@
 
         temp[artist].push(song);
       });
-
-      displaySongs.value = temp;
+      return temp;
     }
+
+    return {};
   });
 
   // PATTERN: Extract this data fetching logic into a composable useHomeData()
