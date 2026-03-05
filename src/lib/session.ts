@@ -1,4 +1,14 @@
-import { collection, query, where, getDocs, type DocumentData } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  orderBy,
+  limit,
+  Timestamp,
+  type DocumentData,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 /**
@@ -8,10 +18,23 @@ import { db } from './firebase';
  * The PIN must be 4 digits. Guests query by PIN to find and join active sessions.
  * Security Rules restrict guest access to active sessions only.
  */
-type Session = {
-  pin: string;
-  isActive: boolean;
+export type Session = {
+  id: string;
+  name: string;
   hostId: string;
+  hostDisplayName: string;
+  isActive: boolean;
+  pin: string;
+  joinedBy: string[];
+  createdAt: Timestamp;
+};
+
+type SessionLookup = Pick<Session, 'pin' | 'isActive' | 'hostId'>;
+
+export type CreateSessionInput = {
+  name: string;
+  hostId: string;
+  hostDisplayName: string;
 };
 
 /**
@@ -37,6 +60,25 @@ export interface JoinSessionResult {
  */
 const isPinInvalid = (pin: string): boolean => {
   return !/^\d{4}$/.test(pin);
+};
+
+const generatePin = (): string => {
+  const value = Math.floor(Math.random() * 10000);
+  return String(value).padStart(4, '0');
+};
+
+const mapSessionDoc = (doc: { id: string; data: () => DocumentData }): Session => {
+  const data = doc.data() as DocumentData;
+  return {
+    id: doc.id,
+    name: data.name,
+    hostId: data.hostId,
+    hostDisplayName: data.hostDisplayName,
+    isActive: data.isActive,
+    pin: data.pin,
+    joinedBy: data.joinedBy ?? [],
+    createdAt: data.createdAt,
+  } as Session;
 };
 
 /**
@@ -77,7 +119,7 @@ export const joinSession = async (pin: string): Promise<JoinSessionResult> => {
   return getDocs(q)
     .then((s) => {
       // Convert query result to typed Session objects
-      const sessions: Session[] = s.docs.map((d) => {
+      const sessions: SessionLookup[] = s.docs.map((d) => {
         const data = d.data() as DocumentData;
         return { pin: data.pin, isActive: data.isActive, hostId: data.hostId };
       });
@@ -99,4 +141,63 @@ export const joinSession = async (pin: string): Promise<JoinSessionResult> => {
       // Any Firestore error (permission denied, network issue, etc.)
       return { ok: false, errorCode: 'firestore-error' };
     });
+};
+
+/**
+ * Fetches the latest sessions for a user (hosted or joined), sorted by newest first.
+ */
+export const fetchLatestSessions = async (userId: string): Promise<Session[]> => {
+  const baseQuery = collection(db, 'sessions');
+  const hostedQuery = query(
+    baseQuery,
+    where('hostId', '==', userId),
+    orderBy('createdAt', 'desc'),
+    limit(3)
+  );
+  const joinedQuery = query(
+    baseQuery,
+    where('joinedBy', 'array-contains', userId),
+    orderBy('createdAt', 'desc'),
+    limit(3)
+  );
+
+  const [hostedSnapshot, joinedSnapshot] = await Promise.all([
+    getDocs(hostedQuery),
+    getDocs(joinedQuery),
+  ]);
+
+  const merged = new Map<string, Session>();
+  hostedSnapshot.docs.forEach((doc) => merged.set(doc.id, mapSessionDoc(doc)));
+  joinedSnapshot.docs.forEach((doc) => merged.set(doc.id, mapSessionDoc(doc)));
+
+  return Array.from(merged.values())
+    .sort((a, b) => {
+      if (a.createdAt.seconds !== b.createdAt.seconds) {
+        return b.createdAt.seconds - a.createdAt.seconds;
+      }
+      return b.createdAt.nanoseconds - a.createdAt.nanoseconds;
+    })
+    .slice(0, 3);
+};
+
+/**
+ * Creates a new active session with a generated 4-digit PIN.
+ */
+export const createSession = async (input: CreateSessionInput): Promise<Session> => {
+  const sessionData = {
+    name: input.name,
+    hostId: input.hostId,
+    hostDisplayName: input.hostDisplayName,
+    isActive: true,
+    pin: generatePin(),
+    joinedBy: [input.hostId],
+    createdAt: Timestamp.now(),
+  };
+
+  const sessionRef = await addDoc(collection(db, 'sessions'), sessionData);
+
+  return {
+    id: sessionRef.id,
+    ...sessionData,
+  };
 };

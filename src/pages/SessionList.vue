@@ -1,16 +1,8 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
-  import { useRoute } from 'vue-router';
   import PageHeader from '../components/PageHeader.vue';
 
-  const TITLE = 'Relace';
-  const TAG_LINE = 'Spolu teď a tady';
-
-  const route = useRoute();
-  const sessionId = computed(() => {
-    const value = route.query.sessionId;
-    return typeof value === 'string' ? value : '';
-  });
+  const TITLE = 'Seznam Relací';
+  const TAG_LINE = 'Vzpomínky nemizí';
 </script>
 
 <template>
@@ -22,19 +14,6 @@
       :title="TITLE"
       :tagline="TAG_LINE"
     />
-    <p
-      v-if="sessionId"
-      class="session-id"
-      data-testid="session-id"
-    >
-      Relace: {{ sessionId }}
-    </p>
-    <p
-      v-else
-      class="session-id"
-    >
-      Relace není vybrána.
-    </p>
   </div>
 </template>
 

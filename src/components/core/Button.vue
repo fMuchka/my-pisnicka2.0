@@ -73,7 +73,7 @@
       :is="props.icon?.component"
       v-if="hasIcon && isPrependIcon"
     />
-    <span>{{ props.label }}</span>
+    <span v-if="props.label">{{ props.label }}</span>
     <component
       :is="props.icon?.component"
       v-if="hasIcon && !isPrependIcon"
@@ -94,6 +94,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: var(--space-sm);
     min-height: 44px;
   }
 
@@ -109,6 +110,11 @@
   }
 
   .btn-primary:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .btn:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }

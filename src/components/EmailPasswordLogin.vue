@@ -7,9 +7,18 @@
 
   const emit = defineEmits<{ login: [] }>();
 
-  const isEmailInvalid = ref(false);
-  const isPasswordInvalid = ref(false);
-  const areCredentialsInvalid = ref(false);
+  type LoginValidation = {
+    email: boolean; // input format
+    password: boolean; // input format
+    credentials: boolean; // server response
+  };
+
+  const validationChecks = ref<LoginValidation>({
+    credentials: false,
+    email: false,
+    password: false,
+  });
+
   const email = ref('');
   const password = ref('');
 
@@ -23,25 +32,25 @@
   };
 
   const handleConfirmClick = async () => {
-    areCredentialsInvalid.value = false;
+    validationChecks.value.credentials = false;
 
     if (email.value.length > 0) {
-      isEmailInvalid.value = !validateEmail(email.value);
+      validationChecks.value.email = !validateEmail(email.value);
     } else {
-      isEmailInvalid.value = true;
+      validationChecks.value.email = true;
     }
 
-    isPasswordInvalid.value = !validatePassword();
+    validationChecks.value.password = !validatePassword();
 
-    if (isEmailInvalid.value === false && isPasswordInvalid.value === false) {
+    if (validationChecks.value.email === false && validationChecks.value.password === false) {
       // extra try catch due to tests
       try {
         await loginWithEmailPassword(email.value, password.value);
-        areCredentialsInvalid.value = false;
+        validationChecks.value.credentials = false;
         emit('login');
       } catch (_err) {
         // Handle rejected promise from mocked login in tests or network errors in runtime
-        areCredentialsInvalid.value = true;
+        validationChecks.value.credentials = true;
       }
     }
   };
@@ -51,7 +60,7 @@
   <div class="login-form">
     <Field.Root
       class="form-group"
-      :invalid="isEmailInvalid || areCredentialsInvalid"
+      :invalid="validationChecks.email || validationChecks.credentials"
     >
       <Field.Label class="form-label">Email</Field.Label>
       <Field.Input
@@ -61,12 +70,12 @@
       />
       <Field.ErrorText
         class="error"
-        :aria-label="areCredentialsInvalid ? 'Špatné údaje' : 'Nesprávný formát'"
-        >{{ areCredentialsInvalid ? 'Špatné údaje' : 'Nesprávný formát' }}</Field.ErrorText
+        :aria-label="validationChecks.credentials ? 'Špatné údaje' : 'Nesprávný formát'"
+        >{{ validationChecks.credentials ? 'Špatné údaje' : 'Nesprávný formát' }}</Field.ErrorText
       >
     </Field.Root>
 
-    <Field.Root :invalid="isPasswordInvalid || areCredentialsInvalid">
+    <Field.Root :invalid="validationChecks.password || validationChecks.credentials">
       <PasswordInput.Root class="form-group">
         <PasswordInput.Label class="form-label">Heslo</PasswordInput.Label>
         <PasswordInput.Control class="password-control">
@@ -88,8 +97,8 @@
       </PasswordInput.Root>
       <Field.ErrorText
         class="error"
-        :aria-label="areCredentialsInvalid ? 'Špatné údaje' : 'Heslo je prázdné'"
-        >{{ areCredentialsInvalid ? 'Špatné údaje' : 'Heslo je prázdné' }}</Field.ErrorText
+        :aria-label="validationChecks.credentials ? 'Špatné údaje' : 'Heslo je prázdné'"
+        >{{ validationChecks.credentials ? 'Špatné údaje' : 'Heslo je prázdné' }}</Field.ErrorText
       >
     </Field.Root>
 

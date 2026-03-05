@@ -11,7 +11,7 @@ test.describe('Join by PIN', () => {
 
     await page.getByRole('button', { name: /připojit/i }).click();
 
-    await expect(page.getByText('Parta s tímto PINem neexistuje.')).toBeVisible();
+    await expect(page.getByText('Relace s tímto PINem neexistuje.')).toBeVisible();
   });
 
   test('shows error for closed session', async ({ page }) => {
@@ -24,7 +24,7 @@ test.describe('Join by PIN', () => {
 
     await page.getByRole('button', { name: /připojit/i }).click();
 
-    await expect(page.getByText('Parta je uzavřena nebo již skončila.')).toBeVisible();
+    await expect(page.getByText('Relace je uzavřena nebo již skončila.')).toBeVisible();
   });
 
   test('navigates to Session on valid PIN', async ({ page }) => {

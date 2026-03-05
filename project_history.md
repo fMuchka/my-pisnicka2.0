@@ -1,58 +1,43 @@
-# Project History Log
-
 > **Purpose**: Searchable log of features, decisions, and milestones. Use feature IDs for easy lookup.
-> **When to update**: When merging PRs or completing significant work.
 
 ## Template Entry (Copy Below)
 
 ```markdown
-## YYYY-MM-DD | FEAT-XXX | Feature Name
+## Feature Name
 
 - **Feature**: Brief description of what was built
-- **Status**: 🔄 In Progress | ✅ Complete | ⚠️ Blocked | ❌ Cancelled
-- **Branch**: `feature/branch-name` (if applicable)
-- **PR**: #123 (if applicable)
-- **Duration**: YYYY-MM-DD to YYYY-MM-DD (optional)
 - **Decisions**:
   - Key decision 1 and rationale
   - Key decision 2 and rationale
 - **Notes**: Outcomes, gotchas, or important context
 ```
 
-## 2026-01-17 | FEAT-SESSION-PIN | Session PIN Validation & Join Flow
+## Home Page Initialize
+
+- **Feature**: Home page with minimum content and function.
+- **Decisions**:
+  - Added form for Session creation to test the flow and create data
+  - Added form for Song creation to test the flow and create data
+- **Notes**:
+
+---
+
+## Session PIN Validation & Join Flow
 
 - **Feature**: Firestore-backed 4-digit session PIN validation in Join page; loading state, inline error messaging, and navigation to Session view on success; minimal Security Rules for guest access
-- **Status**: ✅ Complete
-- **Branch**: feature/session-pin-join
-- **PR**: 002
-- **Duration**: 2026-01-17 to 2026-01-17
 - **Decisions**:
-  - Client-side Firestore query (free tier only; no Cloud Functions) validates PIN and `isActive` status
   - Inline error message in Czech: "Parta s tímto PINem neexistuje." displayed under PIN input with `aria-live` region
-  - Security Rules minimally allow reads for active sessions while protecting non-active data
 - **Notes**: Firestore collection `sessions` with `{pin, isActive, hostId}` contract; PINInput component + Join page updates; unit/component/E2E tests cover validation flow; Firebase emulators used throughout dev/test cycle
 
-## 2025-12-24 | FEAT-AUTH-ITER1 | Authentication Iteration 1 (Email/Password)
+---
 
-- **Feature**: Host email/password login flow with logout, reactive auth state (useAuth), guarded routes, localized Czech UI, and comprehensive unit/component/E2E tests
-- **Status**: ✅ Complete (follow-up: minor router guard tweak to call useAuth inside beforeEach)
-- **Branch**: feat/authentication-init
-- **PR**: 001
-- **Duration**: 2025-12-21 to 2025-12-24
+## Authentication Iteration 1 (Email/Password)
+
 - **Decisions**:
   - Dropped passwordless/magic-link; guest access will use PIN-based join flow in Iteration 2
   - Localized all UI/aria labels to Czech; tests/e2e selectors updated accordingly
 - **Notes**: authService (email+logout), useAuth composable, Login page, and Playwright auth flow tests are in place; adjust router guard to avoid stale auth read
 
-## 2025-12-20 | FEAT-SETUP | Project Setup MVP Phase 1
-
-- **Feature**: Established Vite + Vue 3 TS scaffold with strict TS, ESLint/Prettier, base folders, router + Pinia wiring, PWA plugin, and Firebase config/SDK bootstrap (Auth/Firestore/Hosting)
-- **Status**: ✅ Complete
-- **Branch**: main
-- **PR**: n/a
-- **Duration**: 2025-12-20 to 2025-12-20
 - **Decisions**:
-  - Enabled strict TS plus noUncheckedIndexedAccess/useUnknownInCatchVariables/exactOptionalPropertyTypes for safer typing
   - Selected vite-plugin-pwa with autoUpdate and installable manifest defaults for MVP
   - Configured Firebase Hosting for SPA rewrites and env-driven client SDK setup (Auth/Firestore ready)
-- **Notes**: npm scripts cover dev/build/preview/lint/format; Firebase CLI initialized and first hosting deploy ran successfully

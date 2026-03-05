@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host",
     "firebase:login": "firebase login",
     "firebase:init": "firebase init",
     "deploy": "npm run build && firebase deploy --only hosting",
@@ -18,14 +19,17 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "firebase:emulators": "firebase emulators:start --import=./emulator-data --export-on-exit=./emulator-data"
   },
   "dependencies": {
-    "@ark-ui/vue": "^5.30.0",
+    "@ark-ui/vue": "^5.34.0",
     "@vueuse/core": "^14.1.0",
+    "@vueuse/integrations": "^14.1.0",
     "firebase": "^10.11.0",
     "lucide-vue-next": "^0.562.0",
     "pinia": "^3.0.4",
+    "sortablejs": "^1.15.6",
     "vue": "^3.5.24",
     "vue-router": "^4.6.4"
   },
@@ -35,6 +39,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@testing-library/vue": "^8.1.0",
     "@types/node": "^24.10.1",
+    "@types/sortablejs": "^1.15.9",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
     "@vitejs/plugin-vue": "^6.0.1",
@@ -46,6 +51,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-vue": "^10.6.2",
+    "globals": "^17.3.0",
     "jsdom": "^27.3.0",
     "prettier": "^3.7.4",
     "typescript": "~5.9.3",

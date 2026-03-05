@@ -5,7 +5,10 @@
 </script>
 
 <template>
-  <div class="top-nav">
+  <div
+    class="top-nav"
+    role="banner"
+  >
     <div class="nav-title">MyPísnička</div>
     <div class="nav-actions">
       <Button
