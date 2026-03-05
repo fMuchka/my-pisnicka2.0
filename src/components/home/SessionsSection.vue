@@ -109,61 +109,7 @@
 </template>
 
 <style scoped>
-  .content-section {
-    background-color: white;
-    border: 1px solid var(--bg-tertiary);
-    border-radius: var(--radius-md);
-    padding: var(--space-lg);
-    margin-bottom: var(--space-lg);
-  }
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-md);
-    gap: var(--space-sm);
-  }
-
-  .section-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: var(--space-xs);
-    align-items: center;
-  }
-
-  .action-btn {
-    background: transparent;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: var(--text-primary);
-    transition: all 150ms ease;
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-sm);
-  }
-
-  .action-btn:hover {
-    color: var(--accent);
-    background-color: var(--bg-secondary);
-  }
-
-  .view-all-link {
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: opacity 150ms ease;
-  }
-
-  .view-all-link:hover {
-    opacity: 0.8;
-    text-decoration: underline;
-  }
+  @import './section-common.css';
 
   .sessions-list {
     display: flex;
@@ -197,15 +143,5 @@
   .session-meta {
     font-size: 14px;
     color: var(--text-secondary);
-  }
-
-  .tooltip-content {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
   }
 </style>
