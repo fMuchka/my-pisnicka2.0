@@ -239,7 +239,6 @@ test.describe('Home Screen - E2E Tests', () => {
 
     test('uses proper heading hierarchy', async ({ page }) => {
       // Get all headings
-      const h1Count = await page.getByRole('heading', { level: 1 }).count();
       const h2Count = await page.getByRole('heading', { level: 2 }).count();
 
       // Should have section headings as h2

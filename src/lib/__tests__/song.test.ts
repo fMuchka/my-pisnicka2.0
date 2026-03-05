@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { Timestamp } from 'firebase/firestore';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { selectHomeSongs, fetchHomeSongs } from '../song';
 import type { Song } from '../song';
 
@@ -14,11 +13,11 @@ vi.mock('firebase/firestore', async () => {
   const actual = await vi.importActual('firebase/firestore');
   return {
     ...actual,
-    collection: (...args: any[]) => mockCollection(...args),
-    query: (...args: any[]) => mockQuery(...args),
-    orderBy: (...args: any[]) => mockOrderBy(...args),
-    limit: (...args: any[]) => mockLimit(...args),
-    getDocs: (...args: any[]) => mockGetDocs(...args),
+    collection: (...args: unknown[]) => mockCollection(...args),
+    query: (...args: unknown[]) => mockQuery(...args),
+    orderBy: (...args: unknown[]) => mockOrderBy(...args),
+    limit: (...args: unknown[]) => mockLimit(...args),
+    getDocs: (...args: unknown[]) => mockGetDocs(...args),
   };
 });
 
