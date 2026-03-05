@@ -23,7 +23,7 @@
     "firebase:emulators": "firebase emulators:start --import=./emulator-data --export-on-exit=./emulator-data"
   },
   "dependencies": {
-    "@ark-ui/vue": "^5.30.0",
+    "@ark-ui/vue": "^5.34.0",
     "@vueuse/core": "^14.1.0",
     "@vueuse/integrations": "^14.1.0",
     "firebase": "^10.11.0",
