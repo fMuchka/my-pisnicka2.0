@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { onMounted, ref, watch, computed } from 'vue';
+  import { onMounted, ref, computed } from 'vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import SessionsSection from '../components/home/SessionsSection.vue';
   import SongsSection from '../components/home/SongsSection.vue';
