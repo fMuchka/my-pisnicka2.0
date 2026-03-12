@@ -87,7 +87,7 @@
 
   const sections = ref<Section[]>([]);
   const sectionsListRef = ref<HTMLElement | null>(null);
-  const lastEmittedMarkdown = ref(props.modelValue);
+  const lastEmittedMarkdown = ref('');
   const isTouchPointer =
     typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
@@ -117,7 +117,7 @@
           collapsed: false,
         };
       } else if (currentSection) {
-        currentSection.text += (currentSection.text ? '\n' : '') + line;
+        currentSection.text += (currentSection.text ? '\n' : '') + toVisualChordText(line);
       }
     }
 
@@ -134,7 +134,7 @@
     return secs
       .map((section) => {
         const header = `[${sectionTypes[section.type].label}]`;
-        return `${header}\n${section.text}`;
+        return `${header}\n${toStoredChordText(section.text)}`;
       })
       .join('\n\n');
   }
@@ -254,8 +254,12 @@
   // Update section text
   function updateSectionText(sectionId: string, text: string) {
     const section = sections.value.find((s) => s.id === sectionId);
+
     if (section) {
-      section.text = text;
+      // Keep visual mode chord editing bracket-free (e.g. G, Am, H7)
+      section.text = toVisualChordText(text);
+
+      console.log(section.text);
       updateMarkdown();
     }
   }
@@ -270,15 +274,28 @@
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // Matches chord tokens: root (A-G) + optional accidental + optional quality/extension + optional bass
-  // Negative lookbehind/lookahead prevent matching chords inside regular words (e.g. "Am" in "Amazing")
-  const CHORD_PATTERN =
-    /\[([A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?)\]/g;
+  const CHORD_CORE_PATTERN =
+    '[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:/[A-GH][#b]?)?';
+  const STORED_CHORD_PATTERN = new RegExp(`\\[(${CHORD_CORE_PATTERN})\\]`, 'g');
+  const BRACKETED_VISUAL_PATTERN = /\[([^\]\s][^\]]*)\]/g;
+  // In visual mode, detect plain chords but avoid words and already-bracketed tokens.
+  const VISUAL_CHORD_PATTERN = new RegExp(
+    `(?<![a-zA-Z\\[])((${CHORD_CORE_PATTERN}))(?![a-z\\]])`,
+    'g'
+  );
+
+  function toVisualChordText(text: string): string {
+    return text.replace(STORED_CHORD_PATTERN, '$1').replace(BRACKETED_VISUAL_PATTERN, '$1');
+  }
+
+  function toStoredChordText(text: string): string {
+    return text.replace(VISUAL_CHORD_PATTERN, '[$1]');
+  }
 
   function buildHighlightedHtml(text: string): string {
-    const escaped = escapeHtml(text);
+    const escaped = escapeHtml(toVisualChordText(text));
     const highlighted = escaped.replace(
-      CHORD_PATTERN,
+      VISUAL_CHORD_PATTERN,
       '<mark style="background-color: color-mix(in srgb, var(--accent) 18%, transparent); border-radius: 3px; box-shadow: 2px 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent), -2px 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);">$1</mark>'
     );
     // Trailing space prevents last-line height collapse in the backdrop div
@@ -395,10 +412,10 @@
             <div
               class="textarea-highlight"
               aria-hidden="true"
-              v-html="buildHighlightedHtml(section.text)"
+              v-html="buildHighlightedHtml(toVisualChordText(section.text))"
             />
             <textarea
-              :value="section.text"
+              :value="toVisualChordText(section.text)"
               class="section-textarea"
               placeholder="Text a akordy..."
               rows="4"
