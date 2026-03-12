@@ -259,7 +259,6 @@
       // Keep visual mode chord editing bracket-free (e.g. G, Am, H7)
       section.text = toVisualChordText(text);
 
-      console.log(section.text);
       updateMarkdown();
     }
   }
