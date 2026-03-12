@@ -447,9 +447,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow-y: auto;
     gap: var(--space-md);
-    overscroll-behavior: contain;
   }
 
   .empty-state {
