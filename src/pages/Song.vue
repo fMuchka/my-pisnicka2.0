@@ -1,17 +1,22 @@
 <script setup lang="ts">
-  import { ArrowLeft } from 'lucide-vue-next';
-  import { computed } from 'vue';
+  import { ArrowLeft, Pencil } from 'lucide-vue-next';
+  import { computed, ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import PageHeader from '../components/PageHeader.vue';
   import Button from '../components/core/Button.vue';
+  import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
+  import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
+  import type { Song } from '../lib/song';
   import Routes from '../router/Routes';
 
   const route = useRoute();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const isEditDialogOpen = ref(false);
 
   const songId = computed(() => {
     const routeSongId = route.params.songId;
@@ -31,6 +36,14 @@
   const goBackHome = () => {
     router.push({ path: Routes.Home });
   };
+
+  const openEditSongDialog = () => {
+    isEditDialogOpen.value = true;
+  };
+
+  const handleSongSaved = (updatedSong: Song) => {
+    song.value = updatedSong;
+  };
 </script>
 
 <template>
@@ -46,6 +59,17 @@
         :icon="{ position: 'prepend', component: ArrowLeft }"
         type="button"
         @click="goBackHome"
+      />
+
+      <Button
+        v-if="isAuthenticated && song"
+        class="edit-button"
+        label="Upravit píseň"
+        color-variation="Primary"
+        style-variation="Outlined"
+        :icon="{ position: 'prepend', component: Pencil }"
+        type="button"
+        @click="openEditSongDialog"
       />
 
       <LoadingSpinner
@@ -96,6 +120,13 @@
         <p class="song-empty-text">Zkontrolujte odkaz nebo se vraťte na přehled písní.</p>
       </section>
     </div>
+
+    <CreateSongDialog
+      :open="isEditDialogOpen"
+      :song-to-edit="song"
+      @update:open="isEditDialogOpen = $event"
+      @saved="handleSongSaved"
+    />
   </main>
 </template>
 
@@ -120,6 +151,10 @@
 
   .back-button {
     margin-bottom: var(--space-md);
+  }
+
+  .edit-button {
+    margin-bottom: var(--space-lg);
   }
 
   .song-content {

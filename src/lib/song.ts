@@ -8,6 +8,7 @@ import {
   addDoc,
   doc,
   getDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -32,6 +33,13 @@ export interface Song {
 }
 
 export interface CreateSongInput {
+  title: string;
+  artist: string;
+  text?: string;
+  chords?: string[];
+}
+
+export interface UpdateSongInput {
   title: string;
   artist: string;
   text?: string;
@@ -135,6 +143,23 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
 
   return {
     id: songRef.id,
+    ...songData,
+  };
+};
+
+export const updateSong = async (songId: string, input: UpdateSongInput): Promise<Song> => {
+  const songRef = doc(db, 'songs', songId);
+  const songData: UpdateSongInput = {
+    title: input.title,
+    artist: input.artist,
+    text: input.text,
+    chords: input.chords,
+  };
+
+  await updateDoc(songRef, songData);
+
+  return {
+    id: songId,
     ...songData,
   };
 };

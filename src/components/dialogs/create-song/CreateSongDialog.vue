@@ -4,18 +4,21 @@
   import { computed, ref, watch } from 'vue';
   import Button from '../../core/Button.vue';
   import SongTextEditor from '../../song/SongTextEditor.vue';
-  import { createSong } from '../../../lib/song';
+  import { createSong, updateSong, type Song } from '../../../lib/song';
 
   interface Props {
     open?: boolean;
+    songToEdit?: Song | null;
   }
 
   interface Emits {
     (e: 'update:open', value: boolean): void;
+    (e: 'saved', song: Song): void;
   }
 
   const props = withDefaults(defineProps<Props>(), {
     open: false,
+    songToEdit: null,
   });
 
   const emit = defineEmits<Emits>();
@@ -38,7 +41,20 @@
   const isArtistValid = computed(() => trimmedArtist.value.length >= 1);
   const isFormValid = computed(() => isTitleValid.value && isArtistValid.value);
   const isSubmitDisabled = computed(() => !isFormValid.value || isCreating.value);
-  const submitLabel = computed(() => (isCreating.value ? 'Vytvářím...' : 'Vytvořit'));
+  const isEditMode = computed(() => props.songToEdit != null);
+  const dialogTitle = computed(() => (isEditMode.value ? 'Upravit píseň' : 'Vytvořit píseň'));
+  const dialogDescription = computed(() =>
+    isEditMode.value
+      ? 'Upravte název písně, umělce a text s akordy.'
+      : 'Zadejte název písně, umělce a volitelně text s akordy.'
+  );
+  const submitLabel = computed(() => {
+    if (isCreating.value) {
+      return isEditMode.value ? 'Ukládám...' : 'Vytvářím...';
+    }
+
+    return isEditMode.value ? 'Uložit změny' : 'Vytvořit';
+  });
 
   const resetDialog = () => {
     songTitle.value = '';
@@ -54,10 +70,17 @@
       resetDialog();
     } else {
       createError.value = null;
+
+      if (props.songToEdit != null) {
+        songTitle.value = props.songToEdit.title;
+        songArtist.value = props.songToEdit.artist;
+        songText.value = props.songToEdit.text ?? '';
+        songChords.value = props.songToEdit.chords?.join(' ') ?? '';
+      }
     }
   });
 
-  const handleCreateSong = async () => {
+  const handleCreateOrUpdateSong = async () => {
     if (isSubmitDisabled.value) return;
 
     isCreating.value = true;
@@ -69,20 +92,25 @@
         .split(/[\s,]+/)
         .filter((c) => c.length > 0);
 
-      const createdSong = await createSong({
+      const songInput = {
         title: trimmedTitle.value,
         artist: trimmedArtist.value,
         text: songText.value.trim() || undefined,
         chords: chordsList.length > 0 ? chordsList : [],
-      });
+      };
 
-      console.log(createdSong);
+      const savedSong =
+        isEditMode.value && props.songToEdit != null
+          ? await updateSong(props.songToEdit.id, songInput)
+          : await createSong(songInput);
+
+      emit('saved', savedSong);
 
       isOpen.value = false;
-    } catch (_error) {
-      console.log(_error);
-
-      createError.value = 'Nepodařilo se vytvořit píseň. Zkus to prosím znovu.';
+    } catch {
+      createError.value = isEditMode.value
+        ? 'Nepodařilo se upravit píseň. Zkus to prosím znovu.'
+        : 'Nepodařilo se vytvořit píseň. Zkus to prosím znovu.';
     } finally {
       isCreating.value = false;
     }
@@ -98,12 +126,12 @@
           class="dialog-content"
           data-testid="create-song-dialog"
         >
-          <Dialog.Title class="dialog-title">Vytvořit píseň</Dialog.Title>
+          <Dialog.Title class="dialog-title">{{ dialogTitle }}</Dialog.Title>
 
           <div class="dialog-body">
-            <Dialog.Description class="dialog-description">
-              Zadejte název písně, umělce a volitelně text s akordy.
-            </Dialog.Description>
+            <Dialog.Description class="dialog-description">{{
+              dialogDescription
+            }}</Dialog.Description>
 
             <div class="form-fields">
               <!-- Title Field -->
@@ -182,7 +210,7 @@
               data-testid="create-song-submit"
               type="button"
               :disabled="isSubmitDisabled"
-              @click="handleCreateSong"
+              @click="handleCreateOrUpdateSong"
             />
           </div>
 
