@@ -87,6 +87,9 @@
 
   const sections = ref<Section[]>([]);
   const sectionsListRef = ref<HTMLElement | null>(null);
+  const lastEmittedMarkdown = ref(props.modelValue);
+  const isTouchPointer =
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
   // Parse markdown to sections
   function parseMarkdown(markdown: string): Section[] {
@@ -143,6 +146,11 @@
     () => props.modelValue,
     (newValue) => {
       if (!isVisualMode.value) return; // Don't parse when in markdown mode
+
+      if (newValue === lastEmittedMarkdown.value) {
+        return;
+      }
+
       sections.value = parseMarkdown(newValue);
     },
     { immediate: true }
@@ -151,6 +159,7 @@
   // Emit updated markdown when sections change
   function updateMarkdown() {
     const markdown = serializeToMarkdown(sections.value);
+    lastEmittedMarkdown.value = markdown;
     emit('update:modelValue', markdown);
   }
 
@@ -168,6 +177,7 @@
       // Switching to markdown mode
       rawMarkdown.value = serializeToMarkdown(sections.value);
     } else {
+      lastEmittedMarkdown.value = rawMarkdown.value;
       // Switching to visual mode
       emit('update:modelValue', rawMarkdown.value);
       sections.value = parseMarkdown(rawMarkdown.value);
@@ -242,17 +252,23 @@
   }
 
   useSortable(sectionsListRef, sections, {
-    animation: 100,
+    animation: 150,
     handle: '.drag-handle',
+    draggable: '.section-block',
     ghostClass: 'drag-ghost',
     chosenClass: 'drag-chosen',
     dragClass: 'drag-dragging',
-    fallbackOnBody: true,
+    fallbackOnBody: isTouchPointer,
     swapThreshold: 0.3,
-    delay: 150,
+    invertSwap: true,
+    delay: isTouchPointer ? 70 : 0,
     delayOnTouchOnly: true,
-    touchStartThreshold: 10,
-    forceFallback: true,
+    touchStartThreshold: isTouchPointer ? 3 : 8,
+    fallbackTolerance: isTouchPointer ? 3 : 6,
+    forceFallback: isTouchPointer,
+    scrollSensitivity: isTouchPointer ? 90 : 40,
+    scrollSpeed: isTouchPointer ? 16 : 10,
+    emptyInsertThreshold: 20,
     onEnd: () => updateMarkdown(),
   });
 
@@ -433,6 +449,7 @@
     height: 100%;
     overflow-y: auto;
     gap: var(--space-md);
+    overscroll-behavior: contain;
   }
 
   .empty-state {
@@ -479,10 +496,19 @@
   .drag-handle {
     cursor: grab;
     color: rgba(0, 0, 0, 0.4);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    touch-action: none;
   }
 
   .drag-handle:active {
     cursor: grabbing;
+  }
+
+  .drag-handle:hover {
+    background: rgba(0, 0, 0, 0.1);
   }
 
   .drag-ghost {
@@ -497,6 +523,7 @@
 
   .drag-dragging {
     cursor: grabbing;
+    opacity: 0.95;
   }
 
   .section-title-btn {
@@ -603,5 +630,31 @@
 
   .menu-item:hover {
     background-color: var(--bg-secondary);
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .section-block {
+      transition: box-shadow 0.15s;
+    }
+
+    .section-block:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .drag-handle {
+      width: 40px;
+      height: 40px;
+      padding: 8px;
+    }
+
+    .section-title-btn,
+    .icon-btn {
+      min-height: 40px;
+    }
+
+    .icon-btn {
+      min-width: 40px;
+    }
   }
 </style>
