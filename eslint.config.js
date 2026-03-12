@@ -53,4 +53,12 @@ export default [
       indent: 'off',
     },
   },
+  {
+    // v-html is used in SongTextEditor to render chord highlights.
+    // Content is HTML-escaped before chord <mark> spans are injected, so XSS is not a risk here.
+    files: ['**/SongTextEditor.vue'],
+    rules: {
+      'vue/no-v-html': 'off',
+    },
+  },
 ];

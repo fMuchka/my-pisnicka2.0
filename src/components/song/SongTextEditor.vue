@@ -266,6 +266,25 @@
     sections.value = sections.value.filter((s) => s.id !== sectionId);
     updateMarkdown();
   }
+
+  function escapeHtml(text: string): string {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Matches chord tokens: root (A-G) + optional accidental + optional quality/extension + optional bass
+  // Negative lookbehind/lookahead prevent matching chords inside regular words (e.g. "Am" in "Amazing")
+  const CHORD_PATTERN =
+    /(?<![a-zA-Z])([A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?)(?![a-z])/g;
+
+  function buildHighlightedHtml(text: string): string {
+    const escaped = escapeHtml(text);
+    const highlighted = escaped.replace(
+      CHORD_PATTERN,
+      '<mark style="background-color: color-mix(in srgb, var(--accent) 18%, transparent); border-radius: 3px; box-shadow: 2px 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent), -2px 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);">$1</mark>'
+    );
+    // Trailing space prevents last-line height collapse in the backdrop div
+    return highlighted + ' ';
+  }
 </script>
 
 <template>
@@ -373,13 +392,20 @@
           v-if="!section.collapsed"
           class="section-content"
         >
-          <textarea
-            :value="section.text"
-            class="section-textarea"
-            placeholder="Text a akordy..."
-            rows="4"
-            @input="updateSectionText(section.id, ($event.target as HTMLTextAreaElement).value)"
-          />
+          <div class="textarea-wrapper">
+            <div
+              class="textarea-highlight"
+              aria-hidden="true"
+              v-html="buildHighlightedHtml(section.text)"
+            />
+            <textarea
+              :value="section.text"
+              class="section-textarea"
+              placeholder="Text a akordy..."
+              rows="4"
+              @input="updateSectionText(section.id, ($event.target as HTMLTextAreaElement).value)"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -552,23 +578,55 @@
     margin-top: var(--space-sm);
   }
 
-  .section-textarea {
-    width: 100%;
-    padding: var(--space-sm);
+  /* Grid overlay: backdrop highlight div and textarea share the same cell */
+  .textarea-wrapper {
+    display: grid;
+    background: rgba(255, 255, 255, 0.5);
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: var(--radius-sm);
+    min-height: 80px;
+  }
+
+  .textarea-wrapper:focus-within {
+    outline: 2px solid rgba(0, 0, 0, 0.3);
+    outline-offset: 1px;
+  }
+
+  /* Shared sizing for both children so they stay pixel-aligned */
+  .textarea-wrapper > * {
+    grid-area: 1 / 1;
+    padding: var(--space-sm);
     font-family: monospace;
     font-size: 1rem;
-    resize: none;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.5);
+    line-height: 1.5;
     min-height: 80px;
     field-sizing: content;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .textarea-highlight {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: transparent;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .section-textarea {
+    width: 100%;
+    resize: none;
+    overflow: hidden;
+    background: transparent;
+    color: var(--text-primary);
+    caret-color: var(--text-primary);
+    border: none;
+    position: relative;
+    z-index: 1;
   }
 
   .section-textarea:focus {
-    outline: 2px solid rgba(0, 0, 0, 0.3);
-    outline-offset: 1px;
+    outline: none;
   }
 
   /* Markdown Editor */
