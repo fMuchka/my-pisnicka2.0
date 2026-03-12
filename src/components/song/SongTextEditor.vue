@@ -109,12 +109,10 @@
         }
 
         const type = match[1]?.toLowerCase() as SectionType;
-        const number = match[2] ? parseInt(match[2], 10) : 1;
 
         currentSection = {
           id: `section-${sectionCounter++}`,
           type: type in sectionTypes ? type : 'verse',
-          number,
           text: '',
           collapsed: false,
         };
@@ -135,7 +133,7 @@
   function serializeToMarkdown(secs: Section[]): string {
     return secs
       .map((section) => {
-        const header = `[${sectionTypes[section.type].label} ${section.number}]`;
+        const header = `[${sectionTypes[section.type].label}]`;
         return `${header}\n${section.text}`;
       })
       .join('\n\n');
@@ -186,30 +184,13 @@
   }
 
   // Get valid section options based on existing sections
-  function getValidSectionOptions(
-    excludeId?: string
-  ): Array<{ type: SectionType; number: number }> {
+  function getValidSectionOptions(): Array<{ type: SectionType; number: number }> {
     const options: Array<{ type: SectionType; number: number }> = [];
-    const counts: Record<SectionType, number> = {
-      verse: 0,
-      chorus: 0,
-      bridge: 0,
-      intro: 0,
-      outro: 0,
-    };
-
-    // Count existing sections
-    sections.value.forEach((section) => {
-      if (section.id !== excludeId) {
-        counts[section.type] = Math.max(counts[section.type], section.number);
-      }
-    });
 
     // Generate valid options
     Object.keys(sectionTypes).forEach((type) => {
       const t = type as SectionType;
-      const currentMax = counts[t];
-      options.push({ type: t, number: currentMax + 1 });
+      options.push({ type: t });
     });
 
     return options;
@@ -224,7 +205,6 @@
     const newSection: Section = {
       id: `section-${Date.now()}`,
       type: firstOption.type,
-      number: firstOption.number,
       text: '',
       collapsed: false,
     };
@@ -234,11 +214,10 @@
   }
 
   // Change section type
-  function changeSectionType(sectionId: string, type: SectionType, number: number) {
+  function changeSectionType(sectionId: string, type: SectionType) {
     const section = sections.value.find((s) => s.id === sectionId);
     if (section) {
       section.type = type;
-      section.number = number;
       updateMarkdown();
     }
   }
@@ -347,7 +326,7 @@
             <Menu.Root>
               <Menu.Trigger class="section-title-btn">
                 <span class="section-title">
-                  {{ sectionTypes[section.type].label }} {{ section.number }}
+                  {{ sectionTypes[section.type].label }}
                 </span>
                 <ChevronDown :size="16" />
               </Menu.Trigger>
@@ -356,12 +335,12 @@
                 <Menu.Content class="menu-content">
                   <Menu.Item
                     v-for="option in getValidSectionOptions(section.id)"
-                    :key="`${option.type}-${option.number}`"
-                    :value="`${option.type}-${option.number}`"
+                    :key="`${option.type}`"
+                    :value="`${option.type}`"
                     class="menu-item"
-                    @select="() => changeSectionType(section.id, option.type, option.number)"
+                    @select="() => changeSectionType(section.id, option.type)"
                   >
-                    {{ sectionTypes[option.type].label }} {{ option.number }}
+                    {{ sectionTypes[option.type].label }}
                   </Menu.Item>
                 </Menu.Content>
               </Menu.Positioner>
