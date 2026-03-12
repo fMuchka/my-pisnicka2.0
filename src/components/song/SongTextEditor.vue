@@ -81,7 +81,6 @@
   interface Section {
     id: string;
     type: SectionType;
-    number: number;
     text: string;
     collapsed: boolean;
   }
@@ -185,8 +184,8 @@
   }
 
   // Get valid section options based on existing sections
-  function getValidSectionOptions(): Array<{ type: SectionType; number: number }> {
-    const options: Array<{ type: SectionType; number: number }> = [];
+  function getValidSectionOptions(): Array<{ type: SectionType }> {
+    const options: Array<{ type: SectionType }> = [];
 
     // Generate valid options
     Object.keys(sectionTypes).forEach((type) => {
@@ -274,7 +273,7 @@
   // Matches chord tokens: root (A-G) + optional accidental + optional quality/extension + optional bass
   // Negative lookbehind/lookahead prevent matching chords inside regular words (e.g. "Am" in "Amazing")
   const CHORD_PATTERN =
-    /(?<![a-zA-Z])([A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?)(?![a-z])/g;
+    /\[([A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?)\]/g;
 
   function buildHighlightedHtml(text: string): string {
     const escaped = escapeHtml(text);
@@ -354,7 +353,7 @@
               <Menu.Positioner>
                 <Menu.Content class="menu-content">
                   <Menu.Item
-                    v-for="option in getValidSectionOptions(section.id)"
+                    v-for="option in getValidSectionOptions()"
                     :key="`${option.type}`"
                     :value="`${option.type}`"
                     class="menu-item"
