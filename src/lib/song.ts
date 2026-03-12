@@ -1,4 +1,14 @@
-import { collection, query, orderBy, limit, getDocs, Timestamp, addDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  Timestamp,
+  addDoc,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 /**
@@ -90,6 +100,26 @@ export async function fetchHomeSongs(): Promise<Song[]> {
   });
 
   return selectHomeSongs(allSongs);
+}
+
+export async function fetchSongById(songId: string): Promise<Song | null> {
+  const songRef = doc(db, 'songs', songId);
+  const songSnapshot = await getDoc(songRef);
+
+  if (!songSnapshot.exists()) {
+    return null;
+  }
+
+  const data = songSnapshot.data();
+
+  return {
+    id: songSnapshot.id,
+    title: data.title,
+    artist: data.artist,
+    text: data.text,
+    chords: data.chords,
+    createdAt: data.createdAt,
+  } as Song;
 }
 
 export const createSong = async (input: CreateSongInput): Promise<Song> => {

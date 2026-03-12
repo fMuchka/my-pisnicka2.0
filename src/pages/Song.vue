@@ -1,0 +1,217 @@
+<script setup lang="ts">
+  import { ArrowLeft } from 'lucide-vue-next';
+  import { computed } from 'vue';
+  import { useRoute, useRouter } from 'vue-router';
+  import PageHeader from '../components/PageHeader.vue';
+  import Button from '../components/core/Button.vue';
+  import ErrorMessage from '../components/core/ErrorMessage.vue';
+  import LoadingSpinner from '../components/core/LoadingSpinner.vue';
+  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
+  import { useSongDetail } from '../composables/useSongDetail';
+  import Routes from '../router/Routes';
+
+  const route = useRoute();
+  const router = useRouter();
+
+  const songId = computed(() => {
+    const routeSongId = route.params.songId;
+
+    if (typeof routeSongId === 'string') {
+      return routeSongId;
+    }
+
+    return null;
+  });
+
+  const { song, songError, songLoading } = useSongDetail(songId);
+
+  const songText = computed(() => song.value?.text?.trim() || 'Text písně zatím není k dispozici.');
+  const songChords = computed(() => song.value?.chords?.filter((chord) => chord.length > 0) ?? []);
+
+  const goBackHome = () => {
+    router.push({ path: Routes.Home });
+  };
+</script>
+
+<template>
+  <TopNavigation />
+
+  <main class="song-page">
+    <div class="song-shell">
+      <Button
+        class="back-button"
+        label="Zpět na přehled"
+        color-variation="Secondary"
+        style-variation="Text"
+        :icon="{ position: 'prepend', component: ArrowLeft }"
+        type="button"
+        @click="goBackHome"
+      />
+
+      <LoadingSpinner
+        v-if="songLoading"
+        label="Načítání písně..."
+      />
+
+      <ErrorMessage
+        v-else-if="songError"
+        :message="songError"
+      />
+
+      <section
+        v-else-if="song"
+        class="song-content"
+      >
+        <PageHeader
+          :title="song.title"
+          :tagline="song.artist"
+        />
+
+        <div
+          v-if="songChords.length > 0"
+          class="song-meta"
+        >
+          <span class="song-meta-label">Akordy</span>
+          <div class="song-chord-list">
+            <span
+              v-for="chord in songChords"
+              :key="chord"
+              class="song-chord-pill"
+            >
+              {{ chord }}
+            </span>
+          </div>
+        </div>
+
+        <article class="song-body">
+          <pre class="song-text">{{ songText }}</pre>
+        </article>
+      </section>
+
+      <section
+        v-else
+        class="song-empty-state"
+      >
+        <h1 class="song-empty-title">Píseň nebyla nalezena</h1>
+        <p class="song-empty-text">Zkontrolujte odkaz nebo se vraťte na přehled písní.</p>
+      </section>
+    </div>
+  </main>
+</template>
+
+<style scoped>
+  .song-page {
+    min-height: 100vh;
+    background:
+      radial-gradient(
+        circle at top,
+        color-mix(in srgb, var(--accent) 6%, transparent),
+        transparent 35%
+      ),
+      var(--bg-primary);
+    color: var(--text-primary);
+  }
+
+  .song-shell {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    padding: var(--space-lg) var(--space-md) var(--space-3xl);
+  }
+
+  .back-button {
+    margin-bottom: var(--space-md);
+  }
+
+  .song-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .song-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border: 1px solid color-mix(in srgb, var(--text-secondary) 20%, transparent);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--bg-secondary) 88%, white);
+  }
+
+  .song-meta-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .song-chord-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .song-chord-pill {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--bg-primary);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--text-chord);
+    font-family: var(--font-chord);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .song-body {
+    padding: var(--space-lg) var(--space-md);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--section-verse-bg) 76%, white),
+      color-mix(in srgb, var(--bg-primary) 92%, white)
+    );
+    box-shadow: 0 18px 50px rgba(28, 25, 23, 0.08);
+    overflow-x: auto;
+  }
+
+  .song-text {
+    margin: 0;
+    font-family: var(--font-chord);
+    font-size: clamp(1rem, 2.8vw, 1.125rem);
+    line-height: 1.8;
+    color: var(--text-chord);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .song-empty-state {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-xl) var(--space-md);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+  }
+
+  .song-empty-title {
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .song-empty-text {
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  @media (min-width: 768px) {
+    .song-shell {
+      padding: var(--space-2xl) var(--space-xl) var(--space-3xl);
+    }
+
+    .song-body {
+      padding: var(--space-xl);
+    }
+  }
+</style>

@@ -14,6 +14,7 @@ export const router = createRouter({
     { path: Routes.Home, component: () => import('../pages/Home.vue') },
     { path: Routes.Login, component: () => import('../pages/Login.vue') },
     { path: Routes.Join, component: () => import('../pages/Join.vue') },
+    { path: Routes.Song, component: () => import('../pages/Song.vue') },
     { path: Routes.Session, component: () => import('../pages/Session.vue') },
     { path: Routes.SessionList, component: () => import('../pages/SessionList.vue') },
   ],

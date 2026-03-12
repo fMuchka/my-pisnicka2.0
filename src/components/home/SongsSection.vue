@@ -11,6 +11,7 @@
     songsError: string | null;
     loadingSection: 'sessions' | 'songs' | null;
     openCreateSongDialog: () => void;
+    openSong: (song: Song) => void;
   }
 
   const props = defineProps<SongsSectionProps>();
@@ -71,14 +72,15 @@
       >
         <div class="artist-name">{{ key }}</div>
         <div class="songs-in-artist">
-          <div
+          <Button
             v-for="song in item"
             :key="song.id"
+            type="button"
             role="listitem"
             class="song-item"
-          >
-            {{ song.title }}
-          </div>
+            :label="song.title"
+            @click="props.openSong(song)"
+          />
         </div>
       </div>
     </div>
@@ -134,15 +136,26 @@
 
   .song-item {
     font-size: 14px;
-    color: var(--text-secondary);
-    padding: var(--space-xs) 0;
+    color: var(--text-primary);
+    padding: var(--space-xs) var(--space-sm);
     cursor: pointer;
     transition: color 150ms ease;
     text-decoration: none;
     display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-family: inherit;
   }
 
   .song-item:hover {
     color: var(--accent);
+  }
+
+  .song-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 </style>

@@ -6,6 +6,7 @@
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import { type Session } from '../lib/session';
+  import { type Song } from '../lib/song';
   import { useAuth } from '../composables/useAuth';
   import { useRouter } from 'vue-router';
   import Routes from '../router/Routes';
@@ -30,6 +31,10 @@
 
   const openSession = (session: Session) => {
     router.push({ path: Routes.Session, query: { sessionId: session.id } });
+  };
+
+  const openSong = (song: Song) => {
+    router.push({ path: Routes.Song.replace(':songId', song.id) });
   };
 
   const goToJoinPage = () => router.push({ path: Routes.Join });
@@ -58,6 +63,7 @@
       :songs-error="songsError"
       :loading-section="loadingSection"
       :open-create-song-dialog="openCreateSongDialog"
+      :open-song="openSong"
     />
 
     <!-- Create Session Dialog -->
