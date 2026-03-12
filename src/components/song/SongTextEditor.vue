@@ -15,6 +15,7 @@
       Record<string, unknown>,
       EmitsOptions
     >;
+    props?: LucideProps;
   };
 
   interface Props {
@@ -353,15 +354,15 @@
               :aria-label="section.collapsed ? 'Rozbalit' : 'Sbalit'"
               :icon="
                 section.collapsed
-                  ? { component: ChevronDown, position: 'prepend' }
-                  : { component: ChevronUp, position: 'prepend' }
+                  ? { component: ChevronDown, position: 'prepend', props: { size: 20 } }
+                  : { component: ChevronUp, position: 'prepend', props: { size: 20 } }
               "
               @click="toggleCollapse(section.id)"
             />
             <Button
               class="icon-btn delete-btn"
               aria-label="Smazat sekci"
-              :icon="{ component: X, position: 'append' }"
+              :icon="{ component: X, position: 'append', props: { size: 20 } }"
               @click="deleteSection(section.id)"
             />
           </div>
@@ -441,14 +442,13 @@
   .section-block {
     border: 3px solid;
     border-radius: var(--radius-md);
-    padding: var(--space-md);
+    padding: var(--space-sm);
     transition:
       transform 0.2s,
       box-shadow 0.2s;
   }
 
   .section-block:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
@@ -535,6 +535,7 @@
     display: flex;
     align-items: center;
     transition: background-color 0.2s;
+    min-height: unset;
   }
 
   .icon-btn:hover {
