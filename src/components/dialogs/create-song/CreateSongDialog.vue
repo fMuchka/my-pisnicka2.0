@@ -249,9 +249,8 @@
     background-color: var(--bg-primary);
     border-radius: var(--radius-md);
     padding: var(--space-md);
-    max-width: 480px;
-    width: 90%;
-    max-height: 85vh;
+    width: min(96vw, 640px);
+    max-height: 90vh;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow-y: auto;
@@ -359,5 +358,13 @@
   .field-error {
     font-size: 0.75rem;
     color: var(--color-error);
+  }
+
+  @media (min-width: 1024px) {
+    .dialog-content {
+      width: min(92vw, 980px);
+      max-height: 92vh;
+      padding: var(--space-xl);
+    }
   }
 </style>
