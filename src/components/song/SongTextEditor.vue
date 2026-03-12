@@ -49,25 +49,25 @@
 
   // Section type definitions with colors (CSS variables)
   const sectionTypes = {
+    intro: {
+      label: 'Intro',
+      color: 'var(--section-intro-bg)',
+      borderColor: 'var(--section-intro-border)',
+    },
     verse: {
       label: 'Verse',
       color: 'var(--section-verse-bg)',
       borderColor: 'var(--section-verse-border)',
-    },
-    chorus: {
-      label: 'Chorus',
-      color: 'var(--section-chorus-bg)',
-      borderColor: 'var(--section-chorus-border)',
     },
     bridge: {
       label: 'Bridge',
       color: 'var(--section-bridge-bg)',
       borderColor: 'var(--section-bridge-border)',
     },
-    intro: {
-      label: 'Intro',
-      color: 'var(--section-intro-bg)',
-      borderColor: 'var(--section-intro-border)',
+    chorus: {
+      label: 'Chorus',
+      color: 'var(--section-chorus-bg)',
+      borderColor: 'var(--section-chorus-border)',
     },
     outro: {
       label: 'Outro',
@@ -559,9 +559,11 @@
     border-radius: var(--radius-sm);
     font-family: monospace;
     font-size: 1rem;
-    resize: vertical;
+    resize: none;
+    overflow: hidden;
     background: rgba(255, 255, 255, 0.5);
     min-height: 80px;
+    field-sizing: content;
   }
 
   .section-textarea:focus {
