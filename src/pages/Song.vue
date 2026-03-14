@@ -35,6 +35,12 @@
 
   const songText = computed(() => song.value?.text?.trim() || 'Text písně zatím není k dispozici.');
   const songChords = computed(() => song.value?.chords?.filter((chord) => chord.length > 0) ?? []);
+  const sectionLabels: Record<SectionType, string> = {
+    intro: 'Intro',
+    verse: 'Verse',
+    chorus: 'Chorus',
+    outro: 'Outro',
+  };
 
   const sections = ref<Section[]>([]);
 
@@ -162,7 +168,23 @@
         </div>
 
         <article class="song-body">
-          <pre class="song-text">{{ songText }}</pre>
+          <template v-if="sections.length > 0">
+            <section
+              v-for="(section, index) in sections"
+              :key="`${section.type}-${index}`"
+              class="song-section"
+              :class="`song-section--${section.type}`"
+            >
+              <h2 class="song-section-title">{{ sectionLabels[section.type] }}</h2>
+              <pre class="song-text">{{ section.text }}</pre>
+            </section>
+          </template>
+          <div
+            v-else
+            class="song-text"
+          >
+            {{ songText }}
+          </div>
         </article>
       </section>
 
@@ -262,6 +284,43 @@
     );
     box-shadow: 0 18px 50px rgba(28, 25, 23, 0.08);
     overflow-x: auto;
+  }
+
+  .song-section {
+    --section-accent: color-mix(in srgb, var(--accent) 35%, transparent);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
+    border-left-width: 4px;
+    background: color-mix(in srgb, var(--section-accent) 12%, var(--bg-primary));
+  }
+
+  .song-section:not(:last-child) {
+    margin-bottom: var(--space-md);
+  }
+
+  .song-section--intro {
+    --section-accent: color-mix(in srgb, #f59e0b 55%, var(--accent));
+  }
+
+  .song-section--verse {
+    --section-accent: color-mix(in srgb, #16a34a 42%, var(--accent));
+  }
+
+  .song-section--chorus {
+    --section-accent: color-mix(in srgb, #0284c7 45%, var(--accent));
+  }
+
+  .song-section--outro {
+    --section-accent: color-mix(in srgb, #dc2626 35%, var(--accent));
+  }
+
+  .song-section-title {
+    margin: 0 0 var(--space-sm);
+    font-size: 13px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
   }
 
   .song-text {
