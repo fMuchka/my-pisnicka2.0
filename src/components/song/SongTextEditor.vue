@@ -25,7 +25,18 @@
 
   interface Emits {
     (e: 'update:modelValue', value: string): void;
+    (e: 'unique-chords', value: string[]): void;
   }
+
+  const CHORD_CORE_PATTERN =
+    '[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:/[A-GH][#b]?)?';
+  const STORED_CHORD_PATTERN = new RegExp(`\\[(${CHORD_CORE_PATTERN})\\]`, 'g');
+  const BRACKETED_VISUAL_PATTERN = /\[([^\]\s][^\]]*)\]/g;
+  // In visual mode, detect plain chords but avoid words and already-bracketed tokens.
+  const VISUAL_CHORD_PATTERN = new RegExp(
+    `(?<![a-zA-Z\\[])((${CHORD_CORE_PATTERN}))(?![a-z\\]])`,
+    'g'
+  );
 
   const props = withDefaults(defineProps<Props>(), {
     placeholder: 'Začněte psát text písně...',
@@ -143,6 +154,8 @@
   watch(
     () => props.modelValue,
     (newValue) => {
+      emit('unique-chords', extractUniqueChords(newValue));
+
       if (!isVisualMode.value) return; // Don't parse when in markdown mode
 
       if (newValue === lastEmittedMarkdown.value) {
@@ -159,6 +172,7 @@
     const markdown = serializeToMarkdown(sections.value);
     lastEmittedMarkdown.value = markdown;
     emit('update:modelValue', markdown);
+    emit('unique-chords', extractUniqueChords(markdown));
   }
 
   // Raw markdown editing
@@ -174,10 +188,12 @@
     if (isVisualMode.value) {
       // Switching to markdown mode
       rawMarkdown.value = serializeToMarkdown(sections.value);
+      emit('unique-chords', extractUniqueChords(rawMarkdown.value));
     } else {
       lastEmittedMarkdown.value = rawMarkdown.value;
       // Switching to visual mode
       emit('update:modelValue', rawMarkdown.value);
+      emit('unique-chords', extractUniqueChords(rawMarkdown.value));
       sections.value = parseMarkdown(rawMarkdown.value);
     }
     isVisualMode.value = !isVisualMode.value;
@@ -273,22 +289,27 @@
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  const CHORD_CORE_PATTERN =
-    '[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:/[A-GH][#b]?)?';
-  const STORED_CHORD_PATTERN = new RegExp(`\\[(${CHORD_CORE_PATTERN})\\]`, 'g');
-  const BRACKETED_VISUAL_PATTERN = /\[([^\]\s][^\]]*)\]/g;
-  // In visual mode, detect plain chords but avoid words and already-bracketed tokens.
-  const VISUAL_CHORD_PATTERN = new RegExp(
-    `(?<![a-zA-Z\\[])((${CHORD_CORE_PATTERN}))(?![a-z\\]])`,
-    'g'
-  );
-
   function toVisualChordText(text: string): string {
     return text.replace(STORED_CHORD_PATTERN, '$1').replace(BRACKETED_VISUAL_PATTERN, '$1');
   }
 
   function toStoredChordText(text: string): string {
     return text.replace(VISUAL_CHORD_PATTERN, '[$1]');
+  }
+
+  function extractUniqueChords(text: string): string[] {
+    const normalized = toVisualChordText(text);
+    const matches = normalized.matchAll(VISUAL_CHORD_PATTERN);
+    const uniqueChords = new Set<string>();
+
+    for (const match of matches) {
+      const chord = match[1] ?? match[0];
+      if (chord) {
+        uniqueChords.add(chord);
+      }
+    }
+
+    return Array.from(uniqueChords);
   }
 
   function buildHighlightedHtml(text: string): string {
@@ -435,7 +456,12 @@
         class="markdown-textarea"
         :placeholder="placeholder"
         rows="12"
-        @input="emit('update:modelValue', rawMarkdown)"
+        @input="
+          () => {
+            emit('update:modelValue', rawMarkdown);
+            emit('unique-chords', extractUniqueChords(rawMarkdown));
+          }
+        "
       />
     </div>
   </div>

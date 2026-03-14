@@ -56,6 +56,10 @@
     return isEditMode.value ? 'Uložit změny' : 'Vytvořit';
   });
 
+  const handleUniqueChordsChange = (uniqueChords: string[]) => {
+    songChords.value = uniqueChords.join(' ');
+  };
+
   const resetDialog = () => {
     songTitle.value = '';
     songArtist.value = '';
@@ -180,10 +184,22 @@
                 <SongTextEditor
                   v-model="songText"
                   placeholder="[Verse 1]&#10;G                D                Am&#10;  Mama take this badge off of me&#10;[Chorus]&#10;G         D               C&#10;  I can't use it anymore"
+                  @unique-chords="handleUniqueChordsChange"
                 />
                 <Field.HelperText class="field-helper">
                   Vytvořte sekce (Verse, Chorus, Bridge) a přidejte text s akordy
                 </Field.HelperText>
+              </Field.Root>
+
+              <!-- Chords Field -->
+              <Field.Root class="field">
+                <Field.Label class="field-label">Souhrn Akordů</Field.Label>
+                <Field.Input
+                  v-model="songChords"
+                  class="field-input"
+                  placeholder="G D Am C"
+                  :readonly="true"
+                />
               </Field.Root>
 
               <!-- General Error -->
