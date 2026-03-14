@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ArrowLeft, Pencil } from 'lucide-vue-next';
-  import { computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import PageHeader from '../components/PageHeader.vue';
   import Button from '../components/core/Button.vue';
@@ -12,6 +12,9 @@
   import { useSongDetail } from '../composables/useSongDetail';
   import type { Song } from '../lib/song';
   import Routes from '../router/Routes';
+
+  type SectionType = 'intro' | 'verse' | 'chorus' | 'outro';
+  type Section = { type: SectionType; text: string };
 
   const route = useRoute();
   const router = useRouter();
@@ -32,6 +35,57 @@
 
   const songText = computed(() => song.value?.text?.trim() || 'Text písně zatím není k dispozici.');
   const songChords = computed(() => song.value?.chords?.filter((chord) => chord.length > 0) ?? []);
+
+  const sections = ref<Section[]>([]);
+
+  const SECTION_MARKER_REGEX = /\[(intro|verse|chorus|outro)\]/gi;
+
+  watch(
+    songText,
+    (newValue) => {
+      const normalizedText = newValue.trim();
+
+      if (!normalizedText) {
+        sections.value = [];
+
+        return;
+      }
+
+      const markers = [...normalizedText.matchAll(SECTION_MARKER_REGEX)];
+
+      if (markers.length === 0) {
+        sections.value = [];
+
+        return;
+      }
+
+      const newSections: Section[] = [];
+
+      for (let i = 0; i < markers.length; i += 1) {
+        const marker = markers[i];
+
+        if (!marker || marker.index === undefined) {
+          continue;
+        }
+
+        const sectionType = marker[1]?.toLowerCase() as SectionType | undefined;
+        const sectionTextStart = marker.index + marker[0].length;
+        const nextMarker = markers[i + 1];
+        const sectionTextEnd = nextMarker?.index ?? normalizedText.length;
+        const sectionText = normalizedText.slice(sectionTextStart, sectionTextEnd).trim();
+
+        if (sectionType && sectionText.length > 0) {
+          newSections.push({
+            type: sectionType,
+            text: sectionText,
+          });
+        }
+      }
+
+      sections.value = newSections;
+    },
+    { immediate: true }
+  );
 
   const goBackHome = () => {
     router.push({ path: Routes.Home });
