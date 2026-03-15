@@ -63,8 +63,8 @@
       :songs-error="songsError"
       :loading-section="loadingSection"
       :open-create-song-dialog="openCreateSongDialog"
-      :open-song="openSong"
-      :openViewAllSongs="
+      :go-to-song="openSong"
+      :go-to-view-all-songs="
         () => {
           console.log('TO IMPLEMENT');
         }

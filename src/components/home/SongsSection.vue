@@ -11,8 +11,8 @@
     songsError: string | null;
     loadingSection: 'sessions' | 'songs' | null;
     openCreateSongDialog: () => void;
-    openSong: (song: Song) => void;
-    openViewAllSongs: () => void;
+    goToSong: (song: Song) => void;
+    goToViewAllSongs: () => void;
   }
 
   const props = defineProps<SongsSectionProps>();
@@ -47,7 +47,7 @@
           aria-label="Zobrazit všechny písně"
           color-variation="Primary"
           :label="'Zobrazit všechny písně'"
-          @click="props.openViewAllSongs"
+          @click="props.goToViewAllSongs"
         />
       </div>
     </div>
@@ -87,7 +87,7 @@
             role="listitem"
             class="song-item"
             :label="song.title"
-            @click="props.openSong(song)"
+            @click="props.goToSong(song)"
           />
         </div>
       </div>
