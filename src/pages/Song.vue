@@ -7,6 +7,8 @@
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
+  import SongChordOverview from '../components/song/SongChordOverview.vue';
+  import ChordLayoutRenderer from '../components/song/ChordLayoutRenderer.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
@@ -111,26 +113,28 @@
 
   <main class="song-page">
     <div class="song-shell">
-      <Button
-        class="back-button"
-        label="Zpět na přehled"
-        color-variation="Secondary"
-        style-variation="Text"
-        :icon="{ position: 'prepend', component: ArrowLeft }"
-        type="button"
-        @click="goBackHome"
-      />
+      <div class="song-quick-nav">
+        <Button
+          class="back-button"
+          label="Zpět na přehled"
+          color-variation="Secondary"
+          style-variation="Text"
+          :icon="{ position: 'prepend', component: ArrowLeft }"
+          type="button"
+          @click="goBackHome"
+        />
 
-      <Button
-        v-if="isAuthenticated && song"
-        class="edit-button"
-        label="Upravit píseň"
-        color-variation="Primary"
-        style-variation="Outlined"
-        :icon="{ position: 'prepend', component: Pencil }"
-        type="button"
-        @click="openEditSongDialog"
-      />
+        <Button
+          v-if="isAuthenticated && song"
+          class="edit-button"
+          label="Upravit píseň"
+          color-variation="Primary"
+          style-variation="Outlined"
+          :icon="{ position: 'prepend', component: Pencil }"
+          type="button"
+          @click="openEditSongDialog"
+        />
+      </div>
 
       <LoadingSpinner
         v-if="songLoading"
@@ -151,21 +155,10 @@
           :tagline="song.artist"
         />
 
-        <div
+        <SongChordOverview
           v-if="songChords.length > 0"
-          class="song-meta"
-        >
-          <span class="song-meta-label">Akordy</span>
-          <div class="song-chord-list">
-            <span
-              v-for="chord in songChords"
-              :key="chord"
-              class="song-chord-pill"
-            >
-              {{ chord }}
-            </span>
-          </div>
-        </div>
+          :chords="songChords"
+        />
 
         <article class="song-body">
           <template v-if="sections.length > 0">
@@ -176,15 +169,17 @@
               :class="`song-section--${section.type}`"
             >
               <h2 class="song-section-title">{{ sectionLabels[section.type] }}</h2>
-              <pre class="song-text">{{ section.text }}</pre>
+              <ChordLayoutRenderer
+                class="song-text"
+                :text="section.text"
+              />
             </section>
           </template>
-          <div
+          <ChordLayoutRenderer
             v-else
             class="song-text"
-          >
-            {{ songText }}
-          </div>
+            :text="songText"
+          />
         </article>
       </section>
 
@@ -239,51 +234,24 @@
     gap: var(--space-lg);
   }
 
-  .song-meta {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-    padding: var(--space-md);
-    border: 1px solid color-mix(in srgb, var(--text-secondary) 20%, transparent);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--bg-secondary) 88%, white);
-  }
-
-  .song-meta-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .song-chord-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-  }
-
-  .song-chord-pill {
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: var(--bg-primary);
-    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-    color: var(--text-chord);
-    font-family: var(--font-chord);
-    font-size: 14px;
-    font-weight: 600;
-  }
-
   .song-body {
-    padding: var(--space-lg) var(--space-md);
-    border-radius: var(--radius-lg);
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--section-verse-bg) 76%, white),
-      color-mix(in srgb, var(--bg-primary) 92%, white)
-    );
-    box-shadow: 0 18px 50px rgba(28, 25, 23, 0.08);
+    --song-anchored-line-height: 4;
+    --song-chord-font-size: 1rem;
+    --song-text-line-height: 6;
+    --song-text-font-family: monospace;
+    --song-text-font-size: 1rem;
+    --song-chord-inline-color: var(--text-chord);
+    --song-chord-inline-bg: color-mix(in srgb, var(--accent) 18%, white);
+    --song-chord-inline-font-size: inherit;
+    --song-chord-inline-font-family: inherit;
+    --song-chord-inline-font-weight: inherit;
+    --song-chord-inline-radius: 3px;
     overflow-x: auto;
+  }
+
+  .song-quick-nav {
+    display: flex;
+    justify-content: space-between;
   }
 
   .song-section {
@@ -324,13 +292,11 @@
   }
 
   .song-text {
+    --song-text-color: var(--text-chord);
     margin: 0;
-    font-family: var(--font-chord);
-    font-size: clamp(1rem, 2.8vw, 1.125rem);
-    line-height: 1.8;
-    color: var(--text-chord);
-    white-space: pre-wrap;
-    word-break: break-word;
+    font-family: var(--song-text-font-family);
+    font-size: var(--song-text-font-size);
+    line-height: var(--song-text-line-height);
   }
 
   .song-empty-state {
@@ -351,15 +317,5 @@
     color: var(--text-secondary);
     font-size: 16px;
     line-height: 1.6;
-  }
-
-  @media (min-width: 768px) {
-    .song-shell {
-      padding: var(--space-2xl) var(--space-xl) var(--space-3xl);
-    }
-
-    .song-body {
-      padding: var(--space-xl);
-    }
   }
 </style>
