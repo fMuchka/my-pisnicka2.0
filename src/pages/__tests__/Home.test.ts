@@ -5,6 +5,15 @@ import '@testing-library/jest-dom';
 import Home from '../Home.vue';
 import { Timestamp } from 'firebase/firestore';
 
+type MockRef<T> = { __v_isRef: true; value: T };
+
+function mockRef<T>(value: T): MockRef<T> {
+  return {
+    __v_isRef: true,
+    value,
+  };
+}
+
 // Mock router for navigation assertions
 const mockPush = vi.fn();
 vi.mock('vue-router', () => ({
@@ -12,8 +21,8 @@ vi.mock('vue-router', () => ({
 }));
 
 // Mock auth composable - default to authenticated host
-const mockUser = vi.hoisted(() => ({ value: { uid: 'host-123', displayName: 'Test Host' } }));
-const mockIsAuthenticated = vi.hoisted(() => ({ value: true }));
+const mockUser = vi.hoisted(() => mockRef({ uid: 'host-123', displayName: 'Test Host' }));
+const mockIsAuthenticated = vi.hoisted(() => mockRef(true));
 vi.mock('../../composables/useAuth', () => ({
   useAuth: () => ({
     user: mockUser,
@@ -288,6 +297,35 @@ describe('Home Page - Component Tests', () => {
 
       const joinLink = screen.getByLabelText('Připojit se k relaci');
       expect(joinLink).toBeInTheDocument();
+    });
+
+    it('opens create-song dialog when create song button is clicked', async () => {
+      const user = userEvent.setup();
+      render(Home);
+
+      await user.click(screen.getByLabelText(/Vytvořit novou píseň/i));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('create-song-dialog')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to song detail when a song item is clicked', async () => {
+      const user = userEvent.setup();
+
+      mocks.mockFetchHomeSongs.mockResolvedValue([
+        { id: 'song-1', title: 'Song One', artist: 'ArtistA' },
+      ]);
+
+      render(Home);
+
+      await waitFor(() => {
+        expect(screen.getByText('Song One')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Song One'));
+
+      expect(router.push).toHaveBeenCalledWith({ path: '/song/song-1' });
     });
 
     it('opens create-session dialog when create button clicked', async () => {
