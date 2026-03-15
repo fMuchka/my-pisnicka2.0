@@ -10,6 +10,7 @@ export function useHomeData(user: Ref<User | null>) {
   const songsError = ref<string | null>(null);
   const sessionsLoading = ref(true);
   const songsLoading = ref(true);
+  const userId = user.value?.uid;
 
   const loadingSection = computed<'sessions' | 'songs' | null>(() => {
     if (sessionsLoading.value && latestSessions.value.length === 0) {
@@ -43,10 +44,12 @@ export function useHomeData(user: Ref<User | null>) {
   const fetchData = async () => {
     try {
       sessionsError.value = null;
-      // BUG: Passing an empty string when user is null can trigger ambiguous query behavior.
-      // PATTERN: Guard user.value?.uid before querying and skip fetch until auth is ready.
-      // See: https://firebase.google.com/docs/firestore/query-data/queries
-      latestSessions.value = await fetchLatestSessions(user.value?.uid ?? '');
+
+      if (userId) {
+        latestSessions.value = await fetchLatestSessions(userId);
+      } else {
+        latestSessions.value = [];
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Chyba při načítání relací';
       sessionsError.value = `Chyba při načítání relací. ${errorMessage}`;
