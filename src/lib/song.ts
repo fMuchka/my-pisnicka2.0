@@ -158,10 +158,7 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     chords: input.chords,
   };
 
-  // PATTERN: Double assertion weakens type guarantees.
-  // KIS: Prefer a narrowly typed update payload compatible with Firestore updateDoc.
-  // See: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions
-  await updateDoc(songRef, songData as unknown as { [x: string]: unknown });
+  await updateDoc(songRef, songData as DocumentData);
 
   return {
     id: songId,
