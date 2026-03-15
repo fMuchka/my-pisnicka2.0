@@ -26,7 +26,7 @@
   const songTitle = ref('');
   const songArtist = ref('');
   const songText = ref('');
-  const songChords = ref('');
+  const songChords = ref<string[]>([]);
   const createError = ref<string | null>(null);
   const isCreating = ref(false);
 
@@ -57,14 +57,14 @@
   });
 
   const handleUniqueChordsChange = (uniqueChords: string[]) => {
-    songChords.value = uniqueChords.join(' ');
+    songChords.value = uniqueChords;
   };
 
   const resetDialog = () => {
     songTitle.value = '';
     songArtist.value = '';
     songText.value = '';
-    songChords.value = '';
+    songChords.value = [];
     createError.value = null;
     isCreating.value = false;
   };
@@ -79,7 +79,7 @@
         songTitle.value = props.songToEdit.title;
         songArtist.value = props.songToEdit.artist;
         songText.value = props.songToEdit.text ?? '';
-        songChords.value = props.songToEdit.chords?.join(' ') ?? '';
+        songChords.value = props.songToEdit.chords ?? [];
       }
     }
   });
@@ -91,16 +91,11 @@
     createError.value = null;
 
     try {
-      const chordsList = songChords.value
-        .trim()
-        .split(/[\s,]+/)
-        .filter((c) => c.length > 0);
-
       const songInput = {
         title: trimmedTitle.value,
         artist: trimmedArtist.value,
         text: songText.value.trim() || undefined,
-        chords: chordsList.length > 0 ? chordsList : [],
+        chords: songChords.value,
       };
 
       const savedSong =
@@ -187,21 +182,10 @@
                   @unique-chords="handleUniqueChordsChange"
                 />
                 <Field.HelperText class="field-helper">
-                  Vytvořte sekce (Verse, Chorus, Bridge) a přidejte text s akordy
+                  Upravujte markdown v textovém režimu, vizuální režim slouží jako náhled sekcí a
+                  akordů
                 </Field.HelperText>
               </Field.Root>
-
-              <!-- Chords Field -->
-              <Field.Root class="field">
-                <Field.Label class="field-label">Souhrn Akordů</Field.Label>
-                <Field.Input
-                  v-model="songChords"
-                  class="field-input"
-                  placeholder="G D Am C"
-                  :readonly="true"
-                />
-              </Field.Root>
-
               <!-- General Error -->
               <Field.ErrorText
                 v-if="createError"
