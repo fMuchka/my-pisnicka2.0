@@ -12,6 +12,7 @@
     loadingSection: 'sessions' | 'songs' | null;
     openCreateSongDialog: () => void;
     openSong: (song: Song) => void;
+    openViewAllSongs: () => void;
   }
 
   const props = defineProps<SongsSectionProps>();
@@ -41,14 +42,12 @@
             </Tooltip.Positioner>
           </Teleport>
         </Tooltip.Root>
-        <!-- BUG: This button is currently non-functional because no click handler is bound. -->
-        <!-- PATTERN: Add @click with a navigation callback prop (same pattern as SessionsSection). -->
-        <!-- See: https://vuejs.org/guide/essentials/event-handling.html -->
         <Button
           class="view-all-link"
           aria-label="Zobrazit všechny písně"
           color-variation="Primary"
           :label="'Zobrazit všechny písně'"
+          @click="props.openViewAllSongs"
         />
       </div>
     </div>

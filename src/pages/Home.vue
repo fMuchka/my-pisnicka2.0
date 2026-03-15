@@ -64,6 +64,11 @@
       :loading-section="loadingSection"
       :open-create-song-dialog="openCreateSongDialog"
       :open-song="openSong"
+      :openViewAllSongs="
+        () => {
+          console.log('TO IMPLEMENT');
+        }
+      "
     />
 
     <!-- Create Session Dialog -->
