@@ -95,6 +95,9 @@ export async function fetchHomeSongs(): Promise<Song[]> {
   const q = query(songsRef, orderBy('artist', 'asc'), orderBy('title', 'asc'), limit(30));
 
   const snapshot = await getDocs(q);
+  // DRY: Song mapping shape is repeated here and in fetchSongById.
+  // PATTERN: Extract a shared mapSongDoc helper to keep schema changes centralized.
+  // See: https://www.typescriptlang.org/docs/handbook/2/functions.html
   const allSongs = snapshot.docs.map((doc) => {
     const data = doc.data();
     return {
@@ -120,6 +123,7 @@ export async function fetchSongById(songId: string): Promise<Song | null> {
 
   const data = songSnapshot.data();
 
+  // DRY: Keep this mapping consistent with fetchHomeSongs via one mapper function.
   return {
     id: songSnapshot.id,
     title: data.title,
@@ -156,6 +160,9 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     chords: input.chords,
   };
 
+  // PATTERN: Double assertion weakens type guarantees.
+  // KIS: Prefer a narrowly typed update payload compatible with Firestore updateDoc.
+  // See: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions
   await updateDoc(songRef, songData as unknown as { [x: string]: unknown });
 
   return {

@@ -176,6 +176,9 @@ describe('Home Page - Component Tests', () => {
   });
 
   describe('Songs Display', () => {
+    // DRY: The next 4 song-rendering tests verify nearly identical behavior with different fixtures.
+    // KIS: Convert these into one parameterized test (test.each) to reduce maintenance noise.
+    // See: https://vitest.dev/api/#test-each
     it('renders songs returned by helper', async () => {
       const mockSongs: Song[] = [
         { id: 's1', title: 'Hádam', artist: 'Chinaski', chords: 'Am C G' },

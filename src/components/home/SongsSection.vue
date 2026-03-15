@@ -41,6 +41,9 @@
             </Tooltip.Positioner>
           </Teleport>
         </Tooltip.Root>
+        <!-- BUG: This button is currently non-functional because no click handler is bound. -->
+        <!-- PATTERN: Add @click with a navigation callback prop (same pattern as SessionsSection). -->
+        <!-- See: https://vuejs.org/guide/essentials/event-handling.html -->
         <Button
           class="view-all-link"
           aria-label="Zobrazit všechny písně"
@@ -64,6 +67,9 @@
       v-else
       class="song-tree"
     >
+      <!-- PATTERN: Consider adding an explicit empty state when displaySongs is empty, -->
+      <!-- matching SessionsSection's 'Zadne relace' UX for consistency. -->
+      <!-- See: https://vuejs.org/guide/essentials/conditional.html -->
       <div
         v-for="(item, key) of props.displaySongs"
         :key="key"

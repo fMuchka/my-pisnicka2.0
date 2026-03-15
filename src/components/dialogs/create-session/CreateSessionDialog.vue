@@ -102,6 +102,9 @@
           >
             <Field.Label class="field-label">
               Název relace
+              <!-- PATTERN: This class on Field.RequiredIndicator produces repeated Vue extraneous-attrs warnings in tests. -->
+              <!-- NOTE: Prefer styling a wrapped span or component part API that supports attrs explicitly. -->
+              <!-- See: https://vuejs.org/guide/components/attrs.html -->
               <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
             </Field.Label>
             <Field.Input
