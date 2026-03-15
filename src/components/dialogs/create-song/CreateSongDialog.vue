@@ -137,10 +137,9 @@
               <Field.Root class="field">
                 <Field.Label class="field-label">
                   Název písně
-                  <!-- PATTERN: class on Field.RequiredIndicator leads to Vue extraneous-attrs warnings in tests. -->
-                  <!-- NOTE: Prefer a wrapper span or supported part styling API instead of relying on attr inheritance. -->
-                  <!-- See: https://ark-ui.com/vue/docs/components/field -->
-                  <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
+                  <Field.RequiredIndicator>
+                    <span class="field-required">*</span>
+                  </Field.RequiredIndicator>
                 </Field.Label>
                 <Field.Input
                   v-model="songTitle"
@@ -160,10 +159,9 @@
               <Field.Root class="field">
                 <Field.Label class="field-label">
                   Umělec
-                  <!-- PATTERN: Same warning source as above; centralize required-indicator styling approach. -->
-                  <!-- DRY: Reusing one approach in both fields avoids repeated warning patterns. -->
-                  <!-- See: https://vuejs.org/guide/components/attrs.html -->
-                  <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
+                  <Field.RequiredIndicator>
+                    <span class="field-required">*</span>
+                  </Field.RequiredIndicator>
                 </Field.Label>
                 <Field.Input
                   v-model="songArtist"
