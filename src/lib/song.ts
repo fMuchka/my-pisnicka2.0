@@ -9,8 +9,10 @@ import {
   doc,
   getDoc,
   updateDoc,
+  type DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
 
 /**
  * Song interface with WYSIWYG text containing chords above lyrics.
@@ -85,6 +87,20 @@ export function selectHomeSongs(songs: Song[]): Song[] {
   return result;
 }
 
+const mapSongDoc = (
+  doc: QueryDocumentSnapshot<DocumentData, DocumentData>,
+  data: DocumentData
+): Song => {
+  return {
+    id: doc.id,
+    title: data.title,
+    artist: data.artist,
+    text: data.text,
+    chords: data.chords,
+    createdAt: data.createdAt,
+  };
+};
+
 /**
  * Fetch songs for home screen from Firestore.
  * Queries up to 30 songs ordered by artist ASC, title ASC,
@@ -95,19 +111,9 @@ export async function fetchHomeSongs(): Promise<Song[]> {
   const q = query(songsRef, orderBy('artist', 'asc'), orderBy('title', 'asc'), limit(30));
 
   const snapshot = await getDocs(q);
-  // DRY: Song mapping shape is repeated here and in fetchSongById.
-  // PATTERN: Extract a shared mapSongDoc helper to keep schema changes centralized.
-  // See: https://www.typescriptlang.org/docs/handbook/2/functions.html
   const allSongs = snapshot.docs.map((doc) => {
     const data = doc.data();
-    return {
-      id: doc.id,
-      title: data.title,
-      artist: data.artist,
-      text: data.text,
-      chords: data.chords,
-      createdAt: data.createdAt,
-    } as Song;
+    return mapSongDoc(doc, data);
   });
 
   return selectHomeSongs(allSongs);
@@ -123,15 +129,7 @@ export async function fetchSongById(songId: string): Promise<Song | null> {
 
   const data = songSnapshot.data();
 
-  // DRY: Keep this mapping consistent with fetchHomeSongs via one mapper function.
-  return {
-    id: songSnapshot.id,
-    title: data.title,
-    artist: data.artist,
-    text: data.text,
-    chords: data.chords,
-    createdAt: data.createdAt,
-  } as Song;
+  return mapSongDoc(songSnapshot, data);
 }
 
 export const createSong = async (input: CreateSongInput): Promise<Song> => {
