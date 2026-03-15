@@ -178,7 +178,7 @@
                 <Field.Label class="field-label"> Text s akordy </Field.Label>
                 <SongTextEditor
                   v-model="songText"
-                  placeholder="[Verse 1]&#10;G                D                Am&#10;  Mama take this badge off of me&#10;[Chorus]&#10;G         D               C&#10;  I can't use it anymore"
+                  placeholder="[Verse]&#10;[G] Mama take this [D] badge off of [Am] me"
                   @unique-chords="handleUniqueChordsChange"
                 />
                 <Field.HelperText class="field-helper">
