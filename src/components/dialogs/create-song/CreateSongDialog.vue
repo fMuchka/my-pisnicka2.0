@@ -4,18 +4,21 @@
   import { computed, ref, watch } from 'vue';
   import Button from '../../core/Button.vue';
   import SongTextEditor from '../../song/SongTextEditor.vue';
-  import { createSong } from '../../../lib/song';
+  import { createSong, updateSong, type Song } from '../../../lib/song';
 
   interface Props {
     open?: boolean;
+    songToEdit?: Song | null;
   }
 
   interface Emits {
     (e: 'update:open', value: boolean): void;
+    (e: 'saved', song: Song): void;
   }
 
   const props = withDefaults(defineProps<Props>(), {
     open: false,
+    songToEdit: null,
   });
 
   const emit = defineEmits<Emits>();
@@ -23,7 +26,7 @@
   const songTitle = ref('');
   const songArtist = ref('');
   const songText = ref('');
-  const songChords = ref('');
+  const songChords = ref<string[]>([]);
   const createError = ref<string | null>(null);
   const isCreating = ref(false);
 
@@ -38,13 +41,30 @@
   const isArtistValid = computed(() => trimmedArtist.value.length >= 1);
   const isFormValid = computed(() => isTitleValid.value && isArtistValid.value);
   const isSubmitDisabled = computed(() => !isFormValid.value || isCreating.value);
-  const submitLabel = computed(() => (isCreating.value ? 'Vytvářím...' : 'Vytvořit'));
+  const isEditMode = computed(() => props.songToEdit != null);
+  const dialogTitle = computed(() => (isEditMode.value ? 'Upravit píseň' : 'Vytvořit píseň'));
+  const dialogDescription = computed(() =>
+    isEditMode.value
+      ? 'Upravte název písně, umělce a text s akordy.'
+      : 'Zadejte název písně, umělce a volitelně text s akordy.'
+  );
+  const submitLabel = computed(() => {
+    if (isCreating.value) {
+      return isEditMode.value ? 'Ukládám...' : 'Vytvářím...';
+    }
+
+    return isEditMode.value ? 'Uložit změny' : 'Vytvořit';
+  });
+
+  const handleUniqueChordsChange = (uniqueChords: string[]) => {
+    songChords.value = uniqueChords;
+  };
 
   const resetDialog = () => {
     songTitle.value = '';
     songArtist.value = '';
     songText.value = '';
-    songChords.value = '';
+    songChords.value = [];
     createError.value = null;
     isCreating.value = false;
   };
@@ -54,35 +74,42 @@
       resetDialog();
     } else {
       createError.value = null;
+
+      if (props.songToEdit != null) {
+        songTitle.value = props.songToEdit.title;
+        songArtist.value = props.songToEdit.artist;
+        songText.value = props.songToEdit.text ?? '';
+        songChords.value = props.songToEdit.chords ?? [];
+      }
     }
   });
 
-  const handleCreateSong = async () => {
+  const handleCreateOrUpdateSong = async () => {
     if (isSubmitDisabled.value) return;
 
     isCreating.value = true;
     createError.value = null;
 
     try {
-      const chordsList = songChords.value
-        .trim()
-        .split(/[\s,]+/)
-        .filter((c) => c.length > 0);
-
-      const createdSong = await createSong({
+      const songInput = {
         title: trimmedTitle.value,
         artist: trimmedArtist.value,
         text: songText.value.trim() || undefined,
-        chords: chordsList.length > 0 ? chordsList : [],
-      });
+        chords: songChords.value,
+      };
 
-      console.log(createdSong);
+      const savedSong =
+        isEditMode.value && props.songToEdit != null
+          ? await updateSong(props.songToEdit.id, songInput)
+          : await createSong(songInput);
+
+      emit('saved', savedSong);
 
       isOpen.value = false;
-    } catch (_error) {
-      console.log(_error);
-
-      createError.value = 'Nepodařilo se vytvořit píseň. Zkus to prosím znovu.';
+    } catch {
+      createError.value = isEditMode.value
+        ? 'Nepodařilo se upravit píseň. Zkus to prosím znovu.'
+        : 'Nepodařilo se vytvořit píseň. Zkus to prosím znovu.';
     } finally {
       isCreating.value = false;
     }
@@ -98,19 +125,21 @@
           class="dialog-content"
           data-testid="create-song-dialog"
         >
-          <Dialog.Title class="dialog-title">Vytvořit píseň</Dialog.Title>
+          <Dialog.Title class="dialog-title">{{ dialogTitle }}</Dialog.Title>
 
           <div class="dialog-body">
-            <Dialog.Description class="dialog-description">
-              Zadejte název písně, umělce a volitelně text s akordy.
-            </Dialog.Description>
+            <Dialog.Description class="dialog-description">{{
+              dialogDescription
+            }}</Dialog.Description>
 
             <div class="form-fields">
               <!-- Title Field -->
               <Field.Root class="field">
                 <Field.Label class="field-label">
                   Název písně
-                  <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
+                  <Field.RequiredIndicator>
+                    <span class="field-required">*</span>
+                  </Field.RequiredIndicator>
                 </Field.Label>
                 <Field.Input
                   v-model="songTitle"
@@ -130,7 +159,9 @@
               <Field.Root class="field">
                 <Field.Label class="field-label">
                   Umělec
-                  <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
+                  <Field.RequiredIndicator>
+                    <span class="field-required">*</span>
+                  </Field.RequiredIndicator>
                 </Field.Label>
                 <Field.Input
                   v-model="songArtist"
@@ -151,13 +182,14 @@
                 <Field.Label class="field-label"> Text s akordy </Field.Label>
                 <SongTextEditor
                   v-model="songText"
-                  placeholder="[Verse 1]&#10;G                D                Am&#10;  Mama take this badge off of me&#10;[Chorus]&#10;G         D               C&#10;  I can't use it anymore"
+                  placeholder="[Verse]&#10;[G] Mama take this [D] badge off of [Am] me"
+                  @unique-chords="handleUniqueChordsChange"
                 />
                 <Field.HelperText class="field-helper">
-                  Vytvořte sekce (Verse, Chorus, Bridge) a přidejte text s akordy
+                  Upravujte markdown v textovém režimu, vizuální režim slouží jako náhled sekcí a
+                  akordů
                 </Field.HelperText>
               </Field.Root>
-
               <!-- General Error -->
               <Field.ErrorText
                 v-if="createError"
@@ -182,7 +214,7 @@
               data-testid="create-song-submit"
               type="button"
               :disabled="isSubmitDisabled"
-              @click="handleCreateSong"
+              @click="handleCreateOrUpdateSong"
             />
           </div>
 
@@ -221,9 +253,8 @@
     background-color: var(--bg-primary);
     border-radius: var(--radius-md);
     padding: var(--space-md);
-    max-width: 480px;
-    width: 90%;
-    max-height: 85vh;
+    width: min(96vw, 640px);
+    max-height: 90vh;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow-y: auto;
@@ -331,5 +362,13 @@
   .field-error {
     font-size: 0.75rem;
     color: var(--color-error);
+  }
+
+  @media (min-width: 1024px) {
+    .dialog-content {
+      width: min(92vw, 980px);
+      max-height: 92vh;
+      padding: var(--space-xl);
+    }
   }
 </style>

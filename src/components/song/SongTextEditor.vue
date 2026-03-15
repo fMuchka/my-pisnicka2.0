@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue';
-  import { Menu } from '@ark-ui/vue/menu';
-  import { ChevronDown, Plus, GripVertical, ChevronUp, Eye, Code, X } from 'lucide-vue-next';
-  import { useSortable } from '@vueuse/integrations/useSortable';
+  import { computed, ref, watch } from 'vue';
+  import { Eye, Code } from 'lucide-vue-next';
+  import ChordLayoutRenderer from './ChordLayoutRenderer.vue';
+  import SongChordOverview from './SongChordOverview.vue';
   import Button from '../core/Button.vue';
   import type { LucideProps } from 'lucide-vue-next';
   import type { EmitsOptions, FunctionalComponent } from 'vue';
@@ -15,6 +15,7 @@
       Record<string, unknown>,
       EmitsOptions
     >;
+    props?: LucideProps;
   };
 
   interface Props {
@@ -24,7 +25,18 @@
 
   interface Emits {
     (e: 'update:modelValue', value: string): void;
+    (e: 'unique-chords', value: string[]): void;
   }
+
+  const CHORD_CORE_PATTERN =
+    '[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:/[A-GH][#b]?)?';
+  const STORED_CHORD_PATTERN = new RegExp(`\\[(${CHORD_CORE_PATTERN})\\]`, 'g');
+  const BRACKETED_VISUAL_PATTERN = /\[([^\]\s][^\]]*)\]/g;
+  // In visual mode, detect plain chords but avoid words and already-bracketed tokens.
+  const VISUAL_CHORD_PATTERN = new RegExp(
+    `(?<![a-zA-Z\\[])((${CHORD_CORE_PATTERN}))(?![a-z\\]])`,
+    'g'
+  );
 
   const props = withDefaults(defineProps<Props>(), {
     placeholder: 'Začněte psát text písně...',
@@ -41,52 +53,20 @@
     component: isVisualMode.value ? Code : Eye,
   }));
 
-  const addSectionIcon = computed<ButtonIcon>(() => ({
-    position: 'prepend',
-    component: Plus,
-  }));
-
-  // Section type definitions with colors (CSS variables)
-  const sectionTypes = {
-    verse: {
-      label: 'Verse',
-      color: 'var(--section-verse-bg)',
-      borderColor: 'var(--section-verse-border)',
-    },
-    chorus: {
-      label: 'Chorus',
-      color: 'var(--section-chorus-bg)',
-      borderColor: 'var(--section-chorus-border)',
-    },
-    bridge: {
-      label: 'Bridge',
-      color: 'var(--section-bridge-bg)',
-      borderColor: 'var(--section-bridge-border)',
-    },
-    intro: {
-      label: 'Intro',
-      color: 'var(--section-intro-bg)',
-      borderColor: 'var(--section-intro-border)',
-    },
-    outro: {
-      label: 'Outro',
-      color: 'var(--section-outro-bg)',
-      borderColor: 'var(--section-outro-border)',
-    },
+  const sectionLabels = {
+    intro: 'Intro',
+    verse: 'Verse',
+    bridge: 'Bridge',
+    chorus: 'Chorus',
+    outro: 'Outro',
   } as const;
 
-  type SectionType = keyof typeof sectionTypes;
+  type SectionType = keyof typeof sectionLabels;
 
   interface Section {
-    id: string;
     type: SectionType;
-    number: number;
     text: string;
-    collapsed: boolean;
   }
-
-  const sections = ref<Section[]>([]);
-  const sectionsListRef = ref<HTMLElement | null>(null);
 
   // Parse markdown to sections
   function parseMarkdown(markdown: string): Section[] {
@@ -94,301 +74,150 @@
 
     const lines = markdown.split('\n');
     const parsed: Section[] = [];
-    let currentSection: Section | null = null;
-    let sectionCounter = 0;
+    let currentType: SectionType | null = null;
+    let currentLines: string[] = [];
+
+    const pushSection = () => {
+      if (!currentType) {
+        return;
+      }
+
+      const text = currentLines.join('\n').trim();
+
+      if (!text) {
+        return;
+      }
+
+      parsed.push({
+        type: currentType,
+        text,
+      });
+    };
 
     for (const line of lines) {
       const match = line.match(/^\[([A-Za-z]+)\s*(\d+)?\]$/);
+
       if (match) {
-        // Save previous section if exists
-        if (currentSection) {
-          parsed.push(currentSection);
-        }
+        pushSection();
 
         const type = match[1]?.toLowerCase() as SectionType;
-        const number = match[2] ? parseInt(match[2], 10) : 1;
+        currentType = type in sectionLabels ? type : 'verse';
+        currentLines = [];
+        continue;
+      }
 
-        currentSection = {
-          id: `section-${sectionCounter++}`,
-          type: type in sectionTypes ? type : 'verse',
-          number,
-          text: '',
-          collapsed: false,
-        };
-      } else if (currentSection) {
-        currentSection.text += (currentSection.text ? '\n' : '') + line;
+      if (currentType) {
+        currentLines.push(line);
       }
     }
 
-    // Add last section
-    if (currentSection) {
-      parsed.push(currentSection);
-    }
+    pushSection();
 
     return parsed;
   }
 
-  // Serialize sections back to markdown
-  function serializeToMarkdown(secs: Section[]): string {
-    return secs
-      .map((section) => {
-        const header = `[${sectionTypes[section.type].label} ${section.number}]`;
-        return `${header}\n${section.text}`;
-      })
-      .join('\n\n');
-  }
-
-  // Initialize sections from modelValue
-  watch(
-    () => props.modelValue,
-    (newValue) => {
-      if (!isVisualMode.value) return; // Don't parse when in markdown mode
-      sections.value = parseMarkdown(newValue);
-    },
-    { immediate: true }
-  );
-
-  // Emit updated markdown when sections change
-  function updateMarkdown() {
-    const markdown = serializeToMarkdown(sections.value);
-    emit('update:modelValue', markdown);
-  }
-
-  // Raw markdown editing
   const rawMarkdown = ref(props.modelValue);
+
   watch(
     () => props.modelValue,
     (newValue) => {
       rawMarkdown.value = newValue;
-    }
+      emit('unique-chords', extractUniqueChords(newValue));
+    },
+    { immediate: true }
   );
 
+  const previewSections = computed(() => parseMarkdown(rawMarkdown.value));
+  const previewText = computed(() => rawMarkdown.value.trim());
+  const uniqueChords = computed(() => extractUniqueChords(rawMarkdown.value));
+
   function toggleMode() {
-    if (isVisualMode.value) {
-      // Switching to markdown mode
-      rawMarkdown.value = serializeToMarkdown(sections.value);
-    } else {
-      // Switching to visual mode
+    if (!isVisualMode.value) {
       emit('update:modelValue', rawMarkdown.value);
-      sections.value = parseMarkdown(rawMarkdown.value);
+      emit('unique-chords', extractUniqueChords(rawMarkdown.value));
     }
+
     isVisualMode.value = !isVisualMode.value;
   }
 
-  // Get valid section options based on existing sections
-  function getValidSectionOptions(
-    excludeId?: string
-  ): Array<{ type: SectionType; number: number }> {
-    const options: Array<{ type: SectionType; number: number }> = [];
-    const counts: Record<SectionType, number> = {
-      verse: 0,
-      chorus: 0,
-      bridge: 0,
-      intro: 0,
-      outro: 0,
-    };
+  function toVisualChordText(text: string): string {
+    return text.replace(STORED_CHORD_PATTERN, '$1').replace(BRACKETED_VISUAL_PATTERN, '$1');
+  }
 
-    // Count existing sections
-    sections.value.forEach((section) => {
-      if (section.id !== excludeId) {
-        counts[section.type] = Math.max(counts[section.type], section.number);
+  function extractUniqueChords(text: string): string[] {
+    const normalized = toVisualChordText(text);
+    const matches = normalized.matchAll(VISUAL_CHORD_PATTERN);
+    const uniqueChords = new Set<string>();
+
+    for (const match of matches) {
+      const chord = match[1] ?? match[0];
+      if (chord) {
+        uniqueChords.add(chord);
       }
-    });
-
-    // Generate valid options
-    Object.keys(sectionTypes).forEach((type) => {
-      const t = type as SectionType;
-      const currentMax = counts[t];
-      options.push({ type: t, number: currentMax + 1 });
-    });
-
-    return options;
-  }
-
-  // Add new section
-  function addSection() {
-    const validOptions = getValidSectionOptions();
-    const firstOption = validOptions[0];
-    if (!firstOption) return;
-
-    const newSection: Section = {
-      id: `section-${Date.now()}`,
-      type: firstOption.type,
-      number: firstOption.number,
-      text: '',
-      collapsed: false,
-    };
-
-    sections.value.push(newSection);
-    updateMarkdown();
-  }
-
-  // Change section type
-  function changeSectionType(sectionId: string, type: SectionType, number: number) {
-    const section = sections.value.find((s) => s.id === sectionId);
-    if (section) {
-      section.type = type;
-      section.number = number;
-      updateMarkdown();
     }
-  }
 
-  // Toggle section collapse
-  function toggleCollapse(sectionId: string) {
-    const section = sections.value.find((s) => s.id === sectionId);
-    if (section) {
-      section.collapsed = !section.collapsed;
-    }
-  }
-
-  useSortable(sectionsListRef, sections, {
-    animation: 100,
-    handle: '.drag-handle',
-    ghostClass: 'drag-ghost',
-    chosenClass: 'drag-chosen',
-    dragClass: 'drag-dragging',
-    fallbackOnBody: true,
-    swapThreshold: 0.3,
-    delay: 150,
-    delayOnTouchOnly: true,
-    touchStartThreshold: 10,
-    forceFallback: true,
-    onEnd: () => updateMarkdown(),
-  });
-
-  // Update section text
-  function updateSectionText(sectionId: string, text: string) {
-    const section = sections.value.find((s) => s.id === sectionId);
-    if (section) {
-      section.text = text;
-      updateMarkdown();
-    }
-  }
-
-  // Delete section
-  function deleteSection(sectionId: string) {
-    sections.value = sections.value.filter((s) => s.id !== sectionId);
-    updateMarkdown();
+    return Array.from(uniqueChords);
   }
 </script>
 
 <template>
   <div class="song-text-editor">
-    <!-- Toolbar -->
     <div class="editor-toolbar">
+      <SongChordOverview
+        v-if="uniqueChords.length > 0"
+        class="editor-chords"
+        :chords="uniqueChords"
+      />
+
       <Button
+        class="mode-toggle-button"
         color-variation="Primary"
         style-variation="Text"
         :aria-label="isVisualMode ? 'Přepnout na text' : 'Přepnout na vizuální režim'"
-        :label="isVisualMode ? 'Textové' : 'Vizuální'"
+        :label="isVisualMode ? 'Upravit' : 'Náhled'"
         :icon="modeToggleIcon"
         @click="toggleMode"
       />
-
-      <Button
-        v-if="isVisualMode"
-        color-variation="Primary"
-        style-variation="Text"
-        class="add-section-btn"
-        aria-label="Přidat sekci"
-        :label="'Přidat sekci'"
-        :icon="addSectionIcon"
-        @click="addSection"
-      />
     </div>
 
-    <!-- Visual Mode -->
     <div
       v-if="isVisualMode"
-      ref="sectionsListRef"
       class="visual-editor"
     >
       <div
-        v-if="sections.length === 0"
+        v-if="!previewText"
         class="empty-state"
       >
-        <p>Žádné sekce. Klikněte na "Přidat sekci" pro začátek.</p>
+        <p>Žádný text písně. Přepněte do textového režimu a upravte markdown.</p>
       </div>
 
-      <div
-        v-for="section in sections"
-        :key="section.id"
-        class="section-block"
-        :data-id="section.id"
-        :style="{
-          backgroundColor: sectionTypes[section.type].color,
-          borderColor: sectionTypes[section.type].borderColor,
-        }"
+      <article
+        v-else
+        class="song-body"
       >
-        <!-- Section Header -->
-        <div class="section-header">
-          <div class="section-header-left">
-            <GripVertical
-              :size="20"
-              class="drag-handle"
+        <template v-if="previewSections.length > 0">
+          <section
+            v-for="(section, index) in previewSections"
+            :key="`${section.type}-${index}`"
+            class="song-section"
+            :class="`song-section--${section.type}`"
+          >
+            <h2 class="song-section-title">{{ sectionLabels[section.type] }}</h2>
+            <ChordLayoutRenderer
+              class="song-text"
+              :text="section.text"
             />
+          </section>
+        </template>
 
-            <Menu.Root>
-              <Menu.Trigger class="section-title-btn">
-                <span class="section-title">
-                  {{ sectionTypes[section.type].label }} {{ section.number }}
-                </span>
-                <ChevronDown :size="16" />
-              </Menu.Trigger>
-
-              <Menu.Positioner>
-                <Menu.Content class="menu-content">
-                  <Menu.Item
-                    v-for="option in getValidSectionOptions(section.id)"
-                    :key="`${option.type}-${option.number}`"
-                    :value="`${option.type}-${option.number}`"
-                    class="menu-item"
-                    @select="() => changeSectionType(section.id, option.type, option.number)"
-                  >
-                    {{ sectionTypes[option.type].label }} {{ option.number }}
-                  </Menu.Item>
-                </Menu.Content>
-              </Menu.Positioner>
-            </Menu.Root>
-          </div>
-
-          <div class="section-header-right">
-            <Button
-              class="icon-btn"
-              :aria-label="section.collapsed ? 'Rozbalit' : 'Sbalit'"
-              :icon="
-                section.collapsed
-                  ? { component: ChevronDown, position: 'prepend' }
-                  : { component: ChevronUp, position: 'prepend' }
-              "
-              @click="toggleCollapse(section.id)"
-            />
-            <Button
-              class="icon-btn delete-btn"
-              aria-label="Smazat sekci"
-              :icon="{ component: X, position: 'append' }"
-              @click="deleteSection(section.id)"
-            />
-          </div>
-        </div>
-
-        <!-- Section Content -->
-        <div
-          v-if="!section.collapsed"
-          class="section-content"
-        >
-          <textarea
-            :value="section.text"
-            class="section-textarea"
-            placeholder="Text a akordy..."
-            rows="4"
-            @input="updateSectionText(section.id, ($event.target as HTMLTextAreaElement).value)"
-          />
-        </div>
-      </div>
+        <ChordLayoutRenderer
+          v-else
+          class="song-text"
+          :text="previewText"
+        />
+      </article>
     </div>
 
-    <!-- Markdown Mode -->
     <div
       v-else
       class="markdown-editor"
@@ -398,7 +227,12 @@
         class="markdown-textarea"
         :placeholder="placeholder"
         rows="12"
-        @input="emit('update:modelValue', rawMarkdown)"
+        @input="
+          () => {
+            emit('update:modelValue', rawMarkdown);
+            emit('unique-chords', extractUniqueChords(rawMarkdown));
+          }
+        "
       />
     </div>
   </div>
@@ -412,27 +246,31 @@
     width: 100%;
   }
 
-  /* Toolbar */
   .editor-toolbar {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: var(--space-sm);
     padding: var(--space-xs);
     background-color: var(--bg-secondary);
     border-radius: var(--radius-sm);
   }
 
-  .add-section-btn {
-    margin-left: auto;
+  .editor-chords {
+    flex: 1 1 240px;
+    min-width: 0;
   }
 
-  /* Visual Editor */
+  .mode-toggle-button {
+    margin-left: auto;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
   .visual-editor {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
-    gap: var(--space-md);
   }
 
   .empty-state {
@@ -443,128 +281,78 @@
     border-radius: var(--radius-sm);
   }
 
-  /* Section Block */
-  .section-block {
-    border: 3px solid;
-    border-radius: var(--radius-md);
+  .song-body {
+    --song-anchored-line-height: 4;
+    --song-chord-font-size: 1.2em;
+    --song-text-line-height: 4;
+    --song-text-font-family: monospace;
+    --song-text-font-size: 1rem;
+    --song-chord-inline-color: var(--text-chord);
+    --song-chord-inline-bg: color-mix(in srgb, var(--accent) 18%, white);
+    --song-chord-inline-font-size: inherit;
+    --song-chord-inline-font-family: inherit;
+    --song-chord-inline-font-weight: inherit;
+    --song-chord-inline-radius: 3px;
+    padding: var(--space-lg) var(--space-md);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--section-verse-bg) 76%, white),
+      color-mix(in srgb, var(--bg-primary) 92%, white)
+    );
+    box-shadow: 0 18px 50px rgba(28, 25, 23, 0.08);
+    overflow-x: auto;
+  }
+
+  .song-section {
+    --section-accent: color-mix(in srgb, var(--accent) 35%, transparent);
     padding: var(--space-md);
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s;
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
+    border-left-width: 4px;
+    background: color-mix(in srgb, var(--section-accent) 12%, var(--bg-primary));
   }
 
-  .section-block:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  .song-section:not(:last-child) {
+    margin-bottom: var(--space-md);
   }
 
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-sm);
+  .song-section--intro {
+    --section-accent: color-mix(in srgb, #f59e0b 55%, var(--accent));
   }
 
-  .section-header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
+  .song-section--verse {
+    --section-accent: color-mix(in srgb, #16a34a 42%, var(--accent));
   }
 
-  .section-header-right {
-    display: flex;
-    gap: var(--space-xs);
+  .song-section--bridge {
+    --section-accent: color-mix(in srgb, var(--section-bridge-border) 70%, var(--accent));
   }
 
-  .drag-handle {
-    cursor: grab;
-    color: rgba(0, 0, 0, 0.4);
+  .song-section--chorus {
+    --section-accent: color-mix(in srgb, #0284c7 45%, var(--accent));
   }
 
-  .drag-handle:active {
-    cursor: grabbing;
+  .song-section--outro {
+    --section-accent: color-mix(in srgb, #dc2626 35%, var(--accent));
   }
 
-  .drag-ghost {
-    opacity: 0.5;
-    box-shadow: none;
-    filter: grayscale(0.1);
+  .song-section-title {
+    margin: 0 0 var(--space-sm);
+    font-size: 13px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
   }
 
-  .drag-chosen {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  .song-text {
+    --song-text-color: var(--text-chord);
+    margin: 0;
+    font-family: var(--song-text-font-family);
+    font-size: var(--song-text-font-size);
+    line-height: var(--song-text-line-height);
   }
 
-  .drag-dragging {
-    cursor: grabbing;
-  }
-
-  .section-title-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-sm);
-    background: rgba(0, 0, 0, 0.1);
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 1.125rem;
-    transition: background-color 0.2s;
-  }
-
-  .section-title-btn:hover {
-    background: rgba(0, 0, 0, 0.15);
-  }
-
-  .section-title {
-    font-weight: 700;
-    font-size: 1.25rem;
-  }
-
-  .icon-btn {
-    padding: var(--space-xs);
-    background: rgba(0, 0, 0, 0.1);
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s;
-  }
-
-  .icon-btn:hover {
-    background: rgba(0, 0, 0, 0.2);
-  }
-
-  .delete-btn:hover {
-    background: rgba(220, 38, 38, 0.2);
-    color: #dc2626;
-  }
-
-  /* Section Content */
-  .section-content {
-    margin-top: var(--space-sm);
-  }
-
-  .section-textarea {
-    width: 100%;
-    padding: var(--space-sm);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: var(--radius-sm);
-    font-family: monospace;
-    font-size: 1rem;
-    resize: vertical;
-    background: rgba(255, 255, 255, 0.5);
-    min-height: 80px;
-  }
-
-  .section-textarea:focus {
-    outline: 2px solid rgba(0, 0, 0, 0.3);
-    outline-offset: 1px;
-  }
-
-  /* Markdown Editor */
   .markdown-textarea {
     width: 100%;
     padding: var(--space-sm);
@@ -583,25 +371,20 @@
     outline-offset: 1px;
   }
 
-  /* Menu Dropdown */
-  .menu-content {
-    background: white;
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-sm);
-    padding: var(--space-xs);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    min-width: 150px;
-    z-index: 1000;
+  @media (min-width: 768px) {
+    .song-body {
+      padding: var(--space-xl);
+    }
   }
 
-  .menu-item {
-    padding: var(--space-xs) var(--space-sm);
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: background-color 0.2s;
-  }
+  @media (max-width: 640px) {
+    .editor-toolbar {
+      align-items: stretch;
+    }
 
-  .menu-item:hover {
-    background-color: var(--bg-secondary);
+    .mode-toggle-button {
+      width: 100%;
+      margin-left: 0;
+    }
   }
 </style>

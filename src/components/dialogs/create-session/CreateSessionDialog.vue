@@ -102,7 +102,9 @@
           >
             <Field.Label class="field-label">
               Název relace
-              <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
+              <Field.RequiredIndicator>
+                <span class="field-required">*</span>
+              </Field.RequiredIndicator>
             </Field.Label>
             <Field.Input
               v-model="sessionName"

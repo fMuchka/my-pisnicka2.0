@@ -14,6 +14,7 @@
       Record<string, unknown>,
       EmitsOptions
     >;
+    props?: LucideProps;
   };
 
   const props = withDefaults(
@@ -72,11 +73,13 @@
     <component
       :is="props.icon?.component"
       v-if="hasIcon && isPrependIcon"
+      v-bind="props.icon?.props"
     />
     <span v-if="props.label">{{ props.label }}</span>
     <component
       :is="props.icon?.component"
       v-if="hasIcon && !isPrependIcon"
+      v-bind="props.icon?.props"
     />
   </button>
 </template>

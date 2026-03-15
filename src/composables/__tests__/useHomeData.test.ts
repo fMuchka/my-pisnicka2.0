@@ -86,4 +86,16 @@ describe('useHomeData', () => {
       expect(mocks.mockFetchHomeSongs).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('does not fetch sessions when user is null but still fetches songs', async () => {
+    mocks.mockFetchHomeSongs.mockResolvedValue([]);
+
+    const user = ref(null);
+    mountComposable(user);
+
+    await waitFor(() => {
+      expect(mocks.mockFetchLatestSessions).not.toHaveBeenCalled();
+      expect(mocks.mockFetchHomeSongs).toHaveBeenCalledTimes(1);
+    });
+  });
 });

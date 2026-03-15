@@ -1,5 +1,18 @@
-import { collection, query, orderBy, limit, getDocs, Timestamp, addDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  Timestamp,
+  addDoc,
+  doc,
+  getDoc,
+  updateDoc,
+  type DocumentData,
+} from 'firebase/firestore';
 import { db } from './firebase';
+import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
 
 /**
  * Song interface with WYSIWYG text containing chords above lyrics.
@@ -22,6 +35,13 @@ export interface Song {
 }
 
 export interface CreateSongInput {
+  title: string;
+  artist: string;
+  text?: string;
+  chords?: string[];
+}
+
+export interface UpdateSongInput {
   title: string;
   artist: string;
   text?: string;
@@ -67,6 +87,20 @@ export function selectHomeSongs(songs: Song[]): Song[] {
   return result;
 }
 
+const mapSongDoc = (
+  doc: QueryDocumentSnapshot<DocumentData, DocumentData>,
+  data: DocumentData
+): Song => {
+  return {
+    id: doc.id,
+    title: data.title,
+    artist: data.artist,
+    text: data.text,
+    chords: data.chords,
+    createdAt: data.createdAt,
+  };
+};
+
 /**
  * Fetch songs for home screen from Firestore.
  * Queries up to 30 songs ordered by artist ASC, title ASC,
@@ -79,17 +113,23 @@ export async function fetchHomeSongs(): Promise<Song[]> {
   const snapshot = await getDocs(q);
   const allSongs = snapshot.docs.map((doc) => {
     const data = doc.data();
-    return {
-      id: doc.id,
-      title: data.title,
-      artist: data.artist,
-      text: data.text,
-      chords: data.chords,
-      createdAt: data.createdAt,
-    } as Song;
+    return mapSongDoc(doc, data);
   });
 
   return selectHomeSongs(allSongs);
+}
+
+export async function fetchSongById(songId: string): Promise<Song | null> {
+  const songRef = doc(db, 'songs', songId);
+  const songSnapshot = await getDoc(songRef);
+
+  if (!songSnapshot.exists()) {
+    return null;
+  }
+
+  const data = songSnapshot.data();
+
+  return mapSongDoc(songSnapshot, data);
 }
 
 export const createSong = async (input: CreateSongInput): Promise<Song> => {
@@ -105,6 +145,23 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
 
   return {
     id: songRef.id,
+    ...songData,
+  };
+};
+
+export const updateSong = async (songId: string, input: UpdateSongInput): Promise<Song> => {
+  const songRef = doc(db, 'songs', songId);
+  const songData: UpdateSongInput = {
+    title: input.title,
+    artist: input.artist,
+    text: input.text,
+    chords: input.chords,
+  };
+
+  await updateDoc(songRef, songData as DocumentData);
+
+  return {
+    id: songId,
     ...songData,
   };
 };

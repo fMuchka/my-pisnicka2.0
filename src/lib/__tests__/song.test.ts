@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { selectHomeSongs, fetchHomeSongs } from '../song';
+import { selectHomeSongs, fetchHomeSongs, fetchSongById, createSong, updateSong } from '../song';
 import type { Song } from '../song';
 
 // Mock Firestore
@@ -8,6 +8,10 @@ const mockQuery = vi.fn();
 const mockCollection = vi.fn();
 const mockOrderBy = vi.fn();
 const mockLimit = vi.fn();
+const mockDoc = vi.fn();
+const mockGetDoc = vi.fn();
+const mockAddDoc = vi.fn();
+const mockUpdateDoc = vi.fn();
 
 vi.mock('firebase/firestore', async () => {
   const actual = await vi.importActual('firebase/firestore');
@@ -17,6 +21,10 @@ vi.mock('firebase/firestore', async () => {
     query: (...args: unknown[]) => mockQuery(...args),
     orderBy: (...args: unknown[]) => mockOrderBy(...args),
     limit: (...args: unknown[]) => mockLimit(...args),
+    doc: (...args: unknown[]) => mockDoc(...args),
+    getDoc: (...args: unknown[]) => mockGetDoc(...args),
+    addDoc: (...args: unknown[]) => mockAddDoc(...args),
+    updateDoc: (...args: unknown[]) => mockUpdateDoc(...args),
     getDocs: (...args: unknown[]) => mockGetDocs(...args),
   };
 });
@@ -280,6 +288,109 @@ describe('Song Service - Unit Tests', () => {
       mockGetDocs.mockRejectedValue(new Error('Firestore error'));
 
       await expect(fetchHomeSongs()).rejects.toThrow('Firestore error');
+    });
+  });
+
+  describe('fetchSongById', () => {
+    it('returns null when Firestore document does not exist', async () => {
+      mockDoc.mockReturnValue('song-doc-ref');
+      mockGetDoc.mockResolvedValue({
+        exists: () => false,
+      });
+
+      const result = await fetchSongById('missing-song');
+
+      expect(mockDoc).toHaveBeenCalledWith(expect.anything(), 'songs', 'missing-song');
+      expect(mockGetDoc).toHaveBeenCalledWith('song-doc-ref');
+      expect(result).toBeNull();
+    });
+
+    it('maps existing Firestore document into Song', async () => {
+      mockDoc.mockReturnValue('song-doc-ref');
+      mockGetDoc.mockResolvedValue({
+        id: 'song-1',
+        exists: () => true,
+        data: () => ({
+          title: 'Song title',
+          artist: 'Artist name',
+          text: '[G] line',
+          chords: ['G', 'D'],
+          createdAt: 'ts',
+        }),
+      });
+
+      const result = await fetchSongById('song-1');
+
+      expect(result).toEqual({
+        id: 'song-1',
+        title: 'Song title',
+        artist: 'Artist name',
+        text: '[G] line',
+        chords: ['G', 'D'],
+        createdAt: 'ts',
+      });
+    });
+  });
+
+  describe('createSong', () => {
+    it('persists song data and returns created song with id', async () => {
+      mockCollection.mockReturnValue('songs-collection-ref');
+      mockAddDoc.mockResolvedValue({ id: 'new-song-id' });
+
+      const result = await createSong({
+        title: 'New song',
+        artist: 'New artist',
+        text: '[Am] new line',
+        chords: ['Am', 'C'],
+      });
+
+      expect(mockAddDoc).toHaveBeenCalledWith(
+        'songs-collection-ref',
+        expect.objectContaining({
+          title: 'New song',
+          artist: 'New artist',
+          text: '[Am] new line',
+          chords: ['Am', 'C'],
+        })
+      );
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: 'new-song-id',
+          title: 'New song',
+          artist: 'New artist',
+          text: '[Am] new line',
+          chords: ['Am', 'C'],
+        })
+      );
+    });
+  });
+
+  describe('updateSong', () => {
+    it('updates Firestore document and returns merged result', async () => {
+      mockDoc.mockReturnValue('song-doc-ref');
+      mockUpdateDoc.mockResolvedValue(undefined);
+
+      const result = await updateSong('song-9', {
+        title: 'Updated title',
+        artist: 'Updated artist',
+        text: '[D] updated',
+        chords: ['D', 'A'],
+      });
+
+      expect(mockDoc).toHaveBeenCalledWith(expect.anything(), 'songs', 'song-9');
+      expect(mockUpdateDoc).toHaveBeenCalledWith('song-doc-ref', {
+        title: 'Updated title',
+        artist: 'Updated artist',
+        text: '[D] updated',
+        chords: ['D', 'A'],
+      });
+      expect(result).toEqual({
+        id: 'song-9',
+        title: 'Updated title',
+        artist: 'Updated artist',
+        text: '[D] updated',
+        chords: ['D', 'A'],
+      });
     });
   });
 });
