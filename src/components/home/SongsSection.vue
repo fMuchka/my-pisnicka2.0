@@ -66,9 +66,12 @@
       v-else
       class="song-tree"
     >
-      <!-- PATTERN: Consider adding an explicit empty state when displaySongs is empty, -->
-      <!-- matching SessionsSection's 'Zadne relace' UX for consistency. -->
-      <!-- See: https://vuejs.org/guide/essentials/conditional.html -->
+      <div
+        v-if="Object.keys(props.displaySongs).length === 0"
+        class="empty-state"
+      >
+        Žádné písně
+      </div>
       <div
         v-for="(item, key) of props.displaySongs"
         :key="key"
