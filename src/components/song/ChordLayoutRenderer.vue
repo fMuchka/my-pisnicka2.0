@@ -1,0 +1,246 @@
+<script setup lang="tsx">
+  import { computed } from 'vue';
+
+  interface Props {
+    text: string;
+  }
+
+  type LineKind = 'lyrics' | 'mixed';
+
+  interface TokenMatch {
+    value: string;
+    start: number;
+    type: 'chord' | 'lyrics';
+  }
+
+  interface RenderPart {
+    text: string;
+    chord?: string;
+  }
+
+  interface LineDetails {
+    kind: LineKind;
+    tokens: TokenMatch[];
+  }
+
+  type RenderLine = { line: string; details: LineDetails; parts: RenderPart[] };
+
+  const props = defineProps<Props>();
+
+  const CHORD_TOKEN_REGEX =
+    /^\[?[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?\]?$/;
+
+  function getTokenMatches(line: string): TokenMatch[] {
+    const matches = Array.from(line.matchAll(/(\[[^\]]+\]|[^\s[\]]+)(\s*)/g));
+
+    return matches.flatMap((match) => {
+      if (match.index === undefined) {
+        return [];
+      }
+
+      const hasTrailingSpace = (match[2] ?? '').length > 0;
+      const token = `${match[1] ?? ''}${hasTrailingSpace ? ' ' : ''}`;
+
+      return [
+        {
+          value: token,
+          start: match.index,
+          type: isChordToken(token) ? 'chord' : 'lyrics',
+        },
+      ];
+    });
+  }
+
+  function isChordToken(token: string): boolean {
+    return CHORD_TOKEN_REGEX.test(token.trim());
+  }
+
+  function chordValue(token: string): string {
+    return token.trim().replace(/^\[|\]$/g, '');
+  }
+
+  function classifyLine(line: string): LineDetails {
+    const tokens = getTokenMatches(line);
+    const chordCount = tokens.filter((token) => isChordToken(token.value)).length;
+
+    if (chordCount === 0) {
+      return { kind: 'lyrics', tokens };
+    }
+    if (tokens.length === 0) {
+      return { kind: 'lyrics', tokens };
+    }
+
+    return { kind: 'mixed', tokens };
+  }
+
+  function getRenderParts(line: string): RenderPart[] {
+    const parts: RenderPart[] = [];
+    let index = 0;
+    let pendingChord: string | undefined;
+
+    while (index < line.length) {
+      const chordMatch = line.slice(index).match(/^\[[^\]]+\]/);
+
+      if (chordMatch && isChordToken(chordMatch[0])) {
+        if (pendingChord) {
+          parts.push({
+            chord: pendingChord,
+            text: '      ',
+          });
+        }
+
+        pendingChord = chordValue(chordMatch[0]);
+        index += chordMatch[0].length;
+        continue;
+      }
+
+      if (pendingChord) {
+        const whitespaceMatch = line.slice(index).match(/^\s+/);
+
+        if (whitespaceMatch) {
+          parts.push({ text: whitespaceMatch[0] });
+          index += whitespaceMatch[0].length;
+          continue;
+        }
+
+        const anchoredMatch = line.slice(index).match(/^[^\s[]+/);
+
+        if (anchoredMatch) {
+          parts.push({
+            chord: pendingChord,
+            text: anchoredMatch[0],
+          });
+          pendingChord = undefined;
+          index += anchoredMatch[0].length;
+          continue;
+        }
+
+        parts.push({ text: '[' });
+        pendingChord = undefined;
+        index += 1;
+        continue;
+      }
+
+      const nextChordIndex = line.indexOf('[', index);
+      const plainTextEnd = nextChordIndex === -1 ? line.length : nextChordIndex;
+
+      if (plainTextEnd > index) {
+        parts.push({ text: line.slice(index, plainTextEnd) });
+        index = plainTextEnd;
+        continue;
+      }
+
+      parts.push({ text: line[index] ?? '' });
+      index += 1;
+    }
+
+    if (pendingChord) {
+      parts.push({
+        chord: pendingChord,
+        text: '      ',
+      });
+    }
+
+    return parts;
+  }
+
+  const renderLines = computed<RenderLine[]>(() => {
+    const lines = props.text.split('\n');
+    const rendered: RenderLine[] = [];
+    let index = 0;
+
+    while (index < lines.length) {
+      const line = lines[index] ?? '';
+      const lineDetails = classifyLine(line);
+
+      if (lineDetails.kind === 'mixed') {
+        rendered.push({
+          details: lineDetails,
+          line: line,
+          parts: getRenderParts(line),
+        });
+        index += 1;
+        continue;
+      }
+
+      if (lineDetails.kind === 'lyrics') {
+        rendered.push({
+          details: lineDetails,
+          line,
+          parts: getRenderParts(line),
+        });
+      }
+
+      index += 1;
+    }
+
+    return rendered;
+  });
+</script>
+
+<template>
+  <div class="chord-layout-renderer">
+    <template
+      v-for="(line, lineIndex) in renderLines"
+      :key="lineIndex"
+    >
+      <template
+        v-for="(part, partIndex) in line.parts"
+        :key="partIndex"
+      >
+        <span
+          v-if="part.chord"
+          class="clr-anchored"
+          :data-before-content="part.chord"
+        >
+          {{ part.text }}
+        </span>
+        <span v-else>{{ part.text }}</span>
+      </template>
+      <br />
+    </template>
+  </div>
+</template>
+
+<style scoped>
+  .chord-layout-renderer {
+    font-family: var(--song-text-font-family, monospace);
+    font-size: var(--song-text-font-size, 1rem);
+    line-height: var(--song-anchored-line-height, 2.2);
+    color: var(--song-text-color, var(--text-chord));
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .clr-anchored {
+    position: relative;
+    display: inline-block;
+    white-space: pre-wrap;
+    vertical-align: baseline;
+  }
+
+  .clr-anchored::before {
+    content: attr(data-before-content);
+    position: absolute;
+    left: 0;
+    color: var(--song-chord-inline-color, var(--text-chord));
+    font-family: var(--song-chord-inline-font-family, inherit);
+    font-size: var(--song-chord-font-size, var(--song-chord-inline-font-size, 0.95em));
+    font-weight: var(--song-chord-font-weight, var(--song-chord-inline-font-weight, 700));
+    line-height: 1;
+    min-width: var(--song-chord-min-width, auto);
+    font-variant-ligatures: none;
+    border-radius: var(--song-chord-inline-radius, 3px);
+    white-space: nowrap;
+    vertical-align: baseline;
+
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    background-color: var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
+    box-shadow:
+      2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white)),
+      -2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
+  }
+</style>
