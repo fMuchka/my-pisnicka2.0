@@ -156,7 +156,7 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     chords: input.chords,
   };
 
-  await updateDoc(songRef, songData);
+  await updateDoc(songRef, songData as unknown as { [x: string]: unknown });
 
   return {
     id: songId,
