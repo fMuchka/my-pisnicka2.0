@@ -176,97 +176,63 @@ describe('Home Page - Component Tests', () => {
   });
 
   describe('Songs Display', () => {
-    // DRY: The next 4 song-rendering tests verify nearly identical behavior with different fixtures.
-    // KIS: Convert these into one parameterized test (test.each) to reduce maintenance noise.
-    // See: https://vitest.dev/api/#test-each
-    it('renders songs returned by helper', async () => {
-      const mockSongs: Song[] = [
-        { id: 's1', title: 'Hádam', artist: 'Chinaski', chords: 'Am C G' },
-        { id: 's2', title: 'Klára', artist: 'Chinaski', chords: 'D A E' },
-        { id: 's3', title: 'Andělé', artist: 'Kabát', chords: 'Em G D' },
-        { id: 's4', title: 'Malá dáma', artist: 'Kabát', chords: 'C G Am' },
-        { id: 's5', title: 'Holky z naší školky', artist: 'Žlutý pes', chords: 'G D C' },
-        { id: 's6', title: 'Tancuj', artist: 'Žlutý pes', chords: 'A E D' },
-      ];
-
+    it.each([
+      {
+        name: 'renders songs returned by helper',
+        mockSongs: [
+          { id: 's1', title: 'Hádam', artist: 'Chinaski', chords: 'Am C G' },
+          { id: 's2', title: 'Klára', artist: 'Chinaski', chords: 'D A E' },
+          { id: 's3', title: 'Andělé', artist: 'Kabát', chords: 'Em G D' },
+          { id: 's4', title: 'Malá dáma', artist: 'Kabát', chords: 'C G Am' },
+          { id: 's5', title: 'Holky z naší školky', artist: 'Žlutý pes', chords: 'G D C' },
+          { id: 's6', title: 'Tancuj', artist: 'Žlutý pes', chords: 'A E D' },
+        ] as Song[],
+        expectedTitles: ['Hádam', 'Klára', 'Andělé', 'Malá dáma', 'Holky z naší školky', 'Tancuj'],
+      },
+      {
+        name: 'renders multiple songs for the same artist',
+        mockSongs: [
+          { id: 's1', title: 'Song A1', artist: 'Artist A' },
+          { id: 's2', title: 'Song A2', artist: 'Artist A' },
+          { id: 's3', title: 'Song A3', artist: 'Artist A' },
+          { id: 's4', title: 'Song B1', artist: 'Artist B' },
+          { id: 's5', title: 'Song B2', artist: 'Artist B' },
+          { id: 's6', title: 'Song C1', artist: 'Artist C' },
+        ] as Song[],
+        expectedTitles: ['Song A1', 'Song A2', 'Song A3'],
+      },
+      {
+        name: 'renders songs across multiple artists',
+        mockSongs: [
+          { id: 's1', title: 'Song A', artist: 'Artist A' },
+          { id: 's2', title: 'Song B', artist: 'Artist B' },
+          { id: 's3', title: 'Song C', artist: 'Artist C' },
+          { id: 's4', title: 'Song D', artist: 'Artist D' },
+        ] as Song[],
+        expectedTitles: ['Song A', 'Song B', 'Song C', 'Song D'],
+      },
+      {
+        name: 'renders all songs returned by helper',
+        mockSongs: [
+          { id: 's1', title: 'Song 1', artist: 'Artist A' },
+          { id: 's2', title: 'Song 2', artist: 'Artist A' },
+          { id: 's3', title: 'Song 3', artist: 'Artist B' },
+          { id: 's4', title: 'Song 4', artist: 'Artist B' },
+          { id: 's5', title: 'Song 5', artist: 'Artist C' },
+          { id: 's6', title: 'Song 6', artist: 'Artist C' },
+          { id: 's7', title: 'Song 7', artist: 'Artist D' },
+        ] as Song[],
+        expectedTitles: ['Song 1', 'Song 2', 'Song 3', 'Song 4', 'Song 5', 'Song 6', 'Song 7'],
+      },
+    ])('$name', async ({ mockSongs, expectedTitles }) => {
       mocks.mockFetchHomeSongs.mockResolvedValue(mockSongs);
 
       render(Home);
 
       await waitFor(() => {
-        expect(screen.getByText('Hádam')).toBeInTheDocument();
-        expect(screen.getByText('Klára')).toBeInTheDocument();
-        expect(screen.getByText('Andělé')).toBeInTheDocument();
-        expect(screen.getByText('Malá dáma')).toBeInTheDocument();
-        expect(screen.getByText('Holky z naší školky')).toBeInTheDocument();
-        expect(screen.getByText('Tancuj')).toBeInTheDocument();
-      });
-    });
-
-    it('renders multiple songs for the same artist', async () => {
-      const mockSongs: Song[] = [
-        { id: 's1', title: 'Song A1', artist: 'Artist A' },
-        { id: 's2', title: 'Song A2', artist: 'Artist A' },
-        { id: 's3', title: 'Song A3', artist: 'Artist A' },
-        { id: 's4', title: 'Song B1', artist: 'Artist B' },
-        { id: 's5', title: 'Song B2', artist: 'Artist B' },
-        { id: 's6', title: 'Song C1', artist: 'Artist C' },
-      ];
-
-      mocks.mockFetchHomeSongs.mockResolvedValue(mockSongs);
-
-      render(Home);
-
-      await waitFor(() => {
-        expect(screen.getByText('Song A1')).toBeInTheDocument();
-        expect(screen.getByText('Song A2')).toBeInTheDocument();
-        expect(screen.getByText('Song A3')).toBeInTheDocument();
-      });
-    });
-
-    it('renders songs across multiple artists', async () => {
-      const mockSongs: Song[] = [
-        { id: 's1', title: 'Song A', artist: 'Artist A' },
-        { id: 's2', title: 'Song B', artist: 'Artist B' },
-        { id: 's3', title: 'Song C', artist: 'Artist C' },
-        { id: 's4', title: 'Song D', artist: 'Artist D' },
-      ];
-
-      mocks.mockFetchHomeSongs.mockResolvedValue(mockSongs);
-
-      render(Home);
-
-      await waitFor(() => {
-        expect(screen.getByText('Song A')).toBeInTheDocument();
-        expect(screen.getByText('Song B')).toBeInTheDocument();
-        expect(screen.getByText('Song C')).toBeInTheDocument();
-        expect(screen.getByText('Song D')).toBeInTheDocument();
-      });
-    });
-
-    it('renders all songs returned by helper', async () => {
-      const mockSongs: Song[] = [
-        { id: 's1', title: 'Song 1', artist: 'Artist A' },
-        { id: 's2', title: 'Song 2', artist: 'Artist A' },
-        { id: 's3', title: 'Song 3', artist: 'Artist B' },
-        { id: 's4', title: 'Song 4', artist: 'Artist B' },
-        { id: 's5', title: 'Song 5', artist: 'Artist C' },
-        { id: 's6', title: 'Song 6', artist: 'Artist C' },
-        { id: 's7', title: 'Song 7', artist: 'Artist D' },
-      ];
-
-      mocks.mockFetchHomeSongs.mockResolvedValue(mockSongs);
-
-      render(Home);
-
-      await waitFor(() => {
-        expect(screen.getByText('Song 1')).toBeInTheDocument();
-        expect(screen.getByText('Song 2')).toBeInTheDocument();
-        expect(screen.getByText('Song 3')).toBeInTheDocument();
-        expect(screen.getByText('Song 4')).toBeInTheDocument();
-        expect(screen.getByText('Song 5')).toBeInTheDocument();
-        expect(screen.getByText('Song 6')).toBeInTheDocument();
-        expect(screen.getByText('Song 7')).toBeInTheDocument();
+        expectedTitles.forEach((title) => {
+          expect(screen.getByText(title)).toBeInTheDocument();
+        });
       });
     });
 
