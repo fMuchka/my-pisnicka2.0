@@ -10,6 +10,25 @@ const mocks = vi.hoisted(() => ({
   updateSong: vi.fn(),
 }));
 
+type MockRef<T> = { __v_isRef: true; value: T };
+
+function mockRef<T>(value: T): MockRef<T> {
+  return {
+    __v_isRef: true,
+    value,
+  };
+}
+
+// Mock auth composable - default to authenticated host
+const mockUser = vi.hoisted(() => mockRef({ uid: 'host-123', displayName: 'Test Host' }));
+const mockIsAuthenticated = vi.hoisted(() => mockRef(true));
+vi.mock('../../../../composables/useAuth', () => ({
+  useAuth: () => ({
+    user: mockUser,
+    isAuthenticated: mockIsAuthenticated,
+  }),
+}));
+
 vi.mock('../../../../lib/song', () => ({
   createSong: mocks.createSong,
   updateSong: mocks.updateSong,
@@ -46,6 +65,7 @@ describe('CreateSongDialog', () => {
       artist: 'Bob Dylan',
       text: '[Am] line',
       chords: ['Am', 'C'],
+      ownerId: 'host-123',
     };
 
     mocks.createSong.mockResolvedValue(createdSong);
@@ -68,6 +88,7 @@ describe('CreateSongDialog', () => {
         artist: 'Bob Dylan',
         text: 'line',
         chords: ['Am', 'C'],
+        ownerId: 'host-123',
       });
 
       expect(emitted().saved?.[0]).toEqual([createdSong]);
@@ -83,6 +104,7 @@ describe('CreateSongDialog', () => {
       artist: 'Old artist',
       text: '[C] old',
       chords: ['C'],
+      ownerId: 'host-123',
     };
 
     mocks.updateSong.mockResolvedValue({
@@ -91,6 +113,7 @@ describe('CreateSongDialog', () => {
       artist: 'New artist',
       text: '[Am] new',
       chords: ['Am', 'C'],
+      ownerId: 'host-123',
     });
 
     const { rerender } = render(CreateSongDialog, {
@@ -123,6 +146,7 @@ describe('CreateSongDialog', () => {
         artist: 'New artist',
         text: 'new',
         chords: ['Am', 'C'],
+        ownerId: 'host-123',
       });
     });
   });
@@ -134,6 +158,7 @@ describe('CreateSongDialog', () => {
       artist: 'Edit artist',
       text: 'text',
       chords: ['C'],
+      ownerId: 'host-123',
     };
 
     render(CreateSongDialog, {

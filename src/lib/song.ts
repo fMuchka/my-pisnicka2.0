@@ -32,6 +32,7 @@ export interface Song {
   text?: string; // WYSIWYG song text with chord notation (chords above lyrics or inline)
   chords?: string[]; // Array of unique chords (auto-extracted from text, can be manually edited)
   createdAt?: Timestamp; // Firestore Timestamp
+  ownerId: string;
 }
 
 export interface CreateSongInput {
@@ -39,6 +40,7 @@ export interface CreateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
+  ownerId: string;
 }
 
 export interface UpdateSongInput {
@@ -46,6 +48,7 @@ export interface UpdateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
+  ownerId: string;
 }
 
 /**
@@ -98,6 +101,7 @@ const mapSongDoc = (
     text: data.text,
     chords: data.chords,
     createdAt: data.createdAt,
+    ownerId: data.ownerId,
   };
 };
 
@@ -139,6 +143,7 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     chords: input.chords,
     text: input.text,
     createdAt: Timestamp.now(),
+    ownerId: input.ownerId,
   };
 
   const songRef = await addDoc(collection(db, 'songs'), songData);
@@ -156,6 +161,7 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     artist: input.artist,
     text: input.text,
     chords: input.chords,
+    ownerId: input.ownerId,
   };
 
   await updateDoc(songRef, songData as DocumentData);

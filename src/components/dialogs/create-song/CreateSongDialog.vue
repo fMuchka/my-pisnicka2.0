@@ -4,7 +4,8 @@
   import { computed, ref, watch } from 'vue';
   import Button from '../../core/Button.vue';
   import SongTextEditor from '../../song/SongTextEditor.vue';
-  import { createSong, updateSong, type Song } from '../../../lib/song';
+  import { createSong, updateSong, type CreateSongInput, type Song } from '../../../lib/song';
+  import { useAuth } from '../../../composables/useAuth';
 
   interface Props {
     open?: boolean;
@@ -29,6 +30,8 @@
   const songChords = ref<string[]>([]);
   const createError = ref<string | null>(null);
   const isCreating = ref(false);
+
+  const { user } = useAuth();
 
   const isOpen = computed({
     get: () => props.open,
@@ -85,17 +88,18 @@
   });
 
   const handleCreateOrUpdateSong = async () => {
-    if (isSubmitDisabled.value) return;
+    if (isSubmitDisabled.value || user.value == null) return;
 
     isCreating.value = true;
     createError.value = null;
 
     try {
-      const songInput = {
+      const songInput: CreateSongInput = {
         title: trimmedTitle.value,
         artist: trimmedArtist.value,
         text: songText.value.trim() || undefined,
         chords: songChords.value,
+        ownerId: user.value.uid,
       };
 
       const savedSong =

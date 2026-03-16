@@ -46,9 +46,9 @@ describe('Song Service - Unit Tests', () => {
 
     it('returns all songs when less than 6 total', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'Song A', artist: 'Artist 1' },
-        { id: 's2', title: 'Song B', artist: 'Artist 2' },
-        { id: 's3', title: 'Song C', artist: 'Artist 3' },
+        { id: 's1', title: 'Song A', artist: 'Artist 1', ownerId: 'dude' },
+        { id: 's2', title: 'Song B', artist: 'Artist 2', ownerId: 'dude' },
+        { id: 's3', title: 'Song C', artist: 'Artist 3', ownerId: 'dude' },
       ];
 
       const result = selectHomeSongs(songs);
@@ -58,12 +58,12 @@ describe('Song Service - Unit Tests', () => {
 
     it('limits to 2 songs per artist', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'Song A1', artist: 'Artist A' },
-        { id: 's2', title: 'Song A2', artist: 'Artist A' },
-        { id: 's3', title: 'Song A3', artist: 'Artist A' }, // Should be excluded
-        { id: 's4', title: 'Song B1', artist: 'Artist B' },
-        { id: 's5', title: 'Song B2', artist: 'Artist B' },
-        { id: 's6', title: 'Song C1', artist: 'Artist C' },
+        { id: 's1', title: 'Song A1', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's2', title: 'Song A2', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's3', title: 'Song A3', artist: 'Artist A', ownerId: 'dude' }, // Should be excluded
+        { id: 's4', title: 'Song B1', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's5', title: 'Song B2', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's6', title: 'Song C1', artist: 'Artist C', ownerId: 'dude' },
       ];
 
       const result = selectHomeSongs(songs);
@@ -75,11 +75,11 @@ describe('Song Service - Unit Tests', () => {
 
     it('limits to 3 artists total', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'Song A', artist: 'Artist A' },
-        { id: 's2', title: 'Song B', artist: 'Artist B' },
-        { id: 's3', title: 'Song C', artist: 'Artist C' },
-        { id: 's4', title: 'Song D', artist: 'Artist D' }, // Fourth artist - excluded
-        { id: 's5', title: 'Song E', artist: 'Artist E' }, // Fifth artist - excluded
+        { id: 's1', title: 'Song A', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's2', title: 'Song B', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's3', title: 'Song C', artist: 'Artist C', ownerId: 'dude' },
+        { id: 's4', title: 'Song D', artist: 'Artist D', ownerId: 'dude' }, // Fourth artist - excluded
+        { id: 's5', title: 'Song E', artist: 'Artist E', ownerId: 'dude' }, // Fifth artist - excluded
       ];
 
       const result = selectHomeSongs(songs);
@@ -93,13 +93,13 @@ describe('Song Service - Unit Tests', () => {
 
     it('limits to maximum 6 songs total', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'Song A1', artist: 'Artist A' },
-        { id: 's2', title: 'Song A2', artist: 'Artist A' },
-        { id: 's3', title: 'Song B1', artist: 'Artist B' },
-        { id: 's4', title: 'Song B2', artist: 'Artist B' },
-        { id: 's5', title: 'Song C1', artist: 'Artist C' },
-        { id: 's6', title: 'Song C2', artist: 'Artist C' },
-        { id: 's7', title: 'Song D1', artist: 'Artist D' }, // Fourth artist - should be excluded
+        { id: 's1', title: 'Song A1', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's2', title: 'Song A2', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's3', title: 'Song B1', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's4', title: 'Song B2', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's5', title: 'Song C1', artist: 'Artist C', ownerId: 'dude' },
+        { id: 's6', title: 'Song C2', artist: 'Artist C', ownerId: 'dude' },
+        { id: 's7', title: 'Song D1', artist: 'Artist D', ownerId: 'dude' }, // Fourth artist - should be excluded
       ];
 
       const result = selectHomeSongs(songs);
@@ -110,12 +110,12 @@ describe('Song Service - Unit Tests', () => {
 
     it('is deterministic - same input produces same output', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'Hádam', artist: 'Chinaski' },
-        { id: 's2', title: 'Klára', artist: 'Chinaski' },
-        { id: 's3', title: 'Andělé', artist: 'Kabát' },
-        { id: 's4', title: 'Malá dáma', artist: 'Kabát' },
-        { id: 's5', title: 'Holky', artist: 'Žlutý pes' },
-        { id: 's6', title: 'Tancuj', artist: 'Žlutý pes' },
+        { id: 's1', title: 'Hádam', artist: 'Chinaski', ownerId: 'dude' },
+        { id: 's2', title: 'Klára', artist: 'Chinaski', ownerId: 'dude' },
+        { id: 's3', title: 'Andělé', artist: 'Kabát', ownerId: 'dude' },
+        { id: 's4', title: 'Malá dáma', artist: 'Kabát', ownerId: 'dude' },
+        { id: 's5', title: 'Holky', artist: 'Žlutý pes', ownerId: 'dude' },
+        { id: 's6', title: 'Tancuj', artist: 'Žlutý pes', ownerId: 'dude' },
       ];
 
       const result1 = selectHomeSongs(songs);
@@ -128,10 +128,10 @@ describe('Song Service - Unit Tests', () => {
 
     it('maintains order from input (artist ASC, title ASC assumed)', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'A Song', artist: 'Artist A' },
-        { id: 's2', title: 'B Song', artist: 'Artist A' },
-        { id: 's3', title: 'C Song', artist: 'Artist B' },
-        { id: 's4', title: 'D Song', artist: 'Artist B' },
+        { id: 's1', title: 'A Song', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's2', title: 'B Song', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's3', title: 'C Song', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's4', title: 'D Song', artist: 'Artist B', ownerId: 'dude' },
       ];
 
       const result = selectHomeSongs(songs);
@@ -146,14 +146,14 @@ describe('Song Service - Unit Tests', () => {
     it('handles mix of artists with different song counts', () => {
       const songs: Song[] = [
         // Artist A: 3 songs (only 2 should be selected)
-        { id: 's1', title: 'A1', artist: 'Artist A' },
-        { id: 's2', title: 'A2', artist: 'Artist A' },
-        { id: 's3', title: 'A3', artist: 'Artist A' },
+        { id: 's1', title: 'A1', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's2', title: 'A2', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's3', title: 'A3', artist: 'Artist A', ownerId: 'dude' },
         // Artist B: 1 song (all selected)
-        { id: 's4', title: 'B1', artist: 'Artist B' },
+        { id: 's4', title: 'B1', artist: 'Artist B', ownerId: 'dude' },
         // Artist C: 2 songs (all selected)
-        { id: 's5', title: 'C1', artist: 'Artist C' },
-        { id: 's6', title: 'C2', artist: 'Artist C' },
+        { id: 's5', title: 'C1', artist: 'Artist C', ownerId: 'dude' },
+        { id: 's6', title: 'C2', artist: 'Artist C', ownerId: 'dude' },
       ];
 
       const result = selectHomeSongs(songs);
@@ -166,14 +166,14 @@ describe('Song Service - Unit Tests', () => {
 
     it('stops at 3 artists even if more artists have songs', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'A1', artist: 'Artist A' },
-        { id: 's2', title: 'A2', artist: 'Artist A' },
-        { id: 's3', title: 'B1', artist: 'Artist B' },
-        { id: 's4', title: 'B2', artist: 'Artist B' },
-        { id: 's5', title: 'C1', artist: 'Artist C' },
-        { id: 's6', title: 'C2', artist: 'Artist C' },
-        { id: 's7', title: 'D1', artist: 'Artist D' }, // 4th artist
-        { id: 's8', title: 'E1', artist: 'Artist E' }, // 5th artist
+        { id: 's1', title: 'A1', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's2', title: 'A2', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's3', title: 'B1', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's4', title: 'B2', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's5', title: 'C1', artist: 'Artist C', ownerId: 'dude' },
+        { id: 's6', title: 'C2', artist: 'Artist C', ownerId: 'dude' },
+        { id: 's7', title: 'D1', artist: 'Artist D', ownerId: 'dude' }, // 4th artist
+        { id: 's8', title: 'E1', artist: 'Artist E', ownerId: 'dude' }, // 5th artist
       ];
 
       const result = selectHomeSongs(songs);
@@ -186,12 +186,12 @@ describe('Song Service - Unit Tests', () => {
 
     it('handles edge case: exactly 6 songs from 3 artists (2 each)', () => {
       const songs: Song[] = [
-        { id: 's1', title: 'A1', artist: 'Artist A' },
-        { id: 's2', title: 'A2', artist: 'Artist A' },
-        { id: 's3', title: 'B1', artist: 'Artist B' },
-        { id: 's4', title: 'B2', artist: 'Artist B' },
-        { id: 's5', title: 'C1', artist: 'Artist C' },
-        { id: 's6', title: 'C2', artist: 'Artist C' },
+        { id: 's1', title: 'A1', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's2', title: 'A2', artist: 'Artist A', ownerId: 'dude' },
+        { id: 's3', title: 'B1', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's4', title: 'B2', artist: 'Artist B', ownerId: 'dude' },
+        { id: 's5', title: 'C1', artist: 'Artist C', ownerId: 'dude' },
+        { id: 's6', title: 'C2', artist: 'Artist C', ownerId: 'dude' },
       ];
 
       const result = selectHomeSongs(songs);
@@ -342,6 +342,7 @@ describe('Song Service - Unit Tests', () => {
         artist: 'New artist',
         text: '[Am] new line',
         chords: ['Am', 'C'],
+        ownerId: 'dude',
       });
 
       expect(mockAddDoc).toHaveBeenCalledWith(
@@ -351,6 +352,7 @@ describe('Song Service - Unit Tests', () => {
           artist: 'New artist',
           text: '[Am] new line',
           chords: ['Am', 'C'],
+          ownerId: 'dude',
         })
       );
       expect(result).toEqual(
@@ -360,6 +362,7 @@ describe('Song Service - Unit Tests', () => {
           artist: 'New artist',
           text: '[Am] new line',
           chords: ['Am', 'C'],
+          ownerId: 'dude',
         })
       );
     });
@@ -375,6 +378,7 @@ describe('Song Service - Unit Tests', () => {
         artist: 'Updated artist',
         text: '[D] updated',
         chords: ['D', 'A'],
+        ownerId: 'dude',
       });
 
       expect(mockDoc).toHaveBeenCalledWith(expect.anything(), 'songs', 'song-9');
@@ -383,6 +387,7 @@ describe('Song Service - Unit Tests', () => {
         artist: 'Updated artist',
         text: '[D] updated',
         chords: ['D', 'A'],
+        ownerId: 'dude',
       });
       expect(result).toEqual({
         id: 'song-9',
@@ -390,6 +395,7 @@ describe('Song Service - Unit Tests', () => {
         artist: 'Updated artist',
         text: '[D] updated',
         chords: ['D', 'A'],
+        ownerId: 'dude',
       });
     });
   });
