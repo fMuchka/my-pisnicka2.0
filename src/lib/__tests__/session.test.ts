@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  joinSession as rawJoinSession,
-  type JoinSessionResult,
+  getSessionStatus as rawGetSessionStatus,
+  type SessionStatusResult,
   fetchLatestSessions,
   createSession,
 } from '../session';
@@ -42,9 +42,9 @@ vi.mock('../firebase', () => ({
   db: {},
 }));
 
-type JoinSessionFn = (pin: string) => Promise<JoinSessionResult>;
+type GetSessionStatusFn = (pin: string) => Promise<SessionStatusResult>;
 
-const joinSession = rawJoinSession as unknown as JoinSessionFn;
+const getSessionStatus = rawGetSessionStatus as unknown as GetSessionStatusFn;
 
 describe('session: joinSession', () => {
   beforeEach(() => {
@@ -62,7 +62,7 @@ describe('session: joinSession', () => {
       ],
     });
 
-    const res = await joinSession('1234');
+    const res = await getSessionStatus('1234');
     expect(res.ok).toBe(true);
   });
 
@@ -77,7 +77,7 @@ describe('session: joinSession', () => {
       ],
     });
 
-    const res = await joinSession('1234');
+    const res = await getSessionStatus('1234');
     expect(res.ok).toBe(false);
     expect(res.errorCode).toBe('inactive');
   });
@@ -85,7 +85,7 @@ describe('session: joinSession', () => {
   it('returns not-found when no matching active session', async () => {
     mocks.mockGetDocs.mockResolvedValue({ empty: true, docs: [] });
 
-    const res = await joinSession('9999');
+    const res = await getSessionStatus('9999');
     expect(res.ok).toBe(false);
     expect(res.errorCode).toBe('not-found');
   });
@@ -93,7 +93,7 @@ describe('session: joinSession', () => {
   it('returns firestore-error when Firestore query throws', async () => {
     mocks.mockGetDocs.mockRejectedValue(Object.assign(new Error('boom'), { code: 'unknown' }));
 
-    const res = await joinSession('0000');
+    const res = await getSessionStatus('0000');
     expect(res.ok).toBe(false);
     expect(res.errorCode).toBe('firestore-error');
   });
@@ -101,7 +101,7 @@ describe('session: joinSession', () => {
   it.each([['123'], ['ABCD'], ['1Q2B'], [''], ['12345']])(
     'returns invalid-format when pin is not 4 digit number',
     async (input) => {
-      const res = await joinSession(input);
+      const res = await getSessionStatus(input);
 
       expect(res.ok).toBe(false);
       expect(res.errorCode).toBe('invalid-format');

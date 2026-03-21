@@ -29,6 +29,14 @@ export type Session = {
   createdAt: Timestamp;
 };
 
+export type SessionRouterQuery = {
+  sessionId: string;
+  hostId: string;
+  pin: string;
+};
+
+export type SessionErrorCode = 'not-found' | 'inactive' | 'firestore-error' | 'invalid-format';
+
 type SessionLookup = Pick<Session, 'pin' | 'isActive' | 'hostId'>;
 
 export type CreateSessionInput = {
@@ -46,10 +54,32 @@ export type CreateSessionInput = {
  * - 'firestore-error': Network or permission error
  * - 'invalid-format': PIN doesn't match 4-digit format
  */
-export interface JoinSessionResult {
+export interface SessionStatusResult {
   ok: boolean;
-  errorCode?: 'not-found' | 'inactive' | 'firestore-error' | 'invalid-format';
+  session?: Session;
+  errorCode?: SessionErrorCode;
 }
+
+export interface OkSessionResult extends SessionStatusResult {
+  ok: true;
+  session: Session;
+}
+
+const SESSION_ERROR_MESSAGES_CS: Record<SessionErrorCode, string> = {
+  'not-found': 'Relace s tímto PINem neexistuje.',
+  inactive: 'Relace je uzavřena nebo již skončila.',
+  'invalid-format': 'PIN musí být 4-místné číslo.',
+  'firestore-error':
+    'Chyba připojení. Zkus to prosím později nebo se ujisti, že máš přístup k internetu.',
+};
+
+export const getSessionErrorMessage = (errorCode?: SessionErrorCode): string => {
+  if (!errorCode) {
+    return '';
+  }
+
+  return SESSION_ERROR_MESSAGES_CS[errorCode] ?? 'Neznámá chyba';
+};
 
 /**
  * Validates 4-digit PIN format.
@@ -89,7 +119,7 @@ const mapSessionDoc = (doc: { id: string; data: () => DocumentData }): Session =
  * (specifically active sessions with matching PIN).
  *
  * @param pin - The session PIN to join (should be 4 digits)
- * @returns Promise resolving to JoinSessionResult with ok=true on success,
+ * @returns Promise resolving to SessionStatusResult with ok=true on success,
  *          or ok=false with specific errorCode on failure
  *
  * @example
@@ -108,7 +138,7 @@ const mapSessionDoc = (doc: { id: string; data: () => DocumentData }): Session =
  * - 'inactive': Session found but isActive field is false
  * - 'firestore-error': Catch-all for Firestore exceptions (permission denied, network error, etc.)
  */
-export const joinSession = async (pin: string): Promise<JoinSessionResult> => {
+export const getSessionStatus = async (pin: string): Promise<SessionStatusResult> => {
   // Fail fast on invalid PIN format without hitting Firestore
   if (isPinInvalid(pin) === true) return { ok: false, errorCode: 'invalid-format' };
 
@@ -121,21 +151,21 @@ export const joinSession = async (pin: string): Promise<JoinSessionResult> => {
       // Convert query result to typed Session objects
       const sessions: SessionLookup[] = s.docs.map((d) => {
         const data = d.data() as DocumentData;
-        return { pin: data.pin, isActive: data.isActive, hostId: data.hostId };
+        return { pin: data.pin, isActive: data.isActive, hostId: data.hostId, id: d.id };
       });
 
       // No matching session found with this PIN
       if (sessions.length === 0) {
-        return { ok: false, errorCode: 'not-found' } as JoinSessionResult;
+        return { ok: false, errorCode: 'not-found' } as SessionStatusResult;
       }
 
       // Session exists but is inactive (closed or ended)
       if (sessions[0]?.isActive === false) {
-        return { ok: false, errorCode: 'inactive' } as JoinSessionResult;
+        return { ok: false, errorCode: 'inactive' } as SessionStatusResult;
       }
 
       // Success! Session is active and accepting joins
-      return { ok: true };
+      return { ok: true, session: sessions[0] as Session };
     })
     .catch(() => {
       // Any Firestore error (permission denied, network issue, etc.)
@@ -199,5 +229,13 @@ export const createSession = async (input: CreateSessionInput): Promise<Session>
   return {
     id: sessionRef.id,
     ...sessionData,
+  };
+};
+
+export const createSessionRouterQuery = (session: Session, owner?: string): SessionRouterQuery => {
+  return {
+    sessionId: session.id,
+    hostId: owner ?? session.hostId,
+    pin: session.pin,
   };
 };

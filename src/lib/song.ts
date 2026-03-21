@@ -10,6 +10,7 @@ import {
   getDoc,
   updateDoc,
   type DocumentData,
+  where,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
@@ -121,6 +122,19 @@ export async function fetchHomeSongs(): Promise<Song[]> {
   });
 
   return selectHomeSongs(allSongs);
+}
+
+export async function fetchAllUserSongs(ownerId: string): Promise<Song[]> {
+  const songsRef = collection(db, 'songs');
+  const q = query(songsRef, where('ownerId', '==', ownerId));
+
+  const snapshot = await getDocs(q);
+  const allSongs = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return mapSongDoc(doc, data);
+  });
+
+  return allSongs;
 }
 
 export async function fetchSongById(songId: string): Promise<Song | null> {

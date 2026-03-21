@@ -58,10 +58,7 @@ export function useAuth() {
    * This convention-based check is suitable for internal host management
    * and avoids need for custom claims or Firestore role docs.
    */
-  const isHost = computed(() => {
-    const email = user.value?.email ?? '';
-    return email.includes('@host');
-  });
+  const isHost = computed(() => user.value?.email !== '' && user.value?.email !== null);
 
   /**
    * Guests can be either:
