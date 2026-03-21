@@ -1,15 +1,20 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
+  import { useRouter } from 'vue-router';
   import { SegmentGroup } from '@ark-ui/vue/segment-group';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
   import { useSongListData } from '../../composables/useSongListData';
+  import { useAuth } from '../../composables/useAuth';
+  import Routes from '../../router/Routes';
   import type { Song } from '../../lib/song';
 
   const props = defineProps<{
     ownerId: string;
   }>();
 
+  const { user } = useAuth();
+  const router = useRouter();
   const { userSongs } = useSongListData(props.ownerId);
 
   type ViewMode = 'flat' | 'tree';
@@ -26,6 +31,19 @@
   const sortedSongs = computed(() => {
     return [...userSongs.value].sort(byArtistThenTitle);
   });
+
+  const canOpenSongs = computed(() => {
+    const userId = user.value?.uid ?? '';
+    return userId !== '' && userId === props.ownerId;
+  });
+
+  const handleSongClick = (song: Song) => {
+    if (!canOpenSongs.value) {
+      return;
+    }
+
+    router.push({ path: Routes.Song.replace(':songId', song.id) });
+  };
 </script>
 
 <template>
@@ -74,12 +92,16 @@
     <SongListFlatView
       v-else-if="viewMode === 'flat'"
       :songs="sortedSongs"
+      :on-song-click="handleSongClick"
+      :is-interactive="canOpenSongs"
     />
 
     <SongListTreeView
       v-else
       :songs="sortedSongs"
       artists-label="Interpreti"
+      :on-song-click="handleSongClick"
+      :is-interactive="canOpenSongs"
     />
   </section>
 </template>

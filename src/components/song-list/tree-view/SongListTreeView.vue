@@ -13,6 +13,8 @@
   const props = defineProps<{
     songs: Song[];
     artistsLabel: string;
+    onSongClick: (song: Song) => void;
+    isInteractive: boolean;
   }>();
 
   const groupedSongs = computed(() => {
@@ -52,6 +54,21 @@
   const artistNodes = computed(() => {
     return collection.value.rootNode.children ?? [];
   });
+
+  const songsByNodeId = computed(() => {
+    return new Map<string, Song>(
+      props.songs.map((song): [string, Song] => [`song:${song.id}`, song])
+    );
+  });
+
+  const handleSongNodeClick = (songNodeId: string) => {
+    const song = songsByNodeId.value.get(songNodeId);
+    if (!song) {
+      return;
+    }
+
+    props.onSongClick(song);
+  };
 </script>
 
 <template>
@@ -89,7 +106,12 @@
                 :node="songNode"
                 :index-path="[artistIndex, songIndex]"
               >
-                <TreeView.Item class="song-list__tree-item">
+                <TreeView.Item
+                  class="song-list__tree-item"
+                  :class="{ 'song-list__tree-item--readonly': !props.isInteractive }"
+                  :aria-disabled="!props.isInteractive"
+                  @click="handleSongNodeClick(songNode.id)"
+                >
                   <TreeView.ItemText class="song-list__tree-item-text">
                     <Music2 />
                     {{ songNode.name }}
@@ -162,6 +184,10 @@
     transition:
       color var(--transition-fast),
       background-color var(--transition-fast);
+  }
+
+  .song-list__tree-item--readonly {
+    cursor: default;
   }
 
   .song-list__branch-control:hover,

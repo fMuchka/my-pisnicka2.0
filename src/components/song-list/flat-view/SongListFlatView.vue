@@ -1,8 +1,10 @@
 <script setup lang="ts">
   import type { Song } from '../../../lib/song';
 
-  defineProps<{
+  const props = defineProps<{
     songs: Song[];
+    onSongClick: (song: Song) => void;
+    isInteractive: boolean;
   }>();
 </script>
 
@@ -12,6 +14,9 @@
       v-for="song in songs"
       :key="song.id"
       class="song-list__item"
+      :class="{ 'song-list__item--readonly': !props.isInteractive }"
+      :aria-disabled="!props.isInteractive"
+      @click="props.onSongClick(song)"
     >
       {{ song.artist }} - {{ song.title }}
     </li>
@@ -24,5 +29,13 @@
   .song-list__flat {
     display: grid;
     gap: var(--space-xs);
+  }
+
+  .song-list__item {
+    cursor: pointer;
+  }
+
+  .song-list__item--readonly {
+    cursor: default;
   }
 </style>
