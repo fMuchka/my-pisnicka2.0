@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import { PinInput } from '@ark-ui/vue';
   import PageHeader from '../components/PageHeader.vue';
   import Button from '../components/core/Button.vue';
+  import PinCodeInput from '../components/core/PinCodeInput.vue';
   import { ref, computed } from 'vue';
   import {
     createSessionRouterQuery,
@@ -11,21 +11,17 @@
     type SessionStatusResult,
     type OkSessionResult,
   } from '../lib/session';
+  import { emptyPin, type PIN } from '../lib/pin';
   import { useRouter } from 'vue-router';
   import Routes from '../router/Routes';
   import { useSessionStore } from '../stores/session';
-
-  /**
-   * PIN type ensures exactly 4 string values (ARK UI's PinInput v-model type).
-   */
-  export type PIN = [string, string, string, string];
 
   // UI Text
   const TITLE = 'Připojit se k partě';
   const TAG_LINE = 'Ne každý kdo bloudí, je ztracený.';
 
   // Reactive state
-  const pin = ref<PIN>(['', '', '', '']);
+  const pin = ref<PIN>(emptyPin());
   const joining = ref<boolean>(false); // Loading state during API call
   const errorCode = ref<SessionErrorCode | undefined>(undefined); // Current error, if any
 
@@ -90,30 +86,12 @@
       :tagline="TAG_LINE"
     />
 
-    <!-- PIN Input Component (ARK UI) -->
-    <PinInput.Root
+    <PinCodeInput
       v-model="pin"
-      class="pin-container"
-      type="numeric"
-      @value-change="(newVal) => (pin = newVal.value as PIN)"
-    >
-      <PinInput.Label class="pin-description">
-        <p class="sub-title">Zadej 4-místný PIN</p>
-        Pomocí PINu tě spojíme s otevřenou partou.
-      </PinInput.Label>
-      <PinInput.Control class="pin-control">
-        <!-- Render 4 PIN digit inputs with aria labels for accessibility -->
-        <PinInput.Input
-          v-for="(val, i) in pin"
-          :key="val"
-          class="pin-input"
-          :index="i"
-          placeholder=""
-          :aria-label="`pin číslice ${i + 1}`"
-        />
-      </PinInput.Control>
-      <PinInput.HiddenInput />
-    </PinInput.Root>
+      title="Zadej 4-místný PIN"
+      description="Pomocí PINu tě spojíme s otevřenou partou."
+      aria-label-prefix="pin číslice"
+    />
 
     <!-- Join Button with loading state -->
     <Button
@@ -151,53 +129,6 @@
     padding: var(--space-md);
 
     place-content: center;
-  }
-
-  .pin-container {
-    margin-bottom: var(--space-lg);
-  }
-
-  .pin-description {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: var(--space-lg);
-
-    > .sub-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: var(--space-xs);
-      color: var(--text-primary);
-    }
-  }
-
-  .pin-control {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-md);
-  }
-
-  .pin-input {
-    width: 100%;
-    padding: 12px 0;
-    font-size: 22px;
-    text-align: center;
-    font-weight: 600;
-    border: 1px solid var(--bg-tertiary);
-    border-radius: var(--radius-sm);
-    background-color: white;
-    transition:
-      border-color 150ms ease,
-      box-shadow 150ms ease;
-  }
-
-  .pin-input:focus {
-    outline: none;
-    border: 2px solid var(--accent);
-    padding: 11px 0;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
   }
 
   .error-message {

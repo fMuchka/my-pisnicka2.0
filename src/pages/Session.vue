@@ -3,7 +3,9 @@
   import { useRoute } from 'vue-router';
   import PageHeader from '../components/PageHeader.vue';
   import SongList from '../components/song-list/SongList.vue';
+  import PinCodeInput from '../components/core/PinCodeInput.vue';
   import { useAuth } from '../composables/useAuth';
+  import { stringToPin } from '../lib/pin';
   import {
     getSessionErrorMessage,
     getSessionStatus,
@@ -109,6 +111,7 @@
   });
 
   const ownerId = isAuthenticated.value ? (user.value?.uid ?? '') : sessionDetails.value.hostId;
+  const sessionPin = computed(() => stringToPin(querySessionDetails.value.pin));
 </script>
 
 <template>
@@ -120,13 +123,18 @@
       :title="TITLE"
       :tagline="TAG_LINE"
     />
-    <p
+    <div
       v-if="querySessionDetails.pin"
       class="session-id"
       data-testid="session-id"
     >
-      PIN: {{ querySessionDetails.pin }}
-    </p>
+      <PinCodeInput
+        :model-value="sessionPin"
+        :read-only="true"
+        :show-label="false"
+        aria-label-prefix="pin číslice"
+      />
+    </div>
 
     <div
       v-if="errorMessage"
