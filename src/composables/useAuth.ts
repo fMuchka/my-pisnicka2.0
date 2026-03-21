@@ -9,6 +9,10 @@ import { signOut as signOutService } from '../lib/authService';
  * through a single subscription to Firebase Auth state changes.
  */
 const user = ref<User | null>(null);
+// BUG: `subscribe()` is called on every `useAuth()` invocation, creating duplicate listeners.
+// PERF: Cache the unsubscribe handle and initialize the auth listener exactly once.
+// PATTERN: Follow Firebase Auth observer lifecycle guidance for single-subscription app state.
+// See: https://firebase.google.com/docs/auth/web/manage-users#get_the_currently_signed-in_user
 
 /**
  * Subscribe to Firebase Auth state changes.
@@ -58,6 +62,9 @@ export function useAuth() {
    * This convention-based check is suitable for internal host management
    * and avoids need for custom claims or Firestore role docs.
    */
+  // BUG: The current check only verifies non-empty email; it does not validate `@host` suffix.
+  // FIXME: Align implementation with the documented host rule (for example, `email.endsWith('@host')`).
+  // See: https://firebase.google.com/docs/auth/web/manage-users#retrieve_user_data
   const isHost = computed(() => user.value?.email !== '' && user.value?.email !== null);
 
   /**

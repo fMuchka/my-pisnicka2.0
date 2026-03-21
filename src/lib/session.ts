@@ -93,6 +93,10 @@ const isPinInvalid = (pin: string): boolean => {
 };
 
 const generatePin = (): string => {
+  // HACK: Random 4-digit PIN generation can collide and lacks reservation/retry logic.
+  // BUG: Concurrent hosts may receive identical PINs without a uniqueness check.
+  // PATTERN: Use a Firestore transaction or retry loop against existing active PINs.
+  // See: https://firebase.google.com/docs/firestore/manage-data/transactions
   const value = Math.floor(Math.random() * 10000);
   return String(value).padStart(4, '0');
 };

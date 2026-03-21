@@ -65,6 +65,9 @@
       :open-session="openSession"
     />
 
+    <!-- TODO: Replace placeholder callback with a real route to the song list page. -->
+    <!-- BUG: Current implementation silently logs and leaves the CTA non-functional for users. -->
+    <!-- See: https://router.vuejs.org/guide/essentials/navigation.html -->
     <SongsSection
       :display-songs="displaySongs"
       :songs-error="songsError"
