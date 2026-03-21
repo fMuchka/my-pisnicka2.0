@@ -4,6 +4,7 @@
   import PageHeader from '../components/PageHeader.vue';
   import SongList from '../components/song-list/SongList.vue';
   import PinCodeInput from '../components/core/PinCodeInput.vue';
+  import QrCode from '../components/core/QrCode.vue';
   import { useAuth } from '../composables/useAuth';
   import { stringToPin } from '../lib/pin';
   import {
@@ -112,6 +113,13 @@
 
   const ownerId = isAuthenticated.value ? (user.value?.uid ?? '') : sessionDetails.value.hostId;
   const sessionPin = computed(() => stringToPin(querySessionDetails.value.pin));
+  const currentUrl = computed(() => {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+
+    return window.location.href;
+  });
 </script>
 
 <template>
@@ -128,6 +136,7 @@
       class="session-id"
       data-testid="session-id"
     >
+      <QrCode :value="currentUrl" />
       <PinCodeInput
         :model-value="sessionPin"
         :read-only="true"
