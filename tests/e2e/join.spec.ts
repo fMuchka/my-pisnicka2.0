@@ -29,7 +29,7 @@ test.describe('Join by PIN', () => {
 
   test('navigates to Session on valid PIN', async ({ page }) => {
     // Seed emulator with an active session first, e.g., pin 1234
-    // Then this test should navigate to the Session view
+    // Then this test should navigate to the Session view with session query params
     await page.goto('/join');
 
     await page.getByLabel('pin číslice 1').fill('1');
@@ -39,6 +39,11 @@ test.describe('Join by PIN', () => {
 
     await page.getByRole('button', { name: /připojit/i }).click();
 
-    await expect(page).toHaveURL(/\/session$/);
+    await expect(page).toHaveURL(/\/session\?/);
+
+    const currentUrl = new URL(page.url());
+    expect(currentUrl.searchParams.get('sessionId')).toBeTruthy();
+    expect(currentUrl.searchParams.get('hostId')).toBeTruthy();
+    expect(currentUrl.searchParams.get('pin')).toBe('1234');
   });
 });

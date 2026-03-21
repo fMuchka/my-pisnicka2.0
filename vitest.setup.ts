@@ -1,6 +1,15 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Polyfill ResizeObserver for jsdom (needed by Ark UI components)
+if (typeof global.ResizeObserver === 'undefined') {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // Force Firebase to point to local emulators in test runs.
 vi.stubEnv('VITE_FIREBASE_EMULATOR', 'true');
 vi.stubEnv('VITE_DISABLE_FIREBASE_EMULATOR', 'false');
