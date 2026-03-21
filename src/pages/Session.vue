@@ -24,6 +24,15 @@
 
   const route = useRoute();
 
+  const sessionPin = computed(() => stringToPin(querySessionDetails.value.pin));
+  const currentUrl = computed(() => {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+
+    return window.location.href;
+  });
+
   const querySessionDetails = computed(() => {
     const query = route.query as Partial<SessionRouterQuery>;
 
@@ -38,6 +47,28 @@
     };
   });
 
+  const errorMessage = computed(() => getSessionErrorMessage(errorCode.value));
+
+  const sessionDetails = computed(() => {
+    const detailsFromStore = sessionStore.sessionDetails;
+
+    if (detailsFromStore) {
+      return {
+        id: detailsFromStore.id,
+        hostId: detailsFromStore.hostId,
+        pin: detailsFromStore.pin,
+      };
+    }
+
+    return emptySessionDetails;
+  });
+
+  const ownerId = computed(() => {
+    return isAuthenticated.value
+      ? (user.value?.uid ?? '')
+      : querySessionDetails.value.hostId || sessionDetails.value.hostId;
+  });
+
   watch(
     querySessionDetails,
     async (details) => {
@@ -50,6 +81,7 @@
       }
 
       const detailsFromStore = sessionStore.sessionDetails;
+
       if (
         detailsFromStore &&
         detailsFromStore.id === details.id &&
@@ -89,37 +121,11 @@
     { immediate: true }
   );
 
-  const errorMessage = computed(() => getSessionErrorMessage(errorCode.value));
-
   const emptySessionDetails = {
     id: '',
     hostId: '',
     pin: '',
   };
-
-  const sessionDetails = computed(() => {
-    const detailsFromStore = sessionStore.sessionDetails;
-
-    if (detailsFromStore) {
-      return {
-        id: detailsFromStore.id,
-        hostId: detailsFromStore.hostId,
-        pin: detailsFromStore.pin,
-      };
-    }
-
-    return emptySessionDetails;
-  });
-
-  const ownerId = isAuthenticated.value ? (user.value?.uid ?? '') : sessionDetails.value.hostId;
-  const sessionPin = computed(() => stringToPin(querySessionDetails.value.pin));
-  const currentUrl = computed(() => {
-    if (typeof window === 'undefined') {
-      return '';
-    }
-
-    return window.location.href;
-  });
 </script>
 
 <template>
