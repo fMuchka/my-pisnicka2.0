@@ -5,12 +5,13 @@
   import SongsSection from '../components/home/SongsSection.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
-  import { type Session } from '../lib/session';
+  import { createSessionRouterQuery, type Session } from '../lib/session';
   import { type Song } from '../lib/song';
   import { useAuth } from '../composables/useAuth';
   import { useRouter } from 'vue-router';
   import Routes from '../router/Routes';
   import { useHomeData } from '../composables/useHomeData';
+  import { useSessionStore } from '../stores/session';
 
   const isCreateDialogOpen = ref(false);
   const isCreateSongDialogOpen = ref(false);
@@ -25,12 +26,18 @@
 
   const { user } = useAuth();
   const router = useRouter();
+  const sessionStore = useSessionStore();
 
   const { latestSessions, sessionsError, songsError, loadingSection, displaySongs } =
     useHomeData(user);
 
   const openSession = (session: Session) => {
-    router.push({ path: Routes.Session, query: { sessionId: session.id } });
+    sessionStore.setSessionFromModel(session);
+
+    router.push({
+      path: Routes.Session,
+      query: createSessionRouterQuery(session),
+    });
   };
 
   const openSong = (song: Song) => {
@@ -58,6 +65,9 @@
       :open-session="openSession"
     />
 
+    <!-- TODO: Replace placeholder callback with a real route to the song list page. -->
+    <!-- BUG: Current implementation silently logs and leaves the CTA non-functional for users. -->
+    <!-- See: https://router.vuejs.org/guide/essentials/navigation.html -->
     <SongsSection
       :display-songs="displaySongs"
       :songs-error="songsError"

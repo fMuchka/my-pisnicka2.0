@@ -10,7 +10,7 @@ export function useHomeData(user: Ref<User | null>) {
   const songsError = ref<string | null>(null);
   const sessionsLoading = ref(true);
   const songsLoading = ref(true);
-  const userId = user.value?.uid;
+  const userId = computed(() => user.value?.uid);
 
   const loadingSection = computed<'sessions' | 'songs' | null>(() => {
     if (sessionsLoading.value && latestSessions.value.length === 0) {
@@ -45,8 +45,8 @@ export function useHomeData(user: Ref<User | null>) {
     try {
       sessionsError.value = null;
 
-      if (userId) {
-        latestSessions.value = await fetchLatestSessions(userId);
+      if (userId.value) {
+        latestSessions.value = await fetchLatestSessions(userId.value);
       } else {
         latestSessions.value = [];
       }

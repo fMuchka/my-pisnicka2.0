@@ -10,6 +10,7 @@ import {
   getDoc,
   updateDoc,
   type DocumentData,
+  where,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
@@ -32,6 +33,7 @@ export interface Song {
   text?: string; // WYSIWYG song text with chord notation (chords above lyrics or inline)
   chords?: string[]; // Array of unique chords (auto-extracted from text, can be manually edited)
   createdAt?: Timestamp; // Firestore Timestamp
+  ownerId: string;
 }
 
 export interface CreateSongInput {
@@ -39,6 +41,7 @@ export interface CreateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
+  ownerId: string;
 }
 
 export interface UpdateSongInput {
@@ -46,6 +49,7 @@ export interface UpdateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
+  ownerId: string;
 }
 
 /**
@@ -98,6 +102,7 @@ const mapSongDoc = (
     text: data.text,
     chords: data.chords,
     createdAt: data.createdAt,
+    ownerId: data.ownerId,
   };
 };
 
@@ -117,6 +122,19 @@ export async function fetchHomeSongs(): Promise<Song[]> {
   });
 
   return selectHomeSongs(allSongs);
+}
+
+export async function fetchAllUserSongs(ownerId: string): Promise<Song[]> {
+  const songsRef = collection(db, 'songs');
+  const q = query(songsRef, where('ownerId', '==', ownerId));
+
+  const snapshot = await getDocs(q);
+  const allSongs = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return mapSongDoc(doc, data);
+  });
+
+  return allSongs;
 }
 
 export async function fetchSongById(songId: string): Promise<Song | null> {
@@ -139,6 +157,7 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     chords: input.chords,
     text: input.text,
     createdAt: Timestamp.now(),
+    ownerId: input.ownerId,
   };
 
   const songRef = await addDoc(collection(db, 'songs'), songData);
@@ -156,6 +175,7 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     artist: input.artist,
     text: input.text,
     chords: input.chords,
+    ownerId: input.ownerId,
   };
 
   await updateDoc(songRef, songData as DocumentData);

@@ -93,7 +93,7 @@ Core services and utilities:
 
 Vue composition functions:
 
-- **useAuth.ts**: Reactive auth state (`user`, `isAuthenticated`, `isHost`, `isGuest`); `logout()` method; used in router guard and components
+- **useAuth.ts**: Reactive auth state (`user`, `isAuthenticated, `isGuest`); `logout()` method; used in router guard and components
 
 ### `src/components/`
 

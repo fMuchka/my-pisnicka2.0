@@ -4,7 +4,7 @@
   import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import Button from '../../core/Button.vue';
-  import { createSession } from '../../../lib/session';
+  import { createSession, createSessionRouterQuery } from '../../../lib/session';
   import { useAuth } from '../../../composables/useAuth';
   import Routes from '../../../router/Routes';
 
@@ -73,7 +73,10 @@
       });
 
       isOpen.value = false;
-      await router.push({ path: Routes.Session, query: { sessionId: created.id } });
+      await router.push({
+        path: Routes.Session,
+        query: createSessionRouterQuery(created),
+      });
     } catch (_error) {
       createError.value = 'Nepodařilo se vytvořit relaci. Zkus to prosím znovu.';
     } finally {
