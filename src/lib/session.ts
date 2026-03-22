@@ -92,13 +92,36 @@ const isPinInvalid = (pin: string): boolean => {
   return !/^\d{4}$/.test(pin);
 };
 
+const MAX_PIN_GENERATION_ATTEMPTS = 30;
+
 const generatePin = (): string => {
-  // HACK: Random 4-digit PIN generation can collide and lacks reservation/retry logic.
-  // BUG: Concurrent hosts may receive identical PINs without a uniqueness check.
-  // PATTERN: Use a Firestore transaction or retry loop against existing active PINs.
-  // See: https://firebase.google.com/docs/firestore/manage-data/transactions
   const value = Math.floor(Math.random() * 10000);
   return String(value).padStart(4, '0');
+};
+
+const isActivePinTaken = async (pin: string): Promise<boolean> => {
+  const pinQuery = query(
+    collection(db, 'sessions'),
+    where('pin', '==', pin),
+    where('isActive', '==', true),
+    limit(1)
+  );
+  const snapshot = await getDocs(pinQuery);
+
+  return snapshot.docs.length > 0;
+};
+
+const generateAvailablePin = async (): Promise<string> => {
+  for (let attempt = 0; attempt < MAX_PIN_GENERATION_ATTEMPTS; attempt += 1) {
+    const candidate = generatePin();
+    const taken = await isActivePinTaken(candidate);
+
+    if (taken === false) {
+      return candidate;
+    }
+  }
+
+  throw new Error('Unable to allocate a unique session PIN. Please retry.');
 };
 
 const mapSessionDoc = (doc: { id: string; data: () => DocumentData }): Session => {
@@ -218,12 +241,14 @@ export const fetchLatestSessions = async (userId: string): Promise<Session[]> =>
  * Creates a new active session with a generated 4-digit PIN.
  */
 export const createSession = async (input: CreateSessionInput): Promise<Session> => {
+  const pin = await generateAvailablePin();
+
   const sessionData = {
     name: input.name,
     hostId: input.hostId,
     hostDisplayName: input.hostDisplayName,
     isActive: true,
-    pin: generatePin(),
+    pin,
     joinedBy: [input.hostId],
     createdAt: Timestamp.now(),
   };

@@ -453,6 +453,7 @@ describe('session: fetchLatestSessions', () => {
 describe('session: createSession', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.mockGetDocs.mockResolvedValue({ docs: [] });
   });
 
   it('creates session with required fields', async () => {
@@ -616,5 +617,67 @@ describe('session: createSession', () => {
 
     // Should generate different PINs (statistically very likely)
     expect(pins.size).toBeGreaterThan(1);
+  });
+
+  it('retries when generated PIN is already used by active session', async () => {
+    const randomSpy = vi
+      .spyOn(Math, 'random')
+      .mockReturnValueOnce(0.1234) // 1234
+      .mockReturnValueOnce(0.5678); // 5678
+
+    mocks.mockGetDocs
+      .mockResolvedValueOnce({
+        docs: [
+          {
+            id: 'active-1',
+            data: () => ({ pin: '1234', isActive: true }),
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ docs: [] });
+    mocks.mockAddDoc.mockResolvedValue({ id: 'retry-session-id' });
+
+    const input = {
+      name: 'Retry Session',
+      hostId: 'host-123',
+      hostDisplayName: 'Test Host',
+    };
+
+    await createSession(input);
+
+    const addDocCall = mocks.mockAddDoc.mock.calls[0];
+    const sessionData = addDocCall?.[1];
+
+    expect(sessionData.pin).toBe('5678');
+    expect(mocks.mockGetDocs).toHaveBeenCalledTimes(2);
+
+    randomSpy.mockRestore();
+  });
+
+  it('fails when all PIN generation attempts are exhausted', async () => {
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.1111); // 1111
+
+    mocks.mockGetDocs.mockResolvedValue({
+      docs: [
+        {
+          id: 'active-1',
+          data: () => ({ pin: '1111', isActive: true }),
+        },
+      ],
+    });
+
+    const input = {
+      name: 'Exhausted Session',
+      hostId: 'host-123',
+      hostDisplayName: 'Test Host',
+    };
+
+    await expect(createSession(input)).rejects.toThrow(
+      'Unable to allocate a unique session PIN. Please retry.'
+    );
+    expect(mocks.mockGetDocs).toHaveBeenCalledTimes(30);
+    expect(mocks.mockAddDoc).not.toHaveBeenCalled();
+
+    randomSpy.mockRestore();
   });
 });
