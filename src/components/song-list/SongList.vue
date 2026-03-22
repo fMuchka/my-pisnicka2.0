@@ -15,7 +15,9 @@
 
   const { user } = useAuth();
   const router = useRouter();
-  const { userSongs } = useSongListData(props.ownerId);
+  const ownerRef = ref(props.ownerId);
+
+  const { userSongs } = useSongListData(ownerRef);
 
   type ViewMode = 'flat' | 'tree';
 
