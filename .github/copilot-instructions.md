@@ -34,11 +34,11 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 
 ### 3. Authentication & Routing
 
-- **Composable**: [src/composables/useAuth.ts](src/composables/useAuth.ts) provides reactive `user`, `isAuthenticated`, `isHost`, `isGuest`, `logout`
+- **Composable**: [src/composables/useAuth.ts](src/composables/useAuth.ts) provides reactive `user`, `isAuthenticated` `isGuest`, `logout`
 - **Service layer**: [src/lib/authService.ts](src/lib/authService.ts) wraps Firebase Auth methods
 - **Router guard**: [src/router/index.ts](src/router/index.ts) calls `useAuth()` in `beforeEach` for fresh auth state on every navigation
-- **Hosts**: email contains `@host` (checked via `isHost` computed)
-- **Guests**: anonymous auth or email link providers (checked via `isGuest` computed)
+- **Hosts**: users who pass the login
+- **Guests**: users who got in through pin or direct session url
 - **Czech localization**: UI/labels/aria in Czech; e2e selectors use Czech text (e.g., `Přihlásit se`, `Heslo`)
 
 ### 4. Component & UI Conventions
@@ -95,6 +95,5 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 2. **Array indexing**: TypeScript will flag `arr[i]` as possibly undefined; use optional chaining or explicit checks
 3. **Firebase emulator connection errors**: Check emulator ports in terminal output; ensure Firebase CLI emulators are running
 4. **Czech text in tests**: All Playwright selectors use Czech labels (`getByLabel('Email')`, `getByRole('button', { name: /přihlásit se/i })`)
-
 
 Character for this instruction file in **CANARY_STRING** is "🎵".

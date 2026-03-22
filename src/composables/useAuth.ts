@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { onAuthStateChanged, type Unsubscribe, type User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { signOut as signOutService } from '../lib/authService';
 
@@ -9,10 +9,7 @@ import { signOut as signOutService } from '../lib/authService';
  * through a single subscription to Firebase Auth state changes.
  */
 const user = ref<User | null>(null);
-// BUG: `subscribe()` is called on every `useAuth()` invocation, creating duplicate listeners.
-// PERF: Cache the unsubscribe handle and initialize the auth listener exactly once.
-// PATTERN: Follow Firebase Auth observer lifecycle guidance for single-subscription app state.
-// See: https://firebase.google.com/docs/auth/web/manage-users#get_the_currently_signed-in_user
+const unsubscribe = ref<Unsubscribe | null>(null);
 
 /**
  * Subscribe to Firebase Auth state changes.
@@ -37,7 +34,6 @@ function subscribe() {
  * Returns:
  * - user: ref<User | null> - Current authenticated user or null
  * - isAuthenticated: computed<boolean> - True if user is logged in
- * - isHost: computed<boolean> - True if user email contains @host
  * - isGuest: computed<boolean> - True if anonymous or emailLink provider
  * - logout(): async - Sign out and clear local auth state
  *
@@ -53,32 +49,25 @@ function subscribe() {
  */
 export function useAuth() {
   // Establish listener on first use (subsequent calls reuse same subscription)
-  subscribe();
+  if (unsubscribe.value == null) {
+    unsubscribe.value = subscribe();
+  }
 
   const isAuthenticated = computed(() => user.value != null);
 
   /**
-   * Hosts are identified by @host suffix in their email address.
-   * This convention-based check is suitable for internal host management
-   * and avoids need for custom claims or Firestore role docs.
-   */
-  // BUG: The current check only verifies non-empty email; it does not validate `@host` suffix.
-  // FIXME: Align implementation with the documented host rule (for example, `email.endsWith('@host')`).
-  // See: https://firebase.google.com/docs/auth/web/manage-users#retrieve_user_data
-  const isHost = computed(() => user.value?.email !== '' && user.value?.email !== null);
-
-  /**
-   * Guests can be either:
-   * 1. Anonymous auth users (temporary, no credentials stored)
-   * 2. Email link auth users (passwordless login)
+   * Guests can are Anonymous auth users
+   * who got in through PIN or Session link
    *
-   * Both types have limited Firestore read/write permissions enforced
-   * by Security Rules (can only join active sessions, not create them).
+   * These users cannot create songs or sessions.
+   * They can only get invited into a specific Active Session.
    */
   const isGuest = computed(() => {
-    if (!user.value) return false;
+    if (user.value == null) return true;
     if (user.value.isAnonymous) return true;
-    return (user.value.providerData ?? []).some((p) => p?.providerId === 'emailLink');
+
+    if (user.value != null) return false;
+    return true;
   });
 
   /**
@@ -86,14 +75,15 @@ export function useAuth() {
    * Calls authService.signOut which delegates to Firebase Auth.
    */
   const logout = async () => {
+    unsubscribe.value?.();
     await signOutService();
     user.value = null;
+    unsubscribe.value = null;
   };
 
   return {
     user,
     isAuthenticated,
-    isHost,
     isGuest,
     logout,
   };

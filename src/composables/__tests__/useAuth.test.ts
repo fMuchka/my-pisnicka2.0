@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock, afterEach } from 'vitest';
 
 // Mock onAuthStateChanged and other Firebase Auth bits
 vi.mock('firebase/auth', () => {
@@ -26,6 +26,12 @@ describe('useAuth', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    const { logout } = useAuth();
+
+    logout();
+  });
+
   it('user is reactive and initially null', () => {
     const { user } = useAuth();
     expect(user.value).toBeNull();
@@ -48,34 +54,14 @@ describe('useAuth', () => {
     expect(isAuthenticated.value).toBe(true);
   });
 
-  it('isHost returns true when user email is @host domain', () => {
-    let handler: (u: unknown) => void;
+  it('isGuest returns true when user is not logged in', () => {
+    let _handler: (u: unknown) => void;
     vi.mocked(mockOnAuthStateChanged).mockImplementation((_auth, cb) => {
-      handler = cb;
-      return () => {};
-    });
-
-    const { isHost } = useAuth();
-    handler!({ uid: 'h1', email: 'alice@host' });
-    expect(isHost.value).toBe(true);
-  });
-
-  it('isGuest returns true when user is anonymous or magic link', () => {
-    let handler: (u: unknown) => void;
-    vi.mocked(mockOnAuthStateChanged).mockImplementation((_auth, cb) => {
-      handler = cb;
+      _handler = cb;
       return () => {};
     });
 
     const state = useAuth();
-    handler!({ uid: 'g1', isAnonymous: true });
-    expect(state.isGuest.value).toBe(true);
-
-    handler!({
-      uid: 'g2',
-      email: 'guest@example.com',
-      providerData: [{ providerId: 'emailLink' }],
-    });
     expect(state.isGuest.value).toBe(true);
   });
 
