@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import PageHeader from '../components/PageHeader.vue';
   import Button from '../components/core/Button.vue';
   import PinCodeInput from '../components/core/PinCodeInput.vue';
   import { ref, computed } from 'vue';
