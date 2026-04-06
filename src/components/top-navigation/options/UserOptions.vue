@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { computed } from 'vue';
   import Button, { type ButtonIcon } from '../../core/Button.vue';
   import { User, LogOut } from 'lucide-vue-next';
   import { Menu } from '@ark-ui/vue/menu';
@@ -7,49 +8,61 @@
   import { useRouter } from 'vue-router';
   import Routes from '../../../router/Routes';
 
-  type MenuItems = {
-    items?: {
-      label: string;
-      icon?: ButtonIcon;
-      ariaLabel: string;
-      action: () => void;
-    }[];
+  type MenuItem = {
+    label: string;
+    icon?: ButtonIcon;
+    ariaLabel: string;
+    action: () => void;
   };
 
   const auth = useAuth();
   const router = useRouter();
 
-  const buttonsSpecs: (ButtonIcon & MenuItems)[] = [
-    {
-      component: User,
-      position: 'prepend',
-      items: [
-        {
-          label: 'Odhlásit se',
-          ariaLabel: 'odhlásit se',
-          action: () => {
-            auth.logout().then(() => {
-              router.push(Routes.Login);
-            });
-          },
-          icon: {
-            component: LogOut,
-            position: 'append',
-          },
+  const userLabel = computed(() => {
+    const email = auth.user.value?.email?.trim();
+
+    if (email) {
+      return email;
+    }
+
+    return 'Melon';
+  });
+
+  const menuItems = computed<MenuItem[]>(() => {
+    if (!auth.isAuthenticated.value) {
+      return [];
+    }
+
+    return [
+      {
+        label: 'Odhlásit se',
+        ariaLabel: 'odhlásit se',
+        action: () => {
+          auth.logout().then(() => {
+            router.push(Routes.Login);
+          });
         },
-      ],
-    },
-  ];
+        icon: {
+          component: LogOut,
+          position: 'append',
+        },
+      },
+    ];
+  });
+
+  const triggerIcon: ButtonIcon = {
+    component: User,
+    position: 'prepend',
+  };
 </script>
 
 <template>
-  <Menu.Root
-    v-for="(item, i) in buttonsSpecs"
-    :key="i"
-  >
+  <Menu.Root v-if="menuItems.length > 0">
     <Menu.Trigger as-child>
       <Button
-        :icon="item"
+        class="user-trigger"
+        :icon="triggerIcon"
+        :label="userLabel"
         style-variation="Text"
         aria-label="Uživatelské možnosti"
       />
@@ -57,7 +70,7 @@
     <Menu.Positioner>
       <Menu.Content>
         <Menu.Item
-          v-for="(menuItem, j) in item.items"
+          v-for="(menuItem, j) in menuItems"
           :key="j"
           :value="menuItem.label"
         >
@@ -72,30 +85,22 @@
       </Menu.Content>
     </Menu.Positioner>
   </Menu.Root>
+
+  <Button
+    v-else
+    class="user-trigger"
+    :icon="triggerIcon"
+    :label="userLabel"
+    style-variation="Text"
+    aria-label="Uživatelské možnosti"
+  />
 </template>
 
 <style scoped>
-  /* Top Navigation */
-  .top-nav {
-    height: 48px;
-    background-color: var(--bg-primary);
-    border-bottom: 1px solid var(--bg-tertiary);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--space-md);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .nav-title {
-    font-size: 20px;
-    font-weight: 600;
-  }
-
-  .nav-actions {
-    display: flex;
-    gap: var(--space-sm);
+  .user-trigger :deep(span) {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>
