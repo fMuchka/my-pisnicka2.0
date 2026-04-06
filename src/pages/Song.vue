@@ -103,7 +103,10 @@
 </script>
 
 <template>
-  <TopNavigation :page-title="song?.title ?? 'Píseň'" />
+  <TopNavigation
+    :page-title="song?.title ?? 'Píseň'"
+    :page-subtitle="song?.artist"
+  />
 
   <main class="song-page">
     <div class="song-shell">

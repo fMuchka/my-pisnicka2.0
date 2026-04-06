@@ -1,21 +1,31 @@
 <script setup lang="ts">
   import { ArrowLeft, Settings } from 'lucide-vue-next';
+  import { computed } from 'vue';
   import { useRouter } from 'vue-router';
   import Routes from '../../router/Routes';
   import Button from '../core/Button.vue';
+  import PageHeader from '../PageHeader.vue';
   import UserOptions from './options/UserOptions.vue';
 
   const props = withDefaults(
     defineProps<{
-      pageTitle: string;
+      pageTitle?: string;
+      pageSubtitle?: string;
       showBack?: boolean;
     }>(),
     {
       showBack: true,
+      pageTitle: undefined,
+      pageSubtitle: undefined,
     }
   );
 
   const router = useRouter();
+  const hasPageTitle = computed(() => Boolean(props.pageTitle?.trim()));
+  const hasPageSubtitle = computed(() => Boolean(props.pageSubtitle?.trim()));
+  const showContextRow = computed(
+    () => props.showBack === true || hasPageTitle.value || hasPageSubtitle.value
+  );
 
   const goBack = () => {
     if (window.history.length > 1) {
@@ -45,7 +55,10 @@
       </div>
     </div>
 
-    <div class="context-row">
+    <div
+      v-if="showContextRow"
+      class="context-row"
+    >
       <div class="context-left">
         <Button
           v-if="props.showBack"
@@ -60,7 +73,11 @@
         />
       </div>
 
-      <h1 class="context-title">{{ props.pageTitle }}</h1>
+      <PageHeader
+        class="context-header"
+        :title="props.pageTitle"
+        :tagline="props.pageSubtitle"
+      />
       <div class="context-right" />
     </div>
   </header>
@@ -119,16 +136,36 @@
     justify-self: start;
   }
 
-  .context-title {
+  .context-header {
+    min-width: 0;
+    max-width: min(55vw, 320px);
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .context-header :deep(.header) {
+    margin: 0;
+    text-align: center;
+  }
+
+  .context-header :deep(.title) {
     margin: 0;
     font-size: 1rem;
     font-weight: 650;
-    text-align: center;
     line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: min(55vw, 320px);
+  }
+
+  .context-header :deep(.tagline) {
+    margin-top: 2px;
+    margin-bottom: 0;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   @media (max-width: 360px) {
