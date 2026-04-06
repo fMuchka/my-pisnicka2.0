@@ -168,7 +168,7 @@
   .dialog-backdrop {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-backdrop);
     z-index: 999;
   }
 
@@ -187,7 +187,7 @@
     padding: var(--space-lg);
     max-width: 400px;
     width: 90%;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-dialog);
     position: relative;
   }
 

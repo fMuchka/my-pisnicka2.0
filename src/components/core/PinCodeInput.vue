@@ -95,7 +95,8 @@
     font-weight: 600;
     border: 1px solid var(--bg-tertiary);
     border-radius: var(--radius-sm);
-    background-color: white;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     transition:
       border-color 150ms ease,
       box-shadow 150ms ease;
@@ -105,6 +106,6 @@
     outline: none;
     border: 2px solid var(--accent);
     padding: 11px 0;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    box-shadow: var(--focus-ring-soft);
   }
 </style>

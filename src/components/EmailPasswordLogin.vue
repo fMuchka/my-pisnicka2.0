@@ -154,11 +154,11 @@
 
   /* Error state */
   .form-input-error {
-    border-color: #dc2626;
+    border-color: var(--color-error);
   }
 
   .error {
-    color: #dc2626;
+    color: var(--color-error);
   }
 
   .password-control {

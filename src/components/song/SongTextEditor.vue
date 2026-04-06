@@ -297,10 +297,10 @@
     border-radius: var(--radius-lg);
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--section-verse-bg) 76%, white),
-      color-mix(in srgb, var(--bg-primary) 92%, white)
+      color-mix(in srgb, var(--section-verse-bg) 76%, var(--bg-primary)),
+      color-mix(in srgb, var(--bg-primary) 92%, var(--bg-secondary))
     );
-    box-shadow: 0 18px 50px rgba(28, 25, 23, 0.08);
+    box-shadow: var(--shadow-panel);
     overflow-x: auto;
   }
 

@@ -36,8 +36,8 @@
   .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid var(--bg-tertiary, #e5e7eb);
-    border-top-color: var(--color-primary, #3b82f6);
+    border: 4px solid var(--bg-tertiary);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -49,7 +49,7 @@
   }
 
   .loading-label {
-    color: var(--text-secondary, #6b7280);
+    color: var(--text-secondary);
     font-size: 14px;
     margin: 0;
     font-weight: 500;

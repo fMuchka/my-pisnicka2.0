@@ -218,7 +218,7 @@
     --song-text-font-family: monospace;
     --song-text-font-size: 1rem;
     --song-chord-inline-color: var(--text-chord);
-    --song-chord-inline-bg: color-mix(in srgb, var(--accent) 18%, white);
+    --song-chord-inline-bg: color-mix(in srgb, var(--accent) 18%, var(--bg-primary));
     --song-chord-inline-font-size: inherit;
     --song-chord-inline-font-family: inherit;
     --song-chord-inline-font-weight: inherit;

@@ -134,8 +134,8 @@
   .error-message {
     margin-top: var(--space-md);
     padding: var(--space-sm) var(--space-md);
-    background-color: rgba(220, 38, 38, 0.1);
-    color: #dc2626;
+    background-color: var(--color-error-light);
+    color: var(--color-error-dark);
     border-radius: var(--radius-sm);
     font-size: 14px;
     text-align: center;

@@ -1,7 +1,7 @@
 /* Common styles shared by SessionsSection and SongsSection */
 
 .content-section {
-  background-color: white;
+  background-color: var(--bg-primary);
   border: 1px solid var(--bg-tertiary);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
@@ -62,6 +62,6 @@
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-soft);
   z-index: 1000;
 }
