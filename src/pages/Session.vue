@@ -181,12 +181,9 @@
     font-family: var(--font-body);
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     padding: var(--space-md);
-
-    place-content: center;
   }
 
   .session-id {
