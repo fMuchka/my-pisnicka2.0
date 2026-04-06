@@ -213,12 +213,10 @@
 
   .song-body {
     --song-anchored-line-height: 4;
-    --song-chord-font-size: 1rem;
+    --song-chord-font-size: var(--font-size-chords);
     --song-text-line-height: 6;
     --song-text-font-family: monospace;
-    --song-text-font-size: 1rem;
-    --song-chord-inline-color: var(--text-chord);
-    --song-chord-inline-bg: color-mix(in srgb, var(--accent) 18%, var(--bg-primary));
+    --song-text-font-size: var(--font-size-lyrics);
     --song-chord-inline-font-size: inherit;
     --song-chord-inline-font-family: inherit;
     --song-chord-inline-font-weight: inherit;
