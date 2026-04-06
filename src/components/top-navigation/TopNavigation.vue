@@ -12,11 +12,13 @@
       pageTitle?: string;
       pageSubtitle?: string;
       showBack?: boolean;
+      backToPath?: string;
     }>(),
     {
       showBack: true,
       pageTitle: undefined,
       pageSubtitle: undefined,
+      backToPath: undefined,
     }
   );
 
@@ -28,6 +30,12 @@
   );
 
   const goBack = () => {
+    if (props.backToPath) {
+      router.push({ path: props.backToPath });
+
+      return;
+    }
+
     if (window.history.length > 1) {
       router.back();
 

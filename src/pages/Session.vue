@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
-  import PageHeader from '../components/PageHeader.vue';
+  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import SongList from '../components/song-list/SongList.vue';
   import PinCodeInput from '../components/core/PinCodeInput.vue';
   import QrCode from '../components/core/QrCode.vue';
@@ -13,6 +13,7 @@
     type SessionErrorCode,
     type SessionRouterQuery,
   } from '../lib/session';
+  import Routes from '../router/Routes';
   import { useSessionStore } from '../stores/session';
 
   const TITLE = 'Relace';
@@ -48,6 +49,7 @@
   });
 
   const errorMessage = computed(() => getSessionErrorMessage(errorCode.value));
+  const sessionBackToPath = computed(() => (isAuthenticated.value ? undefined : Routes.Join));
 
   const sessionDetails = computed(() => {
     const detailsFromStore = sessionStore.sessionDetails;
@@ -129,14 +131,16 @@
 </script>
 
 <template>
+  <TopNavigation
+    :page-title="TITLE"
+    :page-subtitle="TAG_LINE"
+    :back-to-path="sessionBackToPath"
+  />
+
   <div
     class="container"
     data-testid="session-view"
   >
-    <PageHeader
-      :title="TITLE"
-      :tagline="TAG_LINE"
-    />
     <div
       v-if="querySessionDetails.pin"
       class="session-id"
