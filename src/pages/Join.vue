@@ -15,6 +15,7 @@
   import { useRouter } from 'vue-router';
   import Routes from '../router/Routes';
   import { useSessionStore } from '../stores/session';
+  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
 
   // UI Text
   const TITLE = 'Připojit se k partě';
@@ -77,15 +78,14 @@
 </script>
 
 <template>
+  <TopNavigation
+    :page-title="TITLE"
+    :page-subtitle="TAG_LINE"
+  />
   <div
     class="container"
     data-testid="join-view"
   >
-    <PageHeader
-      :title="TITLE"
-      :tagline="TAG_LINE"
-    />
-
     <PinCodeInput
       v-model="pin"
       title="Zadej 4-místný PIN"
@@ -123,7 +123,7 @@
     font-family: var(--font-body);
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100vh;
+    min-height: calc(100vh - 200px);
     display: flex;
     flex-direction: column;
     padding: var(--space-md);
