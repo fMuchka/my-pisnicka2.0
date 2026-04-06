@@ -137,11 +137,6 @@
         v-else-if="song"
         class="song-content"
       >
-        <PageHeader
-          :title="song.title"
-          :tagline="song.artist"
-        />
-
         <SongChordOverview
           v-if="songChords.length > 0"
           :chords="songChords"
