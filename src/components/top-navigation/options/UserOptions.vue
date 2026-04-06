@@ -1,8 +1,9 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   import Button, { type ButtonIcon } from '../../core/Button.vue';
   import { User, LogOut } from 'lucide-vue-next';
   import { Menu } from '@ark-ui/vue/menu';
+  import LoginDialog from '../../dialogs/login/LoginDialog.vue';
 
   import { useAuth } from '../../../composables/useAuth';
   import { useRouter } from 'vue-router';
@@ -54,6 +55,8 @@
     component: User,
     position: 'prepend',
   };
+
+  const isLoginDialogOpen = ref(false);
 </script>
 
 <template>
@@ -86,14 +89,18 @@
     </Menu.Positioner>
   </Menu.Root>
 
-  <Button
-    v-else
-    class="user-trigger"
-    :icon="triggerIcon"
-    :label="userLabel"
-    style-variation="Text"
-    aria-label="Uživatelské možnosti"
-  />
+  <template v-else>
+    <Button
+      class="user-trigger"
+      :icon="triggerIcon"
+      :label="userLabel"
+      style-variation="Text"
+      aria-label="Uživatelské možnosti"
+      @click="isLoginDialogOpen = true"
+    />
+
+    <LoginDialog v-model:open="isLoginDialogOpen" />
+  </template>
 </template>
 
 <style scoped>
