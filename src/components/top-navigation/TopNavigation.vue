@@ -1,8 +1,9 @@
 <script setup lang="ts">
-  import { ArrowLeft, Settings } from 'lucide-vue-next';
+  import { ArrowLeft } from 'lucide-vue-next';
   import { computed } from 'vue';
   import { useRouter } from 'vue-router';
   import Routes from '../../router/Routes';
+  import AppOptions from './options/AppOptions.vue';
   import Button from '../core/Button.vue';
   import PageHeader from '../PageHeader.vue';
   import UserOptions from './options/UserOptions.vue';
@@ -54,11 +55,7 @@
     <div class="top-row">
       <div class="nav-title">MyPísnička</div>
       <div class="nav-actions">
-        <Button
-          :icon="{ component: Settings, position: 'prepend' }"
-          style-variation="Text"
-          aria-label="Nastavení"
-        />
+        <AppOptions />
         <UserOptions />
       </div>
     </div>

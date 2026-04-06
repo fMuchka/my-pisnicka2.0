@@ -1,4 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import { useTheme } from './composables/useTheme';
+
+  // Ensure persisted theme is applied before page-specific components render.
+  useTheme();
+</script>
 
 <template>
   <main>
@@ -61,6 +66,7 @@
     --bg-tertiary: #44403c;
     --text-primary: #fafaf9;
     --text-secondary: #a8a29e;
+    --text-disabled: #78716c;
     --text-chord: #e7e5e4;
     --accent: #ef4444;
     --accent-light: #f87171;
