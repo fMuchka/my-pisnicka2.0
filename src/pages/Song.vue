@@ -2,7 +2,6 @@
   import { Pencil } from 'lucide-vue-next';
   import { computed, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
-  import PageHeader from '../components/PageHeader.vue';
   import Button from '../components/core/Button.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
