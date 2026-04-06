@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import { ArrowLeft, Pencil } from 'lucide-vue-next';
+  import { Pencil } from 'lucide-vue-next';
   import { computed, ref, watch } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRoute } from 'vue-router';
   import PageHeader from '../components/PageHeader.vue';
   import Button from '../components/core/Button.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
@@ -13,13 +13,11 @@
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
   import type { Song } from '../lib/song';
-  import Routes from '../router/Routes';
 
   type SectionType = 'intro' | 'verse' | 'chorus' | 'outro';
   type Section = { type: SectionType; text: string };
 
   const route = useRoute();
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const isEditDialogOpen = ref(false);
 
@@ -95,10 +93,6 @@
     { immediate: true }
   );
 
-  const goBackHome = () => {
-    router.push({ path: Routes.Home });
-  };
-
   const openEditSongDialog = () => {
     isEditDialogOpen.value = true;
   };
@@ -109,21 +103,11 @@
 </script>
 
 <template>
-  <TopNavigation />
+  <TopNavigation :page-title="song?.title ?? 'Píseň'" />
 
   <main class="song-page">
     <div class="song-shell">
       <div class="song-quick-nav">
-        <Button
-          class="back-button"
-          label="Zpět na přehled"
-          color-variation="Secondary"
-          style-variation="Text"
-          :icon="{ position: 'prepend', component: ArrowLeft }"
-          type="button"
-          @click="goBackHome"
-        />
-
         <Button
           v-if="isAuthenticated && song"
           class="edit-button"
@@ -218,10 +202,6 @@
     width: min(100%, 760px);
     margin: 0 auto;
     padding: var(--space-lg) var(--space-md) var(--space-3xl);
-  }
-
-  .back-button {
-    margin-bottom: var(--space-md);
   }
 
   .edit-button {

@@ -49,7 +49,10 @@
 </script>
 
 <template>
-  <TopNavigation />
+  <TopNavigation
+    page-title=""
+    :show-back="false"
+  />
 
   <div
     class="container"
