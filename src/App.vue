@@ -96,8 +96,8 @@
     --shadow-panel: 0 18px 50px color-mix(in srgb, var(--text-primary) 14%, transparent);
     --shadow-accent: 0 4px 12px color-mix(in srgb, var(--accent) 26%, transparent);
     --focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
-    --surface-qr: #ffffff;
-    --text-qr: #111111;
+    --surface-qr: var(--bg-primary);
+    --text-qr: var(--text-primary);
     --section-verse-bg: #2b312a;
     --section-verse-border: #7c8f6f;
     --section-chorus-bg: #3a3328;
