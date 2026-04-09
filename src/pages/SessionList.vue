@@ -1,20 +1,19 @@
 <script setup lang="ts">
-  import PageHeader from '../components/PageHeader.vue';
+  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
 
   const TITLE = 'Seznam Relací';
   const TAG_LINE = 'Vzpomínky nemizí';
 </script>
 
 <template>
+  <TopNavigation
+    :page-title="TITLE"
+    :page-subtitle="TAG_LINE"
+  />
   <div
     class="container"
     data-testid="session-view"
-  >
-    <PageHeader
-      :title="TITLE"
-      :tagline="TAG_LINE"
-    />
-  </div>
+  ></div>
 </template>
 
 <style scoped>
@@ -27,12 +26,9 @@
     font-family: var(--font-body);
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     padding: var(--space-md);
-
-    place-content: center;
   }
 
   .session-id {

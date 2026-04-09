@@ -32,7 +32,7 @@
   .song-meta-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -49,10 +49,15 @@
     align-items: center;
     justify-content: center;
     padding: 0.25rem;
-    background-color: var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
+    background-color: var(
+      --song-chord-inline-bg,
+      color-mix(in srgb, var(--accent) 18%, var(--bg-primary))
+    );
     box-shadow:
-      2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white)),
-      -2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
+      2px 0 0 2px
+        var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, var(--bg-primary))),
+      -2px 0 0 2px
+        var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, var(--bg-primary)));
     color: var(--song-chord-inline-color, var(--text-chord));
     border-radius: var(--song-chord-inline-radius, 3px);
     font-family: var(--song-chord-inline-font-family, inherit);

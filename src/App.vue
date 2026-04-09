@@ -1,4 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import { useTheme } from './composables/useTheme';
+
+  // Ensure persisted theme is applied before page-specific components render.
+  useTheme();
+</script>
 
 <template>
   <main>
@@ -18,6 +23,20 @@
     --text-chord: #292524;
     --accent: #dc2626;
     --accent-light: #ef4444;
+    --color-primary: var(--accent);
+    --color-error: #dc2626;
+    --color-error-light: color-mix(in srgb, var(--color-error) 16%, var(--bg-primary));
+    --color-error-dark: #7f1d1d;
+    --color-text-muted: var(--text-secondary);
+    --border-primary: var(--bg-tertiary);
+    --overlay-backdrop: rgba(0, 0, 0, 0.5);
+    --shadow-soft: 0 2px 8px color-mix(in srgb, var(--text-primary) 16%, transparent);
+    --shadow-dialog: 0 4px 24px color-mix(in srgb, var(--text-primary) 20%, transparent);
+    --shadow-panel: 0 18px 50px color-mix(in srgb, var(--text-primary) 8%, transparent);
+    --shadow-accent: 0 4px 12px color-mix(in srgb, var(--accent) 20%, transparent);
+    --focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+    --surface-qr: #ffffff;
+    --text-qr: #111111;
     --section-verse-bg: #e7ece3;
     --section-verse-border: #8ea27f;
     --section-chorus-bg: #f1e6d6;
@@ -61,9 +80,24 @@
     --bg-tertiary: #44403c;
     --text-primary: #fafaf9;
     --text-secondary: #a8a29e;
+    --text-disabled: #78716c;
     --text-chord: #e7e5e4;
     --accent: #ef4444;
     --accent-light: #f87171;
+    --color-primary: var(--accent);
+    --color-error: #f87171;
+    --color-error-light: color-mix(in srgb, var(--color-error) 16%, var(--bg-primary));
+    --color-error-dark: #fecaca;
+    --color-text-muted: var(--text-secondary);
+    --border-primary: var(--bg-tertiary);
+    --overlay-backdrop: rgba(0, 0, 0, 0.5);
+    --shadow-soft: 0 2px 8px color-mix(in srgb, var(--text-primary) 20%, transparent);
+    --shadow-dialog: 0 4px 24px color-mix(in srgb, var(--text-primary) 24%, transparent);
+    --shadow-panel: 0 18px 50px color-mix(in srgb, var(--text-primary) 14%, transparent);
+    --shadow-accent: 0 4px 12px color-mix(in srgb, var(--accent) 26%, transparent);
+    --focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+    --surface-qr: var(--bg-primary);
+    --text-qr: var(--text-primary);
     --section-verse-bg: #2b312a;
     --section-verse-border: #7c8f6f;
     --section-chorus-bg: #3a3328;

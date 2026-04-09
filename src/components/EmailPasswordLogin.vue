@@ -136,7 +136,7 @@
     font-size: 16px;
     font-family: var(--font-body);
     color: var(--text-primary);
-    background-color: white;
+    background-color: var(--bg-primary);
     border: 1px solid var(--bg-tertiary);
     border-radius: var(--radius-sm);
     transition: border-color 150ms ease;
@@ -154,11 +154,11 @@
 
   /* Error state */
   .form-input-error {
-    border-color: #dc2626;
+    border-color: var(--color-error);
   }
 
   .error {
-    color: #dc2626;
+    color: var(--color-error);
   }
 
   .password-control {

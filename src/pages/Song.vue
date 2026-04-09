@@ -1,8 +1,7 @@
 <script setup lang="ts">
-  import { ArrowLeft, Pencil } from 'lucide-vue-next';
+  import { Pencil } from 'lucide-vue-next';
   import { computed, ref, watch } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
-  import PageHeader from '../components/PageHeader.vue';
+  import { useRoute } from 'vue-router';
   import Button from '../components/core/Button.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
@@ -13,13 +12,11 @@
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
   import type { Song } from '../lib/song';
-  import Routes from '../router/Routes';
 
   type SectionType = 'intro' | 'verse' | 'chorus' | 'outro';
   type Section = { type: SectionType; text: string };
 
   const route = useRoute();
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const isEditDialogOpen = ref(false);
 
@@ -95,10 +92,6 @@
     { immediate: true }
   );
 
-  const goBackHome = () => {
-    router.push({ path: Routes.Home });
-  };
-
   const openEditSongDialog = () => {
     isEditDialogOpen.value = true;
   };
@@ -109,21 +102,14 @@
 </script>
 
 <template>
-  <TopNavigation />
+  <TopNavigation
+    :page-title="song?.title ?? 'Píseň'"
+    :page-subtitle="song?.artist"
+  />
 
   <main class="song-page">
     <div class="song-shell">
       <div class="song-quick-nav">
-        <Button
-          class="back-button"
-          label="Zpět na přehled"
-          color-variation="Secondary"
-          style-variation="Text"
-          :icon="{ position: 'prepend', component: ArrowLeft }"
-          type="button"
-          @click="goBackHome"
-        />
-
         <Button
           v-if="isAuthenticated && song"
           class="edit-button"
@@ -150,11 +136,6 @@
         v-else-if="song"
         class="song-content"
       >
-        <PageHeader
-          :title="song.title"
-          :tagline="song.artist"
-        />
-
         <SongChordOverview
           v-if="songChords.length > 0"
           :chords="songChords"
@@ -220,10 +201,6 @@
     padding: var(--space-lg) var(--space-md) var(--space-3xl);
   }
 
-  .back-button {
-    margin-bottom: var(--space-md);
-  }
-
   .edit-button {
     margin-bottom: var(--space-lg);
   }
@@ -236,12 +213,10 @@
 
   .song-body {
     --song-anchored-line-height: 4;
-    --song-chord-font-size: 1rem;
+    --song-chord-font-size: var(--font-size-chords);
     --song-text-line-height: 6;
     --song-text-font-family: monospace;
-    --song-text-font-size: 1rem;
-    --song-chord-inline-color: var(--text-chord);
-    --song-chord-inline-bg: color-mix(in srgb, var(--accent) 18%, white);
+    --song-text-font-size: var(--font-size-lyrics);
     --song-chord-inline-font-size: inherit;
     --song-chord-inline-font-family: inherit;
     --song-chord-inline-font-weight: inherit;

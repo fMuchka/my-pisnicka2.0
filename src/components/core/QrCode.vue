@@ -43,8 +43,8 @@
     display: inline-flex;
     padding: 12px;
     border-radius: var(--radius-sm);
-    background: #fff;
-    color: #111;
+    background: var(--surface-qr);
+    color: var(--text-qr);
   }
 
   .qr-frame {
@@ -63,7 +63,7 @@
     height: 28%;
     padding: 6px;
     border-radius: var(--radius-sm);
-    background: #fff;
+    background: var(--surface-qr);
   }
 
   .qr-overlay-image {

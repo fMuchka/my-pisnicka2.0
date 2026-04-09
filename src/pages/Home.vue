@@ -49,7 +49,10 @@
 </script>
 
 <template>
-  <TopNavigation />
+  <TopNavigation
+    page-title=""
+    :show-back="false"
+  />
 
   <div
     class="container"
@@ -104,7 +107,6 @@
     font-family: var(--font-body);
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100vh;
     padding: var(--space-xl) var(--space-md);
   }
 

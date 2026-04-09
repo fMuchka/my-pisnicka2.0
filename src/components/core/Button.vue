@@ -109,7 +109,7 @@
 
   .btn-primary:hover {
     transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    box-shadow: var(--shadow-accent);
   }
 
   .btn-primary:focus {
