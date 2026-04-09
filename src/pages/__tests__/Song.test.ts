@@ -134,6 +134,7 @@ describe('Song Page', () => {
       artist: 'Artist name',
       chords: ['G', 'D', 'Am', ''],
       text: '[intro]\n[G] Intro line\n[verse]\n[D] Verse line',
+      ownerId: '',
     };
 
     render(SongPage);
@@ -153,6 +154,7 @@ describe('Song Page', () => {
       title: 'Song title',
       artist: 'Artist name',
       text: 'Lyrics',
+      ownerId: '',
     };
 
     render(SongPage);
@@ -167,6 +169,7 @@ describe('Song Page', () => {
       id: 'song-1',
       title: 'Song title',
       artist: 'Artist name',
+      ownerId: '',
     };
 
     authState.isAuthenticated.value = false;

@@ -55,6 +55,7 @@ describe('useSongDetail', () => {
       artist: 'Bob Dylan',
       text: '[verse] [G]Mama',
       chords: ['G'],
+      ownerId: '',
     };
 
     mocks.fetchSongById.mockResolvedValue(loadedSong);
@@ -85,8 +86,8 @@ describe('useSongDetail', () => {
   });
 
   it('reloads when song id changes', async () => {
-    const songA: Song = { id: 'song-a', title: 'A', artist: 'Artist A' };
-    const songB: Song = { id: 'song-b', title: 'B', artist: 'Artist B' };
+    const songA: Song = { id: 'song-a', title: 'A', artist: 'Artist A', ownerId: '' };
+    const songB: Song = { id: 'song-b', title: 'B', artist: 'Artist B', ownerId: '' };
 
     mocks.fetchSongById.mockResolvedValueOnce(songA).mockResolvedValueOnce(songB);
 

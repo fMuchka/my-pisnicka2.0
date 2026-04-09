@@ -55,9 +55,7 @@ describe('useAuth', () => {
   });
 
   it('isGuest returns true when user is not logged in', () => {
-    let _handler: (u: unknown) => void;
-    vi.mocked(mockOnAuthStateChanged).mockImplementation((_auth, cb) => {
-      _handler = cb;
+    vi.mocked(mockOnAuthStateChanged).mockImplementation((_auth) => {
       return () => {};
     });
 
