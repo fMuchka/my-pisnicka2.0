@@ -6,7 +6,7 @@
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
-  import SongChordsDialog from '../components/song/SongChordsDialog.vue';
+  import SongChordsDialog from '../components/dialogs/song-chords/SongChordsDialog.vue';
   import SongChordOverview from '../components/song/SongChordOverview.vue';
   import ChordLayoutRenderer from '../components/song/ChordLayoutRenderer.vue';
   import SongControls from '../components/song/SongControls.vue';

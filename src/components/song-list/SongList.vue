@@ -5,19 +5,12 @@
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
   import { useSongListData } from '../../composables/useSongListData';
-  import { useAuth } from '../../composables/useAuth';
   import Routes from '../../router/Routes';
   import type { Song } from '../../lib/song';
 
-  const props = defineProps<{
-    ownerId: string;
-  }>();
-
-  const { user } = useAuth();
   const router = useRouter();
-  const ownerRef = ref(props.ownerId);
 
-  const { userSongs } = useSongListData(ownerRef);
+  const { userSongs } = useSongListData();
 
   type ViewMode = 'flat' | 'tree';
 
@@ -34,16 +27,9 @@
     return [...userSongs.value].sort(byArtistThenTitle);
   });
 
-  const canOpenSongs = computed(() => {
-    const userId = user.value?.uid ?? '';
-    return userId !== '' && userId === props.ownerId;
-  });
+  const canOpenSongs = true;
 
   const handleSongClick = (song: Song) => {
-    if (!canOpenSongs.value) {
-      return;
-    }
-
     router.push({ path: Routes.Song.replace(':songId', song.id) });
   };
 </script>

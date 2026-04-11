@@ -24,7 +24,7 @@ export const router = createRouter({
  * Global Navigation Guard for Authentication
  *
  * Enforces auth requirements on route transitions:
- * - Join and Session pages: public (no auth required)
+ * - Join, Session and Song pages: public (no auth required)
  * - Other pages: require authentication, redirect to Login if not authenticated
  *
  * IMPORTANT: useAuth() is called INSIDE beforeEach to ensure fresh auth state
@@ -38,8 +38,8 @@ router.beforeEach((to, _from, next) => {
   // Fresh auth check on each navigation (useAuth() hooks into Firebase listener)
   const { isAuthenticated } = useAuth();
 
-  // Public routes (Join and Session don't require auth)
-  if (to.path === Routes.Join || to.path === Routes.Session) {
+  // Public routes (Join, Session and Song don't require auth)
+  if (to.path === Routes.Join || to.path === Routes.Session || to.path.startsWith('/song/')) {
     next();
   } else {
     // Protected routes: redirect to Login if not authenticated

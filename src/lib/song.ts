@@ -124,6 +124,19 @@ export async function fetchHomeSongs(): Promise<Song[]> {
   return selectHomeSongs(allSongs);
 }
 
+export async function fetchAllSongs(): Promise<Song[]> {
+  const songsRef = collection(db, 'songs');
+  const q = query(songsRef);
+
+  const snapshot = await getDocs(q);
+  const allSongs = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return mapSongDoc(doc, data);
+  });
+
+  return allSongs;
+}
+
 export async function fetchAllUserSongs(ownerId: string): Promise<Song[]> {
   const songsRef = collection(db, 'songs');
   const q = query(songsRef, where('ownerId', '==', ownerId));
