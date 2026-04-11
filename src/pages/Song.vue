@@ -26,14 +26,115 @@
 
   const isAutoScrollPlaying = ref(false);
   const autoScrollSpeed = ref(28);
+  const songPageRef = ref<HTMLElement | null>(null);
 
   const AUTO_SCROLL_SPEED_STEP = 6;
   const AUTO_SCROLL_MIN_SPEED = 10;
   const AUTO_SCROLL_MAX_SPEED = 80;
   const AUTO_SCROLL_SCROLL_STEP = 132;
+  type ScrollMode = 'auto' | 'smooth';
 
   let animationFrameId: number | null = null;
   let previousFrameTime: number | null = null;
+  let autoScrollPosition: number | null = null;
+
+  const isElementScrollable = (element: HTMLElement) => {
+    const overflowY = window.getComputedStyle(element).overflowY;
+    const allowsScrolling =
+      overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+
+    return allowsScrolling && element.scrollHeight - element.clientHeight > 1;
+  };
+
+  const getScrollableContainer = () => {
+    let current = songPageRef.value;
+
+    while (current) {
+      if (isElementScrollable(current)) {
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    return null;
+  };
+
+  const getDocumentScrollHeight = () => {
+    const doc = document.documentElement;
+    const body = document.body;
+
+    return Math.max(
+      doc.scrollHeight,
+      body.scrollHeight,
+      doc.offsetHeight,
+      body.offsetHeight,
+      doc.clientHeight,
+      body.clientHeight
+    );
+  };
+
+  const getViewportHeight = () => window.visualViewport?.height ?? window.innerHeight;
+
+  const getCurrentScrollTop = () => {
+    const container = getScrollableContainer();
+
+    if (container) {
+      return container.scrollTop;
+    }
+
+    const doc = document.documentElement;
+    const body = document.body;
+
+    return window.pageYOffset || doc.scrollTop || body.scrollTop || 0;
+  };
+
+  const getMaxScrollTop = () => {
+    const container = getScrollableContainer();
+
+    if (container) {
+      return Math.max(0, container.scrollHeight - container.clientHeight);
+    }
+
+    return Math.max(0, getDocumentScrollHeight() - getViewportHeight());
+  };
+
+  const scrollToTop = (top: number, behavior: ScrollMode = 'auto') => {
+    const container = getScrollableContainer();
+
+    if (container) {
+      try {
+        container.scrollTo({ top, behavior });
+      } catch {
+        container.scrollTop = top;
+      }
+
+      if (Math.abs(container.scrollTop - top) > 1) {
+        container.scrollTop = top;
+      }
+
+      return;
+    }
+
+    const doc = document.documentElement;
+    const body = document.body;
+
+    try {
+      window.scrollTo({ top, behavior });
+    } catch {
+      window.scrollTo(0, top);
+    }
+
+    if (Math.abs(getCurrentScrollTop() - top) > 1) {
+      doc.scrollTop = top;
+      body.scrollTop = top;
+    }
+  };
+
+  const scrollByDistance = (distance: number, behavior: ScrollMode = 'auto') => {
+    const nextTop = Math.max(0, Math.min(getCurrentScrollTop() + distance, getMaxScrollTop()));
+    scrollToTop(nextTop, behavior);
+  };
 
   const songId = computed(() => {
     const routeSongId = route.params.songId;
@@ -124,6 +225,7 @@
     }
 
     previousFrameTime = null;
+    autoScrollPosition = null;
   };
 
   const autoScrollStep = (timestamp: number) => {
@@ -138,13 +240,15 @@
     const elapsedSeconds = (timestamp - previousFrameTime) / 1000;
     previousFrameTime = timestamp;
 
-    const maxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    const nextTop = Math.min(window.scrollY + autoScrollSpeed.value * elapsedSeconds, maxTop);
+    if (autoScrollPosition == null) {
+      autoScrollPosition = getCurrentScrollTop();
+    }
 
-    window.scrollTo({
-      top: nextTop,
-      behavior: 'auto',
-    });
+    const maxTop = getMaxScrollTop();
+    const nextTop = Math.min(autoScrollPosition + autoScrollSpeed.value * elapsedSeconds, maxTop);
+    autoScrollPosition = nextTop;
+
+    scrollToTop(nextTop, 'auto');
 
     if (nextTop >= maxTop - 1) {
       stopAutoScroll();
@@ -161,6 +265,7 @@
 
     isAutoScrollPlaying.value = true;
     previousFrameTime = null;
+    autoScrollPosition = getCurrentScrollTop();
     animationFrameId = requestAnimationFrame(autoScrollStep);
   };
 
@@ -178,10 +283,7 @@
       AUTO_SCROLL_MIN_SPEED,
       autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
     );
-    window.scrollBy({
-      top: -AUTO_SCROLL_SCROLL_STEP,
-      behavior: 'smooth',
-    });
+    scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
   };
 
   const scrollForwardAndSpeedUp = () => {
@@ -189,10 +291,7 @@
       AUTO_SCROLL_MAX_SPEED,
       autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
     );
-    window.scrollBy({
-      top: AUTO_SCROLL_SCROLL_STEP,
-      behavior: 'smooth',
-    });
+    scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
   };
 
   const openChordsDialog = () => {
@@ -210,7 +309,10 @@
     :page-subtitle="song?.artist"
   />
 
-  <main class="song-page">
+  <main
+    ref="songPageRef"
+    class="song-page"
+  >
     <div class="song-shell">
       <div class="song-quick-nav">
         <Button
