@@ -1,8 +1,10 @@
 <script setup lang="tsx">
   import { computed } from 'vue';
+  import { transposeChord } from '../../lib/chords';
 
   interface Props {
     text: string;
+    transpose?: number;
   }
 
   type LineKind = 'lyrics' | 'mixed';
@@ -25,7 +27,9 @@
 
   type RenderLine = { line: string; details: LineDetails; parts: RenderPart[] };
 
-  const props = defineProps<Props>();
+  const props = withDefaults(defineProps<Props>(), {
+    transpose: 0,
+  });
 
   const CHORD_TOKEN_REGEX =
     /^\[?[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?\]?$/;
@@ -176,12 +180,24 @@
 
     return rendered;
   });
+
+  const renderedParts = computed(() => {
+    const shift = props.transpose;
+
+    return renderLines.value.map((line) => ({
+      ...line,
+      parts: line.parts.map((part) => ({
+        ...part,
+        chord: part.chord ? transposeChord(part.chord, shift) : undefined,
+      })),
+    }));
+  });
 </script>
 
 <template>
   <div class="chord-layout-renderer">
     <template
-      v-for="(line, lineIndex) in renderLines"
+      v-for="(line, lineIndex) in renderedParts"
       :key="lineIndex"
     >
       <template

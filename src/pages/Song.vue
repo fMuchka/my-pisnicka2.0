@@ -1,13 +1,15 @@
 <script setup lang="ts">
   import { Pencil } from 'lucide-vue-next';
-  import { computed, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
   import Button from '../components/core/Button.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
+  import SongChordsDialog from '../components/song/SongChordsDialog.vue';
   import SongChordOverview from '../components/song/SongChordOverview.vue';
   import ChordLayoutRenderer from '../components/song/ChordLayoutRenderer.vue';
+  import SongControls from '../components/song/SongControls.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
@@ -19,6 +21,19 @@
   const route = useRoute();
   const { isAuthenticated } = useAuth();
   const isEditDialogOpen = ref(false);
+  const isChordsDialogOpen = ref(false);
+  const transpose = ref(0);
+
+  const isAutoScrollPlaying = ref(false);
+  const autoScrollSpeed = ref(28);
+
+  const AUTO_SCROLL_SPEED_STEP = 6;
+  const AUTO_SCROLL_MIN_SPEED = 10;
+  const AUTO_SCROLL_MAX_SPEED = 80;
+  const AUTO_SCROLL_SCROLL_STEP = 132;
+
+  let animationFrameId: number | null = null;
+  let previousFrameTime: number | null = null;
 
   const songId = computed(() => {
     const routeSongId = route.params.songId;
@@ -99,6 +114,94 @@
   const handleSongSaved = (updatedSong: Song) => {
     song.value = updatedSong;
   };
+
+  const stopAutoScroll = () => {
+    isAutoScrollPlaying.value = false;
+
+    if (animationFrameId != null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+
+    previousFrameTime = null;
+  };
+
+  const autoScrollStep = (timestamp: number) => {
+    if (!isAutoScrollPlaying.value) {
+      return;
+    }
+
+    if (previousFrameTime == null) {
+      previousFrameTime = timestamp;
+    }
+
+    const elapsedSeconds = (timestamp - previousFrameTime) / 1000;
+    previousFrameTime = timestamp;
+
+    const maxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const nextTop = Math.min(window.scrollY + autoScrollSpeed.value * elapsedSeconds, maxTop);
+
+    window.scrollTo({
+      top: nextTop,
+      behavior: 'auto',
+    });
+
+    if (nextTop >= maxTop - 1) {
+      stopAutoScroll();
+      return;
+    }
+
+    animationFrameId = requestAnimationFrame(autoScrollStep);
+  };
+
+  const startAutoScroll = () => {
+    if (isAutoScrollPlaying.value) {
+      return;
+    }
+
+    isAutoScrollPlaying.value = true;
+    previousFrameTime = null;
+    animationFrameId = requestAnimationFrame(autoScrollStep);
+  };
+
+  const toggleAutoScroll = () => {
+    if (isAutoScrollPlaying.value) {
+      stopAutoScroll();
+      return;
+    }
+
+    startAutoScroll();
+  };
+
+  const scrollBackAndSlowDown = () => {
+    autoScrollSpeed.value = Math.max(
+      AUTO_SCROLL_MIN_SPEED,
+      autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
+    );
+    window.scrollBy({
+      top: -AUTO_SCROLL_SCROLL_STEP,
+      behavior: 'smooth',
+    });
+  };
+
+  const scrollForwardAndSpeedUp = () => {
+    autoScrollSpeed.value = Math.min(
+      AUTO_SCROLL_MAX_SPEED,
+      autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
+    );
+    window.scrollBy({
+      top: AUTO_SCROLL_SCROLL_STEP,
+      behavior: 'smooth',
+    });
+  };
+
+  const openChordsDialog = () => {
+    isChordsDialogOpen.value = true;
+  };
+
+  onBeforeUnmount(() => {
+    stopAutoScroll();
+  });
 </script>
 
 <template>
@@ -139,6 +242,7 @@
         <SongChordOverview
           v-if="songChords.length > 0"
           :chords="songChords"
+          :transpose="transpose"
         />
 
         <article class="song-body">
@@ -153,6 +257,7 @@
               <ChordLayoutRenderer
                 class="song-text"
                 :text="section.text"
+                :transpose="transpose"
               />
             </section>
           </template>
@@ -160,6 +265,7 @@
             v-else
             class="song-text"
             :text="songText"
+            :transpose="transpose"
           />
         </article>
       </section>
@@ -178,6 +284,21 @@
       :song-to-edit="song"
       @update:open="isEditDialogOpen = $event"
       @saved="handleSongSaved"
+    />
+
+    <SongChordsDialog
+      :open="isChordsDialogOpen"
+      :transpose="transpose"
+      @update:open="isChordsDialogOpen = $event"
+      @update:transpose="transpose = $event"
+    />
+
+    <SongControls
+      :is-playing="isAutoScrollPlaying"
+      @toggle-play="toggleAutoScroll"
+      @step-back="scrollBackAndSlowDown"
+      @step-forward="scrollForwardAndSpeedUp"
+      @open-chords="openChordsDialog"
     />
   </main>
 </template>
@@ -198,7 +319,8 @@
   .song-shell {
     width: min(100%, 760px);
     margin: 0 auto;
-    padding: var(--space-lg) var(--space-md) var(--space-3xl);
+    padding: var(--space-lg) var(--space-md)
+      calc(var(--space-3xl) + 88px + env(safe-area-inset-bottom, 0px));
   }
 
   .edit-button {
