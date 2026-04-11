@@ -1,9 +1,10 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
   import Button, { type ButtonIcon } from '../../core/Button.vue';
-  import { User, LogOut } from 'lucide-vue-next';
+  import { User, LogOut, Key } from 'lucide-vue-next';
   import { Menu } from '@ark-ui/vue/menu';
   import LoginDialog from '../../dialogs/login/LoginDialog.vue';
+  import ChangePasswordDialog from '../../dialogs/change-password/ChangePasswordDialog.vue';
 
   import { useAuth } from '../../../composables/useAuth';
   import { useRouter } from 'vue-router';
@@ -36,6 +37,17 @@
 
     return [
       {
+        label: 'Změnit heslo',
+        ariaLabel: 'změnit heslo',
+        action: () => {
+          isChangePasswordDialogOpen.value = true;
+        },
+        icon: {
+          component: Key,
+          position: 'append',
+        },
+      },
+      {
         label: 'Odhlásit se',
         ariaLabel: 'odhlásit se',
         action: () => {
@@ -57,6 +69,7 @@
   };
 
   const isLoginDialogOpen = ref(false);
+  const isChangePasswordDialogOpen = ref(false);
 </script>
 
 <template>
@@ -101,6 +114,8 @@
 
     <LoginDialog v-model:open="isLoginDialogOpen" />
   </template>
+
+  <ChangePasswordDialog v-model:open="isChangePasswordDialogOpen" />
 </template>
 
 <style scoped>

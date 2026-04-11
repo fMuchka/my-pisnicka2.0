@@ -1,4 +1,8 @@
-import { signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  updatePassword,
+} from 'firebase/auth';
 import { auth } from './firebase';
 
 /**
@@ -32,4 +36,21 @@ export async function loginWithEmailPassword(email: string, password: string) {
  */
 export async function signOut() {
   await firebaseSignOut(auth);
+}
+
+/**
+ * Updates password for the currently authenticated user.
+ *
+ * @param newPassword - New password that should replace the current one
+ * @throws Error when there is no authenticated user
+ * @throws Firebase Auth error when the operation requires re-authentication or fails validation
+ */
+export async function updateCurrentUserPassword(newPassword: string) {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    throw new Error('No authenticated user');
+  }
+
+  await updatePassword(currentUser, newPassword);
 }
