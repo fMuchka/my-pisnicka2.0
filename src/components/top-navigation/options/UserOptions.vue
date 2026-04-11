@@ -84,13 +84,15 @@
       />
     </Menu.Trigger>
     <Menu.Positioner>
-      <Menu.Content>
+      <Menu.Content class="user-options-menu">
         <Menu.Item
           v-for="(menuItem, j) in menuItems"
           :key="j"
           :value="menuItem.label"
+          as-child
         >
           <Button
+            class="user-menu-button"
             :icon="menuItem.icon"
             :label="menuItem.label"
             style-variation="Text"
@@ -119,6 +121,33 @@
 </template>
 
 <style scoped>
+  .user-options-menu {
+    margin-top: var(--space-xs);
+    width: 200px;
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--text-primary) 12%, transparent);
+    padding: var(--space-xs);
+    z-index: 20;
+  }
+
+  .user-menu-button {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+  }
+
+  .user-menu-button:hover {
+    background: var(--bg-secondary);
+  }
+
+  .user-menu-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
   .user-trigger :deep(span) {
     max-width: 120px;
     overflow: hidden;
