@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { Dialog } from '@ark-ui/vue/dialog';
   import { computed } from 'vue';
-  import Button from '../core/Button.vue';
+  import Button from '../../core/Button.vue';
 
   interface Props {
     open: boolean;
