@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ArrowLeft } from 'lucide-vue-next';
+  import { ArrowLeft, Route } from 'lucide-vue-next';
   import { computed } from 'vue';
   import { useRouter } from 'vue-router';
   import Routes from '../../router/Routes';
@@ -7,6 +7,7 @@
   import Button from '../core/Button.vue';
   import PageHeader from '../PageHeader.vue';
   import UserOptions from './options/UserOptions.vue';
+  import { useAuth } from '../../composables/useAuth';
 
   const props = withDefaults(
     defineProps<{
@@ -22,6 +23,8 @@
       backToPath: undefined,
     }
   );
+
+  const { isAuthenticated } = useAuth();
 
   const router = useRouter();
   const hasPageTitle = computed(() => Boolean(props.pageTitle?.trim()));
@@ -45,6 +48,14 @@
 
     router.push({ path: Routes.Home });
   };
+
+  const goHome = () => {
+    if (isAuthenticated) {
+      router.push({ path: Routes.Home });
+    } else {
+      router.push({ path: Routes.Login });
+    }
+  };
 </script>
 
 <template>
@@ -53,7 +64,12 @@
     role="banner"
   >
     <div class="top-row">
-      <div class="nav-title">MyPísnička</div>
+      <div
+        class="nav-title"
+        @click="goHome"
+      >
+        MyPísnička
+      </div>
       <div class="nav-actions">
         <AppOptions />
         <UserOptions />
@@ -108,6 +124,7 @@
   .nav-title {
     font-size: 20px;
     font-weight: 600;
+    cursor: pointer;
   }
 
   .nav-actions {
