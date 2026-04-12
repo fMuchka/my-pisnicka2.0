@@ -24,7 +24,7 @@
     const email = auth.user.value?.email?.trim();
 
     if (email) {
-      return email;
+      return email.split('@')[0];
     }
 
     return 'Melon';
