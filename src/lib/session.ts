@@ -264,6 +264,51 @@ export const fetchLatestSessions = async (userId: string): Promise<Session[]> =>
 };
 
 /**
+ * Fetches all sessions for a user (hosted or joined), without a limit, sorted by newest first.
+ * Used for the full session list page.
+ */
+export const fetchAllUserSessions = async (userId: string): Promise<Session[]> => {
+  const baseQuery = collection(db, 'sessions');
+  const hostedQuery = query(baseQuery, where('hostId', '==', userId), orderBy('createdAt', 'desc'));
+  const joinedQuery = query(
+    baseQuery,
+    where('joinedBy', 'array-contains', userId),
+    orderBy('createdAt', 'desc')
+  );
+
+  const [hostedSnapshot, joinedSnapshot] = await Promise.all([
+    getDocs(hostedQuery),
+    getDocs(joinedQuery),
+  ]);
+
+  const merged = new Map<string, Session>();
+  hostedSnapshot.docs.forEach((d) => merged.set(d.id, mapSessionDoc(d)));
+  joinedSnapshot.docs.forEach((d) => merged.set(d.id, mapSessionDoc(d)));
+
+  const nowMs = toTimestampMs(Timestamp.now());
+  const expiredSessions = Array.from(merged.values()).filter(
+    (session) => session.isActive === true && isSessionExpired(session, nowMs)
+  );
+
+  if (expiredSessions.length > 0) {
+    await Promise.all(
+      expiredSessions.map(async (session) => {
+        const sessionRef = doc(db, 'sessions', session.id);
+        await updateDoc(sessionRef, { isActive: false });
+        session.isActive = false;
+      })
+    );
+  }
+
+  return Array.from(merged.values()).sort((a, b) => {
+    if (a.createdAt.seconds !== b.createdAt.seconds) {
+      return b.createdAt.seconds - a.createdAt.seconds;
+    }
+    return b.createdAt.nanoseconds - a.createdAt.nanoseconds;
+  });
+};
+
+/**
  * Creates a new active session with a generated 4-digit PIN.
  */
 export const createSession = async (input: CreateSessionInput): Promise<Session> => {
