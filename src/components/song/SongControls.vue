@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { Tooltip } from '@ark-ui/vue/tooltip';
   import {
     ArrowBigLeftDash,
     ArrowBigRightDash,
@@ -34,48 +35,86 @@
     </p>
 
     <div class="song-controls">
-      <button
-        class="control-button"
-        type="button"
-        aria-label="Posunout zpět a zpomalit"
-        @click="emit('step-back')"
-      >
-        <ArrowBigLeftDash :size="22" />
-      </button>
+      <Tooltip.Root :open-delay="300">
+        <Tooltip.Trigger as-child>
+          <button
+            class="control-button"
+            type="button"
+            aria-label="Posunout zpět a zpomalit"
+            @click="emit('step-back')"
+          >
+            <ArrowBigLeftDash :size="22" />
+          </button>
+        </Tooltip.Trigger>
+        <Teleport to="body">
+          <Tooltip.Positioner>
+            <Tooltip.Content class="tooltip-content">Posunout zpět a zpomalit</Tooltip.Content>
+          </Tooltip.Positioner>
+        </Teleport>
+      </Tooltip.Root>
 
-      <button
-        class="control-button control-button--play"
-        type="button"
-        :aria-label="isPlaying ? 'Pozastavit auto-scroll' : 'Spustit auto-scroll'"
-        @click="emit('toggle-play')"
-      >
-        <CirclePause
-          v-if="isPlaying"
-          :size="24"
-        />
-        <CirclePlay
-          v-else
-          :size="24"
-        />
-      </button>
+      <Tooltip.Root :open-delay="300">
+        <Tooltip.Trigger as-child>
+          <button
+            class="control-button control-button--play"
+            type="button"
+            :aria-label="isPlaying ? 'Pozastavit auto-scroll' : 'Spustit auto-scroll'"
+            @click="emit('toggle-play')"
+          >
+            <CirclePause
+              v-if="isPlaying"
+              :size="24"
+            />
+            <CirclePlay
+              v-else
+              :size="24"
+            />
+          </button>
+        </Tooltip.Trigger>
+        <Teleport to="body">
+          <Tooltip.Positioner>
+            <Tooltip.Content class="tooltip-content">
+              {{ isPlaying ? 'Pozastavit auto-scroll' : 'Spustit auto-scroll' }}
+            </Tooltip.Content>
+          </Tooltip.Positioner>
+        </Teleport>
+      </Tooltip.Root>
 
-      <button
-        class="control-button"
-        type="button"
-        aria-label="Posunout vpřed a zrychlit"
-        @click="emit('step-forward')"
-      >
-        <ArrowBigRightDash :size="22" />
-      </button>
+      <Tooltip.Root :open-delay="300">
+        <Tooltip.Trigger as-child>
+          <button
+            class="control-button"
+            type="button"
+            aria-label="Posunout vpřed a zrychlit"
+            @click="emit('step-forward')"
+          >
+            <ArrowBigRightDash :size="22" />
+          </button>
+        </Tooltip.Trigger>
+        <Teleport to="body">
+          <Tooltip.Positioner>
+            <Tooltip.Content class="tooltip-content">Posunout vpřed a zrychlit</Tooltip.Content>
+          </Tooltip.Positioner>
+        </Teleport>
+      </Tooltip.Root>
 
-      <button
-        class="control-button"
-        type="button"
-        aria-label="Nastavení akordů"
-        @click="emit('open-chords')"
-      >
-        <Music2 :size="22" />
-      </button>
+      <Tooltip.Root :open-delay="300">
+        <Tooltip.Trigger as-child>
+          <button
+            class="control-button"
+            type="button"
+            aria-label="Nastavení akordů"
+            @click="emit('open-chords')"
+          >
+            <Music2 :size="22" />
+          </button>
+        </Tooltip.Trigger>
+        <Teleport to="body">
+          <Tooltip.Positioner>
+            <Tooltip.Content class="tooltip-content">Nastavení akordů</Tooltip.Content>
+          </Tooltip.Positioner>
+        </Teleport>
+      </Tooltip.Root>
     </div>
   </div>
 </template>
@@ -162,6 +201,16 @@
 
   .control-button--play:hover {
     background: var(--accent-light);
+  }
+
+  .tooltip-content {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-soft);
+    z-index: 1000;
   }
 
   @media (max-width: 560px) {
