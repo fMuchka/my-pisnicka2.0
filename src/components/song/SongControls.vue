@@ -163,8 +163,8 @@
   }
 
   .control-button {
-    width: 52px;
-    height: 52px;
+    width: 5em;
+    height: 5em;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -216,11 +216,6 @@
   @media (max-width: 560px) {
     .song-controls-wrap {
       max-width: calc(100vw - var(--space-md));
-    }
-
-    .control-button {
-      width: 48px;
-      height: 48px;
     }
   }
 </style>
