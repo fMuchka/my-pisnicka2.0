@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { ArrowLeft, Route } from 'lucide-vue-next';
-  import { computed } from 'vue';
+  import { ArrowLeft } from 'lucide-vue-next';
+  import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import Routes from '../../router/Routes';
   import AppOptions from './options/AppOptions.vue';
@@ -15,12 +15,14 @@
       pageSubtitle?: string;
       showBack?: boolean;
       backToPath?: string;
+      fadeAway?: boolean;
     }>(),
     {
       showBack: true,
       pageTitle: undefined,
       pageSubtitle: undefined,
       backToPath: undefined,
+      fadeAway: false,
     }
   );
 
@@ -60,7 +62,7 @@
 
 <template>
   <header
-    class="top-nav"
+    :class="`top-nav ${fadeAway ? 'fade-away' : ''}`"
     role="banner"
   >
     <div class="top-row">
@@ -111,6 +113,8 @@
     position: sticky;
     top: 0;
     z-index: 10;
+
+    transition: all 0.3s;
   }
 
   .top-row {
@@ -188,6 +192,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .fade-away {
+    position: relative;
+    top: -100px;
+    opacity: 0;
   }
 
   @media (max-width: 360px) {

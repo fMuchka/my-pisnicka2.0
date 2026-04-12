@@ -314,6 +314,7 @@
   <TopNavigation
     :page-title="song?.title ?? 'Píseň'"
     :page-subtitle="song?.artist"
+    :fade-away="isAutoScrollPlaying"
   />
 
   <main
