@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ArrowLeft } from 'lucide-vue-next';
-  import { computed, ref, watch } from 'vue';
+  import { computed } from 'vue';
   import { useRouter } from 'vue-router';
   import Routes from '../../router/Routes';
   import AppOptions from './options/AppOptions.vue';
