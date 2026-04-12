@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
   import { useRouter } from 'vue-router';
+  import { Search } from 'lucide-vue-next';
   import { SegmentGroup } from '@ark-ui/vue/segment-group';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
@@ -15,6 +16,7 @@
   type ViewMode = 'flat' | 'tree';
 
   const viewMode = ref<ViewMode>('flat');
+  const search = ref('');
 
   const byArtistThenTitle = (a: Song, b: Song): number => {
     return (
@@ -23,8 +25,23 @@
     );
   };
 
-  const sortedSongs = computed(() => {
-    return [...userSongs.value].sort(byArtistThenTitle);
+  const normalizedSearch = computed(() => search.value.trim().toLocaleLowerCase('cs'));
+
+  const filteredSongs = computed(() => {
+    const query = normalizedSearch.value;
+
+    return [...userSongs.value]
+      .filter((song) => {
+        if (!query) {
+          return true;
+        }
+
+        return (
+          song.artist.toLocaleLowerCase('cs').includes(query) ||
+          song.title.toLocaleLowerCase('cs').includes(query)
+        );
+      })
+      .sort(byArtistThenTitle);
   });
 
   const canOpenSongs = true;
@@ -70,23 +87,41 @@
       </SegmentGroup.Root>
     </header>
 
+    <div class="song-list__search-wrapper">
+      <Search
+        class="song-list__search-icon"
+        :size="16"
+      />
+      <input
+        v-model="search"
+        class="song-list__search-input"
+        type="search"
+        placeholder="Hledat podle názvu nebo interpreta…"
+        aria-label="Hledat písně podle názvu nebo interpreta"
+      />
+    </div>
+
     <p
-      v-if="sortedSongs.length === 0"
+      v-if="filteredSongs.length === 0"
       class="song-list__empty"
     >
-      Zatím nejsou dostupné žádné písně.
+      {{
+        normalizedSearch
+          ? 'Žádné písně neodpovídají hledání.'
+          : 'Zatím nejsou dostupné žádné písně.'
+      }}
     </p>
 
     <SongListFlatView
       v-else-if="viewMode === 'flat'"
-      :songs="sortedSongs"
+      :songs="filteredSongs"
       :on-song-click="handleSongClick"
       :is-interactive="canOpenSongs"
     />
 
     <SongListTreeView
       v-else
-      :songs="sortedSongs"
+      :songs="filteredSongs"
       artists-label="Interpreti"
       :on-song-click="handleSongClick"
       :is-interactive="canOpenSongs"
@@ -115,6 +150,35 @@
   .song-list__title {
     font-size: clamp(1.35rem, 1.2rem + 1vw, 1.8rem);
     letter-spacing: 0.02em;
+  }
+
+  .song-list__search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .song-list__search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-secondary);
+    pointer-events: none;
+  }
+
+  .song-list__search-input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: var(--font-body);
+  }
+
+  .song-list__search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
   }
 
   .song-list__segment {

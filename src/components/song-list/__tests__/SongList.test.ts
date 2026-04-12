@@ -149,6 +149,14 @@ describe('SongList', () => {
     expect(screen.getByText('Strom')).toBeInTheDocument();
   });
 
+  it('renders search input for title and artist filtering', () => {
+    render(SongList);
+
+    expect(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' })
+    ).toBeInTheDocument();
+  });
+
   it('shows flat view by default', () => {
     mockUserSongs.value = mockSongs;
 
@@ -221,6 +229,49 @@ describe('SongList', () => {
     expect(screen.getByTestId('tree-view-count')).toHaveTextContent('2 songs');
     expect(screen.getByTestId('tree-view-label')).toHaveTextContent('Interpreti');
     expect(screen.getByTestId('tree-view-interactive')).toHaveTextContent('true');
+  });
+
+  it('filters songs by title', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+
+    render(SongList);
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'Song 2'
+    );
+
+    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+  });
+
+  it('filters songs by artist', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+
+    render(SongList);
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'Artist B'
+    );
+
+    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+  });
+
+  it('shows filtered empty state when no songs match the search', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+
+    render(SongList);
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'No match'
+    );
+
+    expect(screen.getByText('Žádné písně neodpovídají hledání.')).toBeInTheDocument();
+    expect(screen.queryByTestId('flat-view')).not.toBeInTheDocument();
   });
 
   it('allows song navigation for authenticated user', async () => {
