@@ -100,7 +100,15 @@
         @click="() => props.openSession(session)"
       >
         <div class="session-info">
-          <h3>{{ session.name }}</h3>
+          <h3>
+            {{ session.name }}
+            <span
+              class="status-tag"
+              :class="session.isActive ? 'status-tag-open' : 'status-tag-closed'"
+            >
+              {{ session.isActive ? 'Otevřená' : 'Uzavřená' }}
+            </span>
+          </h3>
           <div class="session-meta">{{ formatSessionAge(session.createdAt) }}</div>
         </div>
       </div>
@@ -135,9 +143,32 @@
   }
 
   .session-info h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
     font-size: 16px;
     font-weight: 500;
     margin: 0 0 4px 0;
+  }
+
+  .status-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .status-tag-open {
+    color: #175429;
+    background-color: #dff7e6;
+  }
+
+  .status-tag-closed {
+    color: #6e2c2c;
+    background-color: #f9e2e2;
   }
 
   .session-meta {

@@ -4,6 +4,8 @@ import {
   where,
   getDocs,
   addDoc,
+  doc,
+  updateDoc,
   orderBy,
   limit,
   Timestamp,
@@ -93,6 +95,7 @@ const isPinInvalid = (pin: string): boolean => {
 };
 
 const MAX_PIN_GENERATION_ATTEMPTS = 30;
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const generatePin = (): string => {
   const value = Math.floor(Math.random() * 10000);
@@ -136,6 +139,14 @@ const mapSessionDoc = (doc: { id: string; data: () => DocumentData }): Session =
     joinedBy: data.joinedBy ?? [],
     createdAt: data.createdAt,
   } as Session;
+};
+
+const toTimestampMs = (timestamp: Timestamp): number => {
+  return timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1_000_000);
+};
+
+const isSessionExpired = (session: Session, nowMs: number): boolean => {
+  return nowMs - toTimestampMs(session.createdAt) > SESSION_MAX_AGE_MS;
 };
 
 /**
@@ -226,6 +237,21 @@ export const fetchLatestSessions = async (userId: string): Promise<Session[]> =>
   const merged = new Map<string, Session>();
   hostedSnapshot.docs.forEach((doc) => merged.set(doc.id, mapSessionDoc(doc)));
   joinedSnapshot.docs.forEach((doc) => merged.set(doc.id, mapSessionDoc(doc)));
+
+  const nowMs = toTimestampMs(Timestamp.now());
+  const expiredSessions = Array.from(merged.values()).filter(
+    (session) => session.isActive === true && isSessionExpired(session, nowMs)
+  );
+
+  if (expiredSessions.length > 0) {
+    await Promise.all(
+      expiredSessions.map(async (session) => {
+        const sessionRef = doc(db, 'sessions', session.id);
+        await updateDoc(sessionRef, { isActive: false });
+        session.isActive = false;
+      })
+    );
+  }
 
   return Array.from(merged.values())
     .sort((a, b) => {

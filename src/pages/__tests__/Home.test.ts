@@ -144,4 +144,34 @@ describe('Home Page', () => {
 
     expect(router.push).toHaveBeenCalledWith({ path: '/song/song-1' });
   });
+
+  it('renders open and closed tags for sessions', () => {
+    mockLatestSessions.value = [
+      {
+        id: 'session-open',
+        name: 'Open Session',
+        hostId: 'host-123',
+        hostDisplayName: 'Test Host',
+        isActive: true,
+        pin: '1111',
+        joinedBy: ['host-123'],
+        createdAt: Timestamp.fromDate(new Date('2026-02-01T20:00:00')),
+      },
+      {
+        id: 'session-closed',
+        name: 'Closed Session',
+        hostId: 'host-123',
+        hostDisplayName: 'Test Host',
+        isActive: false,
+        pin: '2222',
+        joinedBy: ['host-123'],
+        createdAt: Timestamp.fromDate(new Date('2026-02-01T19:00:00')),
+      },
+    ];
+
+    render(Home);
+
+    expect(screen.getByText('Otevřená')).toBeInTheDocument();
+    expect(screen.getByText('Uzavřená')).toBeInTheDocument();
+  });
 });
