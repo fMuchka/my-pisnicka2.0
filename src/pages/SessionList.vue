@@ -1,7 +1,9 @@
 <script setup lang="ts">
   import { computed, onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
-  import { ArrowUpDown, ArrowDown, ArrowUp, Search } from 'lucide-vue-next';
+  import { ArrowUpDown, ArrowDown, ArrowUp, Plus, Search, UserPlus } from 'lucide-vue-next';
+  import Button from '../components/core/Button.vue';
+  import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
@@ -26,6 +28,7 @@
   const sessions = ref<Session[]>([]);
   const loading = ref(true);
   const error = ref<string | null>(null);
+  const isCreateSessionDialogOpen = ref(false);
 
   const search = ref('');
   const roleFilter = ref<RoleFilter>('all');
@@ -89,6 +92,14 @@
     router.push({ path: Routes.Session, query: createSessionRouterQuery(session) });
   };
 
+  const openCreateSessionDialog = () => {
+    isCreateSessionDialogOpen.value = true;
+  };
+
+  const goToJoinPage = () => {
+    router.push({ path: Routes.Join });
+  };
+
   const roleOptions: { value: RoleFilter; label: string }[] = [
     { value: 'all', label: 'Vše' },
     { value: 'owned', label: 'Vlastní' },
@@ -112,6 +123,23 @@
     class="container"
     data-testid="session-list-view"
   >
+    <div class="page-actions">
+      <Button
+        aria-label="Vytvořit novou relaci"
+        :icon="{ position: 'prepend', component: Plus }"
+        label="Vytvořit novou relaci"
+        type="button"
+        @click="openCreateSessionDialog"
+      />
+      <Button
+        aria-label="Připojit se k relaci"
+        :icon="{ position: 'prepend', component: UserPlus }"
+        label="Připojit se k relaci"
+        type="button"
+        @click="goToJoinPage"
+      />
+    </div>
+
     <!-- Search -->
     <div class="search-wrapper">
       <Search
@@ -322,6 +350,11 @@
         </div>
       </div>
     </template>
+
+    <CreateSessionDialog
+      :open="isCreateSessionDialogOpen"
+      @update:open="isCreateSessionDialogOpen = $event"
+    />
   </div>
 </template>
 
@@ -336,6 +369,13 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+  }
+
+  .page-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
   }
 
   /* Search */
@@ -526,5 +566,15 @@
     padding: var(--space-lg);
     color: var(--text-secondary);
     font-size: 14px;
+  }
+
+  @media (max-width: 767px) {
+    .page-actions {
+      flex-direction: column;
+    }
+
+    .page-actions :deep(button) {
+      width: 100%;
+    }
   }
 </style>
