@@ -404,6 +404,7 @@
 
     <SongControls
       :is-playing="isAutoScrollPlaying"
+      :auto-scroll-speed="autoScrollSpeed"
       @toggle-play="toggleAutoScroll"
       @step-back="scrollBackAndSlowDown"
       @step-forward="scrollForwardAndSpeedUp"

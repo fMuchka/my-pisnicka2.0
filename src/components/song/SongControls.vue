@@ -9,6 +9,7 @@
 
   interface Props {
     isPlaying: boolean;
+    autoScrollSpeed: number;
   }
 
   interface Emits {
@@ -24,6 +25,14 @@
 
 <template>
   <div class="song-controls-wrap">
+    <p
+      v-if="isPlaying"
+      class="speed-indicator"
+      aria-live="polite"
+    >
+      Rychlost {{ autoScrollSpeed }} px/s
+    </p>
+
     <div class="song-controls">
       <button
         class="control-button"
@@ -80,6 +89,26 @@
     z-index: 30;
     width: fit-content;
     max-width: calc(100vw - var(--space-lg));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .speed-indicator {
+    margin: 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--bg-tertiary));
+    background: color-mix(in srgb, var(--bg-primary) 92%, transparent);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    box-shadow: var(--shadow-panel);
+    position: relative;
+    left: -20px;
   }
 
   .song-controls {
