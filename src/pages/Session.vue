@@ -19,7 +19,7 @@
   const TITLE = 'Relace';
   const TAG_LINE = 'Spolu teď a tady';
 
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const sessionStore = useSessionStore();
   const errorCode = ref<SessionErrorCode | undefined>(undefined);
 
@@ -50,26 +50,6 @@
 
   const errorMessage = computed(() => getSessionErrorMessage(errorCode.value));
   const sessionBackToPath = computed(() => (isAuthenticated.value ? undefined : Routes.Join));
-
-  const sessionDetails = computed(() => {
-    const detailsFromStore = sessionStore.sessionDetails;
-
-    if (detailsFromStore) {
-      return {
-        id: detailsFromStore.id,
-        hostId: detailsFromStore.hostId,
-        pin: detailsFromStore.pin,
-      };
-    }
-
-    return emptySessionDetails;
-  });
-
-  const ownerId = computed(() => {
-    return isAuthenticated.value
-      ? (user.value?.uid ?? '')
-      : querySessionDetails.value.hostId || sessionDetails.value.hostId;
-  });
 
   watch(
     querySessionDetails,
@@ -122,12 +102,6 @@
     },
     { immediate: true }
   );
-
-  const emptySessionDetails = {
-    id: '',
-    hostId: '',
-    pin: '',
-  };
 </script>
 
 <template>
@@ -164,10 +138,7 @@
       {{ errorMessage }}
     </div>
 
-    <SongList
-      v-else
-      :owner-id="ownerId"
-    />
+    <SongList v-else />
   </div>
 </template>
 

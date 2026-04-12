@@ -1,9 +1,19 @@
 <script setup lang="ts">
+  import { computed } from 'vue';
+  import { transposeChord } from '../../lib/chords';
+
   interface Props {
     chords: string[];
+    transpose?: number;
   }
 
-  defineProps<Props>();
+  const props = withDefaults(defineProps<Props>(), {
+    transpose: 0,
+  });
+
+  const renderedChords = computed(() =>
+    props.chords.map((chord) => transposeChord(chord, props.transpose))
+  );
 </script>
 
 <template>
@@ -11,8 +21,8 @@
     <span class="song-meta-label">Akordy</span>
     <div class="song-chord-list">
       <span
-        v-for="chord in chords"
-        :key="chord"
+        v-for="(chord, index) in renderedChords"
+        :key="`${chord}-${index}`"
         class="song-chord-pill"
       >
         {{ chord }}

@@ -1,13 +1,15 @@
 <script setup lang="ts">
   import { Pencil } from 'lucide-vue-next';
-  import { computed, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
   import Button from '../components/core/Button.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
+  import SongChordsDialog from '../components/dialogs/song-chords/SongChordsDialog.vue';
   import SongChordOverview from '../components/song/SongChordOverview.vue';
   import ChordLayoutRenderer from '../components/song/ChordLayoutRenderer.vue';
+  import SongControls from '../components/song/SongControls.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
@@ -19,6 +21,127 @@
   const route = useRoute();
   const { isAuthenticated } = useAuth();
   const isEditDialogOpen = ref(false);
+  const isChordsDialogOpen = ref(false);
+  const transpose = ref(0);
+
+  const isAutoScrollPlaying = ref(false);
+  const autoScrollSpeed = ref(28);
+  const songPageRef = ref<HTMLElement | null>(null);
+
+  const AUTO_SCROLL_SPEED_STEP = 6;
+  const AUTO_SCROLL_MIN_SPEED = 10;
+  const AUTO_SCROLL_MAX_SPEED = 80;
+  const AUTO_SCROLL_SCROLL_STEP = 132;
+  type ScrollMode = 'auto' | 'smooth';
+
+  let animationFrameId: number | null = null;
+  let previousFrameTime: number | null = null;
+  let autoScrollPosition: number | null = null;
+
+  const isElementScrollable = (element: HTMLElement) => {
+    const overflowY = window.getComputedStyle(element).overflowY;
+    const allowsScrolling =
+      overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+
+    return allowsScrolling && element.scrollHeight - element.clientHeight > 1;
+  };
+
+  const getScrollableContainer = () => {
+    let current = songPageRef.value;
+
+    while (current) {
+      if (isElementScrollable(current)) {
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    return null;
+  };
+
+  const getDocumentScrollHeight = () => {
+    const doc = document.documentElement;
+    const body = document.body;
+
+    return Math.max(
+      doc.scrollHeight,
+      body.scrollHeight,
+      doc.offsetHeight,
+      body.offsetHeight,
+      doc.clientHeight,
+      body.clientHeight
+    );
+  };
+
+  const getViewportHeight = () => window.visualViewport?.height ?? window.innerHeight;
+
+  const getCurrentScrollTop = () => {
+    const container = getScrollableContainer();
+
+    if (container) {
+      return container.scrollTop;
+    }
+
+    const doc = document.documentElement;
+    const body = document.body;
+
+    return window.pageYOffset || doc.scrollTop || body.scrollTop || 0;
+  };
+
+  const getMaxScrollTop = () => {
+    const container = getScrollableContainer();
+
+    if (container) {
+      return Math.max(0, container.scrollHeight - container.clientHeight);
+    }
+
+    return Math.max(0, getDocumentScrollHeight() - getViewportHeight());
+  };
+
+  const scrollToTop = (top: number, behavior: ScrollMode = 'auto') => {
+    const container = getScrollableContainer();
+
+    if (container) {
+      try {
+        container.scrollTo({ top, behavior });
+      } catch {
+        container.scrollTop = top;
+      }
+
+      if (Math.abs(container.scrollTop - top) > 1) {
+        container.scrollTop = top;
+      }
+
+      return;
+    }
+
+    const doc = document.documentElement;
+    const body = document.body;
+
+    try {
+      window.scrollTo({ top, behavior });
+    } catch {
+      window.scrollTo(0, top);
+    }
+
+    if (Math.abs(getCurrentScrollTop() - top) > 1) {
+      doc.scrollTop = top;
+      body.scrollTop = top;
+    }
+  };
+
+  const scrollByDistance = (distance: number, behavior: ScrollMode = 'auto') => {
+    const nextTop = Math.max(0, Math.min(getCurrentScrollTop() + distance, getMaxScrollTop()));
+    const shouldUseInstantScroll = isAutoScrollPlaying.value;
+
+    scrollToTop(nextTop, shouldUseInstantScroll ? 'auto' : behavior);
+
+    if (shouldUseInstantScroll) {
+      autoScrollPosition = nextTop;
+      previousFrameTime = null;
+    }
+  };
 
   const songId = computed(() => {
     const routeSongId = route.params.songId;
@@ -99,6 +222,92 @@
   const handleSongSaved = (updatedSong: Song) => {
     song.value = updatedSong;
   };
+
+  const stopAutoScroll = () => {
+    isAutoScrollPlaying.value = false;
+
+    if (animationFrameId != null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+
+    previousFrameTime = null;
+    autoScrollPosition = null;
+  };
+
+  const autoScrollStep = (timestamp: number) => {
+    if (!isAutoScrollPlaying.value) {
+      return;
+    }
+
+    if (previousFrameTime == null) {
+      previousFrameTime = timestamp;
+    }
+
+    const elapsedSeconds = (timestamp - previousFrameTime) / 1000;
+    previousFrameTime = timestamp;
+
+    if (autoScrollPosition == null) {
+      autoScrollPosition = getCurrentScrollTop();
+    }
+
+    const maxTop = getMaxScrollTop();
+    const nextTop = Math.min(autoScrollPosition + autoScrollSpeed.value * elapsedSeconds, maxTop);
+    autoScrollPosition = nextTop;
+
+    scrollToTop(nextTop, 'auto');
+
+    if (nextTop >= maxTop - 1) {
+      stopAutoScroll();
+      return;
+    }
+
+    animationFrameId = requestAnimationFrame(autoScrollStep);
+  };
+
+  const startAutoScroll = () => {
+    if (isAutoScrollPlaying.value) {
+      return;
+    }
+
+    isAutoScrollPlaying.value = true;
+    previousFrameTime = null;
+    autoScrollPosition = getCurrentScrollTop();
+    animationFrameId = requestAnimationFrame(autoScrollStep);
+  };
+
+  const toggleAutoScroll = () => {
+    if (isAutoScrollPlaying.value) {
+      stopAutoScroll();
+      return;
+    }
+
+    startAutoScroll();
+  };
+
+  const scrollBackAndSlowDown = () => {
+    autoScrollSpeed.value = Math.max(
+      AUTO_SCROLL_MIN_SPEED,
+      autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
+    );
+    scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
+  };
+
+  const scrollForwardAndSpeedUp = () => {
+    autoScrollSpeed.value = Math.min(
+      AUTO_SCROLL_MAX_SPEED,
+      autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
+    );
+    scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
+  };
+
+  const openChordsDialog = () => {
+    isChordsDialogOpen.value = true;
+  };
+
+  onBeforeUnmount(() => {
+    stopAutoScroll();
+  });
 </script>
 
 <template>
@@ -107,7 +316,10 @@
     :page-subtitle="song?.artist"
   />
 
-  <main class="song-page">
+  <main
+    ref="songPageRef"
+    class="song-page"
+  >
     <div class="song-shell">
       <div class="song-quick-nav">
         <Button
@@ -139,6 +351,7 @@
         <SongChordOverview
           v-if="songChords.length > 0"
           :chords="songChords"
+          :transpose="transpose"
         />
 
         <article class="song-body">
@@ -153,6 +366,7 @@
               <ChordLayoutRenderer
                 class="song-text"
                 :text="section.text"
+                :transpose="transpose"
               />
             </section>
           </template>
@@ -160,6 +374,7 @@
             v-else
             class="song-text"
             :text="songText"
+            :transpose="transpose"
           />
         </article>
       </section>
@@ -178,6 +393,22 @@
       :song-to-edit="song"
       @update:open="isEditDialogOpen = $event"
       @saved="handleSongSaved"
+    />
+
+    <SongChordsDialog
+      :open="isChordsDialogOpen"
+      :transpose="transpose"
+      @update:open="isChordsDialogOpen = $event"
+      @update:transpose="transpose = $event"
+    />
+
+    <SongControls
+      :is-playing="isAutoScrollPlaying"
+      :auto-scroll-speed="autoScrollSpeed"
+      @toggle-play="toggleAutoScroll"
+      @step-back="scrollBackAndSlowDown"
+      @step-forward="scrollForwardAndSpeedUp"
+      @open-chords="openChordsDialog"
     />
   </main>
 </template>
@@ -198,7 +429,8 @@
   .song-shell {
     width: min(100%, 760px);
     margin: 0 auto;
-    padding: var(--space-lg) var(--space-md) var(--space-3xl);
+    padding: var(--space-lg) var(--space-md)
+      calc(var(--space-3xl) + 88px + env(safe-area-inset-bottom, 0px));
   }
 
   .edit-button {

@@ -4,6 +4,9 @@ import {
   where,
   getDocs,
   addDoc,
+  doc,
+  deleteDoc,
+  updateDoc,
   orderBy,
   limit,
   Timestamp,
@@ -93,6 +96,7 @@ const isPinInvalid = (pin: string): boolean => {
 };
 
 const MAX_PIN_GENERATION_ATTEMPTS = 30;
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const generatePin = (): string => {
   const value = Math.floor(Math.random() * 10000);
@@ -136,6 +140,14 @@ const mapSessionDoc = (doc: { id: string; data: () => DocumentData }): Session =
     joinedBy: data.joinedBy ?? [],
     createdAt: data.createdAt,
   } as Session;
+};
+
+const toTimestampMs = (timestamp: Timestamp): number => {
+  return timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1_000_000);
+};
+
+const isSessionExpired = (session: Session, nowMs: number): boolean => {
+  return nowMs - toTimestampMs(session.createdAt) > SESSION_MAX_AGE_MS;
 };
 
 /**
@@ -227,6 +239,21 @@ export const fetchLatestSessions = async (userId: string): Promise<Session[]> =>
   hostedSnapshot.docs.forEach((doc) => merged.set(doc.id, mapSessionDoc(doc)));
   joinedSnapshot.docs.forEach((doc) => merged.set(doc.id, mapSessionDoc(doc)));
 
+  const nowMs = toTimestampMs(Timestamp.now());
+  const expiredSessions = Array.from(merged.values()).filter(
+    (session) => session.isActive === true && isSessionExpired(session, nowMs)
+  );
+
+  if (expiredSessions.length > 0) {
+    await Promise.all(
+      expiredSessions.map(async (session) => {
+        const sessionRef = doc(db, 'sessions', session.id);
+        await updateDoc(sessionRef, { isActive: false });
+        session.isActive = false;
+      })
+    );
+  }
+
   return Array.from(merged.values())
     .sort((a, b) => {
       if (a.createdAt.seconds !== b.createdAt.seconds) {
@@ -235,6 +262,78 @@ export const fetchLatestSessions = async (userId: string): Promise<Session[]> =>
       return b.createdAt.nanoseconds - a.createdAt.nanoseconds;
     })
     .slice(0, 3);
+};
+
+/**
+ * Fetches all sessions for a user (hosted or joined), without a limit, sorted by newest first.
+ * Used for the full session list page.
+ */
+export const fetchAllUserSessions = async (userId: string): Promise<Session[]> => {
+  const baseQuery = collection(db, 'sessions');
+  const hostedQuery = query(baseQuery, where('hostId', '==', userId), orderBy('createdAt', 'desc'));
+  const joinedQuery = query(
+    baseQuery,
+    where('joinedBy', 'array-contains', userId),
+    orderBy('createdAt', 'desc')
+  );
+
+  const [hostedSnapshot, joinedSnapshot] = await Promise.all([
+    getDocs(hostedQuery),
+    getDocs(joinedQuery),
+  ]);
+
+  const merged = new Map<string, Session>();
+  hostedSnapshot.docs.forEach((d) => merged.set(d.id, mapSessionDoc(d)));
+  joinedSnapshot.docs.forEach((d) => merged.set(d.id, mapSessionDoc(d)));
+
+  const nowMs = toTimestampMs(Timestamp.now());
+  const expiredSessions = Array.from(merged.values()).filter(
+    (session) => session.isActive === true && isSessionExpired(session, nowMs)
+  );
+
+  if (expiredSessions.length > 0) {
+    await Promise.all(
+      expiredSessions.map(async (session) => {
+        const sessionRef = doc(db, 'sessions', session.id);
+        await updateDoc(sessionRef, { isActive: false });
+        session.isActive = false;
+      })
+    );
+  }
+
+  return Array.from(merged.values()).sort((a, b) => {
+    if (a.createdAt.seconds !== b.createdAt.seconds) {
+      return b.createdAt.seconds - a.createdAt.seconds;
+    }
+    return b.createdAt.nanoseconds - a.createdAt.nanoseconds;
+  });
+};
+
+/**
+ * Deletes all closed sessions hosted by the given user.
+ *
+ * Only host-owned closed sessions are deleted to align with Firestore write restrictions.
+ * Returns deleted document IDs so the UI can update local state without a full reload.
+ */
+export const deleteClosedHostedSessions = async (userId: string): Promise<string[]> => {
+  const closedSessionsQuery = query(
+    collection(db, 'sessions'),
+    where('hostId', '==', userId),
+    where('isActive', '==', false)
+  );
+
+  const snapshot = await getDocs(closedSessionsQuery);
+  const deletedIds = snapshot.docs.map((sessionDoc) => sessionDoc.id);
+
+  if (deletedIds.length === 0) {
+    return [];
+  }
+
+  await Promise.all(
+    snapshot.docs.map((sessionDoc) => deleteDoc(doc(db, 'sessions', sessionDoc.id)))
+  );
+
+  return deletedIds;
 };
 
 /**

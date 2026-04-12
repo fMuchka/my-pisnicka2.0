@@ -1,5 +1,21 @@
-import { signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  updatePassword,
+} from 'firebase/auth';
 import { auth } from './firebase';
+
+const LOGIN_EMAIL_DOMAIN = 'mypisnicka.com';
+
+function normalizeLoginIdentifier(identifier: string) {
+  const trimmedIdentifier = identifier.trim();
+
+  if (trimmedIdentifier.includes('@')) {
+    return trimmedIdentifier;
+  }
+
+  return `${trimmedIdentifier}@${LOGIN_EMAIL_DOMAIN}`;
+}
 
 /**
  * Auth Service Module
@@ -12,13 +28,17 @@ import { auth } from './firebase';
 /**
  * Signs in a user with email and password.
  *
- * @param email - User's email address
+ * @param identifier - User name or email address
  * @param password - User's password
  * @returns Promise resolving to the User object on success
  * @throws Firebase Auth error if credentials are invalid or user doesn't exist
  */
-export async function loginWithEmailPassword(email: string, password: string) {
-  const result = await signInWithEmailAndPassword(auth, email, password);
+export async function loginWithEmailPassword(identifier: string, password: string) {
+  const result = await signInWithEmailAndPassword(
+    auth,
+    normalizeLoginIdentifier(identifier),
+    password
+  );
   return result.user;
 }
 
@@ -32,4 +52,21 @@ export async function loginWithEmailPassword(email: string, password: string) {
  */
 export async function signOut() {
   await firebaseSignOut(auth);
+}
+
+/**
+ * Updates password for the currently authenticated user.
+ *
+ * @param newPassword - New password that should replace the current one
+ * @throws Error when there is no authenticated user
+ * @throws Firebase Auth error when the operation requires re-authentication or fails validation
+ */
+export async function updateCurrentUserPassword(newPassword: string) {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    throw new Error('No authenticated user');
+  }
+
+  await updatePassword(currentUser, newPassword);
 }

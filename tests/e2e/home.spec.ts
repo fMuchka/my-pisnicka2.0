@@ -89,9 +89,9 @@ test.describe('Home Screen - E2E Tests', () => {
       const viewAllButton = page.getByLabel('Zobrazit všechny písně');
       await expect(viewAllButton).toBeVisible();
 
-      const currentUrl = page.url();
       await viewAllButton.click();
-      await expect(page).toHaveURL(currentUrl);
+      await expect(page).toHaveURL(/\/songs/);
+      await expect(page.getByTestId('song-library-view')).toBeVisible();
     });
   });
 

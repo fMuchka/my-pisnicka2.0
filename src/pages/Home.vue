@@ -46,6 +46,7 @@
 
   const goToJoinPage = () => router.push({ path: Routes.Join });
   const goToSessionListPage = () => router.push({ path: Routes.SessionList });
+  const goToSongLibraryPage = () => router.push({ path: Routes.SongLibrary });
 </script>
 
 <template>
@@ -68,20 +69,13 @@
       :open-session="openSession"
     />
 
-    <!-- TODO: Replace placeholder callback with a real route to the song list page. -->
-    <!-- BUG: Current implementation silently logs and leaves the CTA non-functional for users. -->
-    <!-- See: https://router.vuejs.org/guide/essentials/navigation.html -->
     <SongsSection
       :display-songs="displaySongs"
       :songs-error="songsError"
       :loading-section="loadingSection"
       :open-create-song-dialog="openCreateSongDialog"
       :go-to-song="openSong"
-      :go-to-view-all-songs="
-        () => {
-          console.log('TO IMPLEMENT');
-        }
-      "
+      :go-to-view-all-songs="goToSongLibraryPage"
     />
 
     <!-- Create Session Dialog -->

@@ -37,6 +37,11 @@
     --focus-ring-soft: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
     --surface-qr: #ffffff;
     --text-qr: #111111;
+    --scrollbar-size: 8px;
+    --scrollbar-size-desktop: 12px;
+    --scrollbar-track: color-mix(in srgb, var(--text-primary) 8%, transparent);
+    --scrollbar-thumb: color-mix(in srgb, var(--accent) 50%, var(--bg-tertiary));
+    --scrollbar-thumb-active: color-mix(in srgb, var(--accent) 72%, var(--text-primary));
     --section-verse-bg: #e7ece3;
     --section-verse-border: #8ea27f;
     --section-chorus-bg: #f1e6d6;
@@ -114,6 +119,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 
   html,
@@ -122,14 +129,59 @@
     width: 100%;
   }
 
+  html {
+    scrollbar-gutter: stable both-edges;
+  }
+
   body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-body);
     font-size: 16px;
     line-height: 1.5;
+    -webkit-overflow-scrolling: touch;
     transition:
       background-color var(--transition-slow),
       color var(--transition-slow);
+  }
+
+  *::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    min-height: 32px;
+    background-color: var(--scrollbar-thumb);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  @media (pointer: fine) {
+    * {
+      scrollbar-width: auto;
+    }
+
+    *::-webkit-scrollbar {
+      width: var(--scrollbar-size-desktop);
+      height: var(--scrollbar-size-desktop);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    *::-webkit-scrollbar-thumb:hover,
+    *::-webkit-scrollbar-thumb:active {
+      background-color: var(--scrollbar-thumb-active);
+    }
   }
 </style>

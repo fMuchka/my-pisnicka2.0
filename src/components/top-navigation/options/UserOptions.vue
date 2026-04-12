@@ -1,9 +1,10 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
   import Button, { type ButtonIcon } from '../../core/Button.vue';
-  import { User, LogOut } from 'lucide-vue-next';
+  import { User, LogOut, Key } from 'lucide-vue-next';
   import { Menu } from '@ark-ui/vue/menu';
   import LoginDialog from '../../dialogs/login/LoginDialog.vue';
+  import ChangePasswordDialog from '../../dialogs/change-password/ChangePasswordDialog.vue';
 
   import { useAuth } from '../../../composables/useAuth';
   import { useRouter } from 'vue-router';
@@ -23,7 +24,7 @@
     const email = auth.user.value?.email?.trim();
 
     if (email) {
-      return email;
+      return email.split('@')[0];
     }
 
     return 'Melon';
@@ -35,6 +36,17 @@
     }
 
     return [
+      {
+        label: 'Změnit heslo',
+        ariaLabel: 'změnit heslo',
+        action: () => {
+          isChangePasswordDialogOpen.value = true;
+        },
+        icon: {
+          component: Key,
+          position: 'append',
+        },
+      },
       {
         label: 'Odhlásit se',
         ariaLabel: 'odhlásit se',
@@ -57,6 +69,7 @@
   };
 
   const isLoginDialogOpen = ref(false);
+  const isChangePasswordDialogOpen = ref(false);
 </script>
 
 <template>
@@ -71,13 +84,15 @@
       />
     </Menu.Trigger>
     <Menu.Positioner>
-      <Menu.Content>
+      <Menu.Content class="user-options-menu">
         <Menu.Item
           v-for="(menuItem, j) in menuItems"
           :key="j"
           :value="menuItem.label"
+          as-child
         >
           <Button
+            class="user-menu-button"
             :icon="menuItem.icon"
             :label="menuItem.label"
             style-variation="Text"
@@ -101,9 +116,38 @@
 
     <LoginDialog v-model:open="isLoginDialogOpen" />
   </template>
+
+  <ChangePasswordDialog v-model:open="isChangePasswordDialogOpen" />
 </template>
 
 <style scoped>
+  .user-options-menu {
+    margin-top: var(--space-xs);
+    width: 200px;
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--text-primary) 12%, transparent);
+    padding: var(--space-xs);
+    z-index: 20;
+  }
+
+  .user-menu-button {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+  }
+
+  .user-menu-button:hover {
+    background: var(--bg-secondary);
+  }
+
+  .user-menu-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
   .user-trigger :deep(span) {
     max-width: 120px;
     overflow: hidden;

@@ -8,23 +8,33 @@
   const emit = defineEmits<{ login: [] }>();
 
   type LoginValidation = {
-    email: boolean; // input format
+    user: boolean; // input format
     password: boolean; // input format
     credentials: boolean; // server response
   };
 
   const validationChecks = ref<LoginValidation>({
     credentials: false,
-    email: false,
+    user: false,
     password: false,
   });
 
-  const email = ref('');
+  const user = ref('');
   const password = ref('');
 
-  const validateEmail = (email: string): boolean => {
+  const validateUser = (value: string): boolean => {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return false;
+    }
+
+    if (!trimmedValue.includes('@')) {
+      return true;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(trimmedValue);
   };
 
   const validatePassword = () => {
@@ -34,18 +44,14 @@
   const handleConfirmClick = async () => {
     validationChecks.value.credentials = false;
 
-    if (email.value.length > 0) {
-      validationChecks.value.email = !validateEmail(email.value);
-    } else {
-      validationChecks.value.email = true;
-    }
+    validationChecks.value.user = !validateUser(user.value);
 
     validationChecks.value.password = !validatePassword();
 
-    if (validationChecks.value.email === false && validationChecks.value.password === false) {
+    if (validationChecks.value.user === false && validationChecks.value.password === false) {
       // extra try catch due to tests
       try {
-        await loginWithEmailPassword(email.value, password.value);
+        await loginWithEmailPassword(user.value, password.value);
         validationChecks.value.credentials = false;
         emit('login');
       } catch (_err) {
@@ -60,12 +66,12 @@
   <div class="login-form">
     <Field.Root
       class="form-group"
-      :invalid="validationChecks.email || validationChecks.credentials"
+      :invalid="validationChecks.user || validationChecks.credentials"
     >
-      <Field.Label class="form-label">Email</Field.Label>
+      <Field.Label class="form-label">Uživatel</Field.Label>
       <Field.Input
-        v-model.trim="email"
-        placeholder="jindra@skalitze.cz"
+        v-model.trim="user"
+        placeholder="Tom Bombadil"
         class="form-input"
       />
       <Field.ErrorText

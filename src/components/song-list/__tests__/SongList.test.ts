@@ -25,7 +25,7 @@ const mockUser = mockRef<{ uid: string; displayName: string } | null>({
 });
 
 vi.mock('../../../composables/useSongListData', () => ({
-  useSongListData: (_ownerId: string) => ({
+  useSongListData: () => ({
     userSongs: mockUserSongs,
   }),
 }));
@@ -137,34 +137,30 @@ describe('SongList', () => {
   });
 
   it('renders section with title', () => {
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     expect(screen.getByText('Seznam písní')).toBeInTheDocument();
   });
 
   it('renders segment group for view mode selection', () => {
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     expect(screen.getByText('Plochý seznam')).toBeInTheDocument();
     expect(screen.getByText('Strom')).toBeInTheDocument();
   });
 
+  it('renders search input for title and artist filtering', () => {
+    render(SongList);
+
+    expect(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' })
+    ).toBeInTheDocument();
+  });
+
   it('shows flat view by default', () => {
     mockUserSongs.value = mockSongs;
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     expect(screen.getByTestId('flat-view')).toBeInTheDocument();
     expect(screen.queryByTestId('tree-view')).not.toBeInTheDocument();
@@ -174,11 +170,7 @@ describe('SongList', () => {
     const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     const treeButton = screen.getByText('Strom');
     await user.click(treeButton);
@@ -191,11 +183,7 @@ describe('SongList', () => {
     const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     // Switch to tree view
     await user.click(screen.getByText('Strom'));
@@ -209,21 +197,13 @@ describe('SongList', () => {
   it('displays empty state message when no songs', () => {
     mockUserSongs.value = [];
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     expect(screen.getByText('Zatím nejsou dostupné žádné písně.')).toBeInTheDocument();
   });
 
   it('passes correct aria-label to segment group', () => {
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     const segmentGroup = screen.getByLabelText('Rezim zobrazeni seznamu pisni');
     expect(segmentGroup).toBeInTheDocument();
@@ -232,11 +212,7 @@ describe('SongList', () => {
   it('passes correct props to flat view component', () => {
     mockUserSongs.value = mockSongs;
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     expect(screen.getByTestId('flat-view-count')).toHaveTextContent('2 songs');
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -246,11 +222,7 @@ describe('SongList', () => {
     const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     await user.click(screen.getByText('Strom'));
 
@@ -259,16 +231,55 @@ describe('SongList', () => {
     expect(screen.getByTestId('tree-view-interactive')).toHaveTextContent('true');
   });
 
-  it('allows song navigation when user owns the song list', async () => {
+  it('filters songs by title', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+
+    render(SongList);
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'Song 2'
+    );
+
+    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+  });
+
+  it('filters songs by artist', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+
+    render(SongList);
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'Artist B'
+    );
+
+    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+  });
+
+  it('shows filtered empty state when no songs match the search', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+
+    render(SongList);
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'No match'
+    );
+
+    expect(screen.getByText('Žádné písně neodpovídají hledání.')).toBeInTheDocument();
+    expect(screen.queryByTestId('flat-view')).not.toBeInTheDocument();
+  });
+
+  it('allows song navigation for authenticated user', async () => {
     const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
     mockUser.value = { uid: 'user-123', displayName: 'Test User' };
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     await user.click(screen.getByTestId('flat-view-click-first'));
 
@@ -276,30 +287,30 @@ describe('SongList', () => {
     expect(mockRouterPush).toHaveBeenCalledWith({ path: '/song/song-1' });
   });
 
-  it('prevents song navigation when user does not own the song list', async () => {
+  it('allows song navigation when authenticated user is not the owner', async () => {
+    const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
     mockUser.value = { uid: 'different-user', displayName: 'Other User' };
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
-    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('false');
+    await user.click(screen.getByTestId('flat-view-click-first'));
+
+    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
+    expect(mockRouterPush).toHaveBeenCalledWith({ path: '/song/song-1' });
   });
 
-  it('prevents song navigation when not authenticated', async () => {
+  it('allows song navigation when not authenticated', async () => {
+    const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
     mockUser.value = null;
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
-    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('false');
+    await user.click(screen.getByTestId('flat-view-click-first'));
+
+    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
+    expect(mockRouterPush).toHaveBeenCalledWith({ path: '/song/song-1' });
   });
 
   it('sorts songs alphabetically by artist then title', () => {
@@ -332,11 +343,7 @@ describe('SongList', () => {
 
     mockUserSongs.value = unsortedSongs;
 
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     // The component sorts by artist then title
     const flatView = screen.getByTestId('flat-view');
@@ -348,9 +355,7 @@ describe('SongList', () => {
     mockUser.value = null;
 
     const { container } = render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
+      props: {},
     });
 
     expect(container.querySelector('section.song-list')).toBeInTheDocument();
@@ -361,9 +366,7 @@ describe('SongList', () => {
     mockUser.value = { uid: 'user-123', displayName: 'Test User' };
 
     const { unmount } = render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
+      props: {},
     });
 
     expect(screen.getByText('Zatím nejsou dostupné žádné písně.')).toBeInTheDocument();
@@ -371,52 +374,29 @@ describe('SongList', () => {
 
     // Render again with songs
     mockUserSongs.value = mockSongs;
-    render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    render(SongList);
 
     expect(screen.queryByText('Zatím nejsou dostupné žádné písně.')).not.toBeInTheDocument();
     expect(screen.getByTestId('flat-view')).toBeInTheDocument();
   });
 
   it('renders as a section element', () => {
-    const { container } = render(SongList, {
-      props: {
-        ownerId: 'user-123',
-      },
-    });
+    const { container } = render(SongList);
 
     const section = container.querySelector('section.song-list');
     expect(section).toBeInTheDocument();
   });
 
-  it('handles different ownerId prop values', () => {
+  it('keeps interactivity enabled across authentication states', () => {
     mockUserSongs.value = mockSongs;
+    mockUser.value = null;
 
-    const { rerender } = render(SongList, {
-      props: {
-        ownerId: 'owner-1',
-      },
-    });
+    const { unmount } = render(SongList);
+    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
 
-    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('false');
-
-    // Change ownerId to match user
+    unmount();
     mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
-    rerender({
-      props: {
-        ownerId: 'owner-1',
-      },
-    });
-
-    // After the next render with matching IDs
-    mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
-    render(SongList, {
-      props: {
-        ownerId: 'owner-1',
-      },
-    });
+    render(SongList);
+    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
   });
 });

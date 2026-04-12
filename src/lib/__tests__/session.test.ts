@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getSessionStatus as rawGetSessionStatus,
   type SessionStatusResult,
+  deleteClosedHostedSessions,
   fetchLatestSessions,
   createSession,
 } from '../session';
@@ -9,6 +10,9 @@ import {
 // Mock Firestore SDK used by session implementation
 const mocks = vi.hoisted(() => ({
   mockAddDoc: vi.fn(),
+  mockDeleteDoc: vi.fn(),
+  mockDoc: vi.fn(),
+  mockUpdateDoc: vi.fn(),
   mockGetDocs: vi.fn(),
   mockQuery: vi.fn(),
   mockCollection: vi.fn(),
@@ -27,6 +31,9 @@ vi.mock('firebase/firestore', () => {
     limit: (...args: unknown[]) => mocks.mockLimit(...args),
     getDocs: (...args: unknown[]) => mocks.mockGetDocs(...args),
     addDoc: (...args: unknown[]) => mocks.mockAddDoc(...args),
+    deleteDoc: (...args: unknown[]) => mocks.mockDeleteDoc(...args),
+    doc: (...args: unknown[]) => mocks.mockDoc(...args),
+    updateDoc: (...args: unknown[]) => mocks.mockUpdateDoc(...args),
     Timestamp: {
       now: () => ({ seconds: 1706745600, nanoseconds: 0 }),
       fromDate: (date: Date) => ({
@@ -112,6 +119,8 @@ describe('session: joinSession', () => {
 describe('session: fetchLatestSessions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.mockDoc.mockImplementation((...args) => args.join(':'));
+    mocks.mockUpdateDoc.mockResolvedValue(undefined);
   });
 
   it('fetches hosted sessions with correct query', async () => {
@@ -448,6 +457,55 @@ describe('session: fetchLatestSessions', () => {
     expect(result[0]).toBeDefined();
     expect(result[0]?.joinedBy).toEqual([]);
   });
+
+  it('closes active sessions older than 24 hours and updates Firestore', async () => {
+    const expiredSession = {
+      id: 'session-expired',
+      data: () => ({
+        name: 'Expired Session',
+        hostId: 'host-123',
+        hostDisplayName: 'Host Name',
+        isActive: true,
+        pin: '5555',
+        joinedBy: ['host-123'],
+        createdAt: { seconds: 1706659199, nanoseconds: 0 },
+      }),
+    };
+
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [expiredSession] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
+
+    const result = await fetchLatestSessions('host-123');
+
+    expect(mocks.mockDoc).toHaveBeenCalledWith({}, 'sessions', 'session-expired');
+    expect(mocks.mockUpdateDoc).toHaveBeenCalledWith('[object Object]:sessions:session-expired', {
+      isActive: false,
+    });
+    expect(result[0]?.isActive).toBe(false);
+  });
+
+  it('does not close active sessions newer than 24 hours', async () => {
+    const freshSession = {
+      id: 'session-fresh',
+      data: () => ({
+        name: 'Fresh Session',
+        hostId: 'host-123',
+        hostDisplayName: 'Host Name',
+        isActive: true,
+        pin: '3333',
+        joinedBy: ['host-123'],
+        createdAt: { seconds: 1706659201, nanoseconds: 0 },
+      }),
+    };
+
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [freshSession] });
+    mocks.mockGetDocs.mockResolvedValueOnce({ docs: [] });
+
+    const result = await fetchLatestSessions('host-123');
+
+    expect(mocks.mockUpdateDoc).not.toHaveBeenCalled();
+    expect(result[0]?.isActive).toBe(true);
+  });
 });
 
 describe('session: createSession', () => {
@@ -679,5 +737,46 @@ describe('session: createSession', () => {
     expect(mocks.mockAddDoc).not.toHaveBeenCalled();
 
     randomSpy.mockRestore();
+  });
+});
+
+describe('session: deleteClosedHostedSessions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.mockDoc.mockImplementation((...args) => args.join(':'));
+    mocks.mockDeleteDoc.mockResolvedValue(undefined);
+  });
+
+  it('deletes only closed sessions owned by the host', async () => {
+    mocks.mockGetDocs.mockResolvedValue({
+      docs: [
+        {
+          id: 'closed-1',
+          data: () => ({ isActive: false, hostId: 'host-123' }),
+        },
+        {
+          id: 'closed-2',
+          data: () => ({ isActive: false, hostId: 'host-123' }),
+        },
+      ],
+    });
+
+    const result = await deleteClosedHostedSessions('host-123');
+
+    expect(mocks.mockWhere).toHaveBeenCalledWith('hostId', '==', 'host-123');
+    expect(mocks.mockWhere).toHaveBeenCalledWith('isActive', '==', false);
+    expect(mocks.mockDoc).toHaveBeenNthCalledWith(1, {}, 'sessions', 'closed-1');
+    expect(mocks.mockDoc).toHaveBeenNthCalledWith(2, {}, 'sessions', 'closed-2');
+    expect(mocks.mockDeleteDoc).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(['closed-1', 'closed-2']);
+  });
+
+  it('returns empty array when there are no closed hosted sessions', async () => {
+    mocks.mockGetDocs.mockResolvedValue({ docs: [] });
+
+    const result = await deleteClosedHostedSessions('host-123');
+
+    expect(mocks.mockDeleteDoc).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
   });
 });

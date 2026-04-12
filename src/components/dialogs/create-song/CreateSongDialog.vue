@@ -26,7 +26,7 @@
 
   const songTitle = ref('');
   const songArtist = ref('');
-  const songText = ref('');
+  const songText = ref('[Verse]\n[G] Mama take this [D] badge off of [Am] me');
   const songChords = ref<string[]>([]);
   const createError = ref<string | null>(null);
   const isCreating = ref(false);

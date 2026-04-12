@@ -28,12 +28,57 @@ describe('authService', () => {
   });
 
   describe('loginWithEmailPassword', () => {
-    it('calls Firebase signInWithEmailAndPassword with correct params', async () => {
-      const email = 'host@host';
+    it('calls Firebase signInWithEmailAndPassword with normalized email for username input', async () => {
+      const identifier = 'admin';
+      const normalizedEmail = 'admin@mypisnicka.com';
       const password = 'secret123';
       vi.mocked(mockedSignIn).mockResolvedValue({
         user: {
           uid: 'u1',
+          email: normalizedEmail,
+          emailVerified: false,
+          isAnonymous: false,
+          metadata: {},
+          providerData: [],
+          refreshToken: '',
+          tenantId: null,
+          delete: function (): Promise<void> {
+            throw new Error('Function not implemented.');
+          },
+          getIdToken: function (_forceRefresh?: boolean): Promise<string> {
+            throw new Error('Function not implemented.');
+          },
+          getIdTokenResult: function (_forceRefresh?: boolean): Promise<IdTokenResult> {
+            throw new Error('Function not implemented.');
+          },
+          reload: function (): Promise<void> {
+            throw new Error('Function not implemented.');
+          },
+          toJSON: function (): object {
+            throw new Error('Function not implemented.');
+          },
+          displayName: null,
+          phoneNumber: null,
+          photoURL: null,
+          providerId: '',
+        },
+        providerId: null,
+        operationType: 'link',
+      });
+
+      const user = await loginWithEmailPassword(identifier, password);
+
+      expect(mockedSignIn).toHaveBeenCalledTimes(1);
+      expect(mockedSignIn).toHaveBeenCalledWith(expect.anything(), normalizedEmail, password);
+      expect(user).toMatchObject({ uid: 'u1', email: normalizedEmail });
+    });
+
+    it('passes full email through unchanged', async () => {
+      const email = 'admin@mypisnicka.com';
+      const password = 'pw';
+      vi.mocked(mockedSignIn).mockResolvedValue({
+        user: {
+          uid: 'abc',
           email,
           emailVerified: false,
           isAnonymous: false,
@@ -67,47 +112,8 @@ describe('authService', () => {
 
       const user = await loginWithEmailPassword(email, password);
 
-      expect(mockedSignIn).toHaveBeenCalledTimes(1);
       expect(mockedSignIn).toHaveBeenCalledWith(expect.anything(), email, password);
-      expect(user).toMatchObject({ uid: 'u1', email });
-    });
-
-    it('returns user on success', async () => {
-      vi.mocked(mockedSignIn).mockResolvedValue({
-        user: {
-          uid: 'abc',
-          email: 'x@y',
-          emailVerified: false,
-          isAnonymous: false,
-          metadata: {},
-          providerData: [],
-          refreshToken: '',
-          tenantId: null,
-          delete: function (): Promise<void> {
-            throw new Error('Function not implemented.');
-          },
-          getIdToken: function (_forceRefresh?: boolean): Promise<string> {
-            throw new Error('Function not implemented.');
-          },
-          getIdTokenResult: function (_forceRefresh?: boolean): Promise<IdTokenResult> {
-            throw new Error('Function not implemented.');
-          },
-          reload: function (): Promise<void> {
-            throw new Error('Function not implemented.');
-          },
-          toJSON: function (): object {
-            throw new Error('Function not implemented.');
-          },
-          displayName: null,
-          phoneNumber: null,
-          photoURL: null,
-          providerId: '',
-        },
-        providerId: null,
-        operationType: 'link',
-      });
-      const user = await loginWithEmailPassword('x@y', 'pw');
-      expect(user).toMatchObject({ uid: 'abc', email: 'x@y' });
+      expect(user).toMatchObject({ uid: 'abc', email });
     });
 
     it('throws error on invalid credentials', async () => {
