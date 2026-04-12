@@ -32,3 +32,4 @@ playwright-report
 dev-dist
 
 firestore.rules
+firestore.indexes
