@@ -314,6 +314,7 @@
   <TopNavigation
     :page-title="song?.title ?? 'Píseň'"
     :page-subtitle="song?.artist"
+    :fade-away="isAutoScrollPlaying"
   />
 
   <main
@@ -446,11 +447,11 @@
   .song-body {
     --song-anchored-line-height: 4;
     --song-chord-font-size: var(--font-size-chords);
-    --song-text-line-height: 6;
-    --song-text-font-family: monospace;
+    --song-text-line-height: 4.25;
+    --song-text-font-family: var(--font-chord);
     --song-text-font-size: var(--font-size-lyrics);
     --song-chord-inline-font-size: inherit;
-    --song-chord-inline-font-family: inherit;
+    --song-chord-inline-font-family: var(--font-chord);
     --song-chord-inline-font-weight: inherit;
     --song-chord-inline-radius: 3px;
     overflow-x: auto;
@@ -463,11 +464,11 @@
 
   .song-section {
     --section-accent: color-mix(in srgb, var(--accent) 35%, transparent);
-    padding: var(--space-md);
+    padding: 0;
+    padding-left: var(--space-md);
     border-radius: var(--radius-md);
-    border: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
     border-left-width: 4px;
-    background: color-mix(in srgb, var(--section-accent) 12%, var(--bg-primary));
   }
 
   .song-section:not(:last-child) {

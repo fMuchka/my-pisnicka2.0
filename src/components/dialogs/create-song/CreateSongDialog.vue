@@ -6,6 +6,7 @@
   import SongTextEditor from '../../song/SongTextEditor.vue';
   import { createSong, updateSong, type CreateSongInput, type Song } from '../../../lib/song';
   import { useAuth } from '../../../composables/useAuth';
+  import { placeholderSong } from './placeholderSong';
 
   interface Props {
     open?: boolean;
@@ -26,7 +27,7 @@
 
   const songTitle = ref('');
   const songArtist = ref('');
-  const songText = ref('[Verse]\n[G] Mama take this [D] badge off of [Am] me');
+  const songText = ref(placeholderSong.text);
   const songChords = ref<string[]>([]);
   const createError = ref<string | null>(null);
   const isCreating = ref(false);
