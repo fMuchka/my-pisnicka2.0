@@ -14,6 +14,7 @@ function mockRef<T>(value: T): MockRef<T> {
 }
 
 const fetchAllUserSessions = vi.hoisted(() => vi.fn());
+const deleteClosedHostedSessions = vi.hoisted(() => vi.fn());
 const mockUser = vi.hoisted(() => mockRef({ uid: 'host-123', displayName: 'Test Host' }));
 const routerPush = vi.hoisted(() => vi.fn());
 
@@ -65,6 +66,39 @@ vi.mock('../../components/dialogs/create-session/CreateSessionDialog.vue', () =>
   }),
 }));
 
+vi.mock('../../components/dialogs/delete-closed-sessions/DeleteClosedSessionsDialog.vue', () => ({
+  default: defineComponent({
+    name: 'DeleteClosedSessionsDialog',
+    props: {
+      open: { type: Boolean, default: false },
+      sessionCount: { type: Number, default: 0 },
+      isDeleting: { type: Boolean, default: false },
+      error: { type: String, default: null },
+    },
+    emits: ['update:open', 'confirm'],
+    setup(props, { emit }) {
+      return () =>
+        props.open
+          ? h('div', { 'data-testid': 'delete-closed-sessions-dialog' }, [
+              h(
+                'span',
+                { 'data-testid': 'delete-closed-sessions-count' },
+                String(props.sessionCount)
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  onClick: () => emit('confirm'),
+                },
+                'Potvrdit smazání'
+              ),
+            ])
+          : null;
+    },
+  }),
+}));
+
 vi.mock('../../composables/useAuth', () => ({
   useAuth: () => ({
     user: mockUser,
@@ -87,6 +121,7 @@ vi.mock('../../lib/session', async () => {
   return {
     ...actual,
     fetchAllUserSessions,
+    deleteClosedHostedSessions,
   };
 });
 
@@ -94,6 +129,7 @@ describe('SessionList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fetchAllUserSessions.mockResolvedValue([]);
+    deleteClosedHostedSessions.mockResolvedValue([]);
   });
 
   it('renders the session list layout', () => {
@@ -119,5 +155,11 @@ describe('SessionList', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Připojit se k relaci' }));
 
     expect(routerPush).toHaveBeenCalledWith({ path: '/join' });
+  });
+
+  it('disables delete action when there are no closed hosted sessions', () => {
+    render(SessionList);
+
+    expect(screen.getByRole('button', { name: 'Smazat uzavřené relace' })).toBeDisabled();
   });
 });

@@ -1,13 +1,19 @@
 <script setup lang="ts">
   import { computed, onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
-  import { ArrowUpDown, ArrowDown, ArrowUp, Plus, Search, UserPlus } from 'lucide-vue-next';
+  import { ArrowUpDown, ArrowDown, ArrowUp, Plus, Search, Trash2, UserPlus } from 'lucide-vue-next';
   import Button from '../components/core/Button.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
+  import DeleteClosedSessionsDialog from '../components/dialogs/delete-closed-sessions/DeleteClosedSessionsDialog.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
-  import { fetchAllUserSessions, createSessionRouterQuery, type Session } from '../lib/session';
+  import {
+    createSessionRouterQuery,
+    deleteClosedHostedSessions,
+    fetchAllUserSessions,
+    type Session,
+  } from '../lib/session';
   import { formatSessionAge } from '../lib/formatter';
   import { useAuth } from '../composables/useAuth';
   import { useSessionStore } from '../stores/session';
@@ -29,6 +35,9 @@
   const loading = ref(true);
   const error = ref<string | null>(null);
   const isCreateSessionDialogOpen = ref(false);
+  const isDeleteClosedDialogOpen = ref(false);
+  const isDeletingClosedSessions = ref(false);
+  const deleteClosedError = ref<string | null>(null);
 
   const search = ref('');
   const roleFilter = ref<RoleFilter>('all');
@@ -78,6 +87,31 @@
       });
   });
 
+  const closedHostedSessions = computed(() => {
+    const uid = user.value?.uid;
+    if (!uid) {
+      return [];
+    }
+
+    return sessions.value.filter((session) => session.hostId === uid && session.isActive === false);
+  });
+
+  const closedHostedSessionsCount = computed(() => closedHostedSessions.value.length);
+
+  const deleteClosedButtonLabel = computed(() => {
+    if (isDeletingClosedSessions.value) {
+      return 'Mažu uzavřené relace...';
+    }
+
+    return closedHostedSessionsCount.value > 0
+      ? `Smazat uzavřené relace (${closedHostedSessionsCount.value})`
+      : 'Smazat uzavřené relace';
+  });
+
+  const isDeleteClosedDisabled = computed(
+    () => loading.value || isDeletingClosedSessions.value || closedHostedSessionsCount.value === 0
+  );
+
   const toggleSort = (field: SortField) => {
     if (sortField.value === field) {
       sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
@@ -94,6 +128,38 @@
 
   const openCreateSessionDialog = () => {
     isCreateSessionDialogOpen.value = true;
+  };
+
+  const openDeleteClosedDialog = () => {
+    if (isDeleteClosedDisabled.value) {
+      return;
+    }
+
+    deleteClosedError.value = null;
+    isDeleteClosedDialogOpen.value = true;
+  };
+
+  const handleDeleteClosedSessions = async () => {
+    const uid = user.value?.uid;
+    if (!uid) {
+      deleteClosedError.value = 'Nejprve se přihlas.';
+      return;
+    }
+
+    isDeletingClosedSessions.value = true;
+    deleteClosedError.value = null;
+
+    try {
+      const deletedIds = await deleteClosedHostedSessions(uid);
+      const deletedIdSet = new Set(deletedIds);
+
+      sessions.value = sessions.value.filter((session) => !deletedIdSet.has(session.id));
+      isDeleteClosedDialogOpen.value = false;
+    } catch (_error) {
+      deleteClosedError.value = 'Uzavřené relace se nepodařilo smazat. Zkus to prosím znovu.';
+    } finally {
+      isDeletingClosedSessions.value = false;
+    }
   };
 
   const goToJoinPage = () => {
@@ -137,6 +203,16 @@
         label="Připojit se k relaci"
         type="button"
         @click="goToJoinPage"
+      />
+      <Button
+        aria-label="Smazat uzavřené relace"
+        color-variation="Secondary"
+        style-variation="Outlined"
+        :icon="{ position: 'prepend', component: Trash2 }"
+        :label="deleteClosedButtonLabel"
+        type="button"
+        :disabled="isDeleteClosedDisabled"
+        @click="openDeleteClosedDialog"
       />
     </div>
 
@@ -354,6 +430,15 @@
     <CreateSessionDialog
       :open="isCreateSessionDialogOpen"
       @update:open="isCreateSessionDialogOpen = $event"
+    />
+
+    <DeleteClosedSessionsDialog
+      :open="isDeleteClosedDialogOpen"
+      :session-count="closedHostedSessionsCount"
+      :is-deleting="isDeletingClosedSessions"
+      :error="deleteClosedError"
+      @update:open="isDeleteClosedDialogOpen = $event"
+      @confirm="handleDeleteClosedSessions"
     />
   </div>
 </template>

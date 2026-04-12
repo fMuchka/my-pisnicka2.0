@@ -5,6 +5,7 @@ import {
   getDocs,
   addDoc,
   doc,
+  deleteDoc,
   updateDoc,
   orderBy,
   limit,
@@ -306,6 +307,33 @@ export const fetchAllUserSessions = async (userId: string): Promise<Session[]> =
     }
     return b.createdAt.nanoseconds - a.createdAt.nanoseconds;
   });
+};
+
+/**
+ * Deletes all closed sessions hosted by the given user.
+ *
+ * Only host-owned closed sessions are deleted to align with Firestore write restrictions.
+ * Returns deleted document IDs so the UI can update local state without a full reload.
+ */
+export const deleteClosedHostedSessions = async (userId: string): Promise<string[]> => {
+  const closedSessionsQuery = query(
+    collection(db, 'sessions'),
+    where('hostId', '==', userId),
+    where('isActive', '==', false)
+  );
+
+  const snapshot = await getDocs(closedSessionsQuery);
+  const deletedIds = snapshot.docs.map((sessionDoc) => sessionDoc.id);
+
+  if (deletedIds.length === 0) {
+    return [];
+  }
+
+  await Promise.all(
+    snapshot.docs.map((sessionDoc) => deleteDoc(doc(db, 'sessions', sessionDoc.id)))
+  );
+
+  return deletedIds;
 };
 
 /**
