@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasOptionalString(data, field) {
+      return !data.keys().hasAny([field]) || data[field] == null || data[field] is string;
+    }
+
+    function hasOptionalList(data, field) {
+      return !data.keys().hasAny([field]) || data[field] == null || data[field] is list;
+    }
+
+    function isValidSong(data) {
+      return data.keys().hasAll(['title', 'artist', 'ownerId'])
+        && data.keys().hasOnly(['title', 'artist', 'text', 'chords', 'createdAt', 'ownerId'])
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.artist is string
+        && data.artist.size() > 0
+        && data.artist.size() <= 200
+        && data.ownerId is string
+        && data.ownerId.size() > 0
+        && (!data.keys().hasAny(['createdAt']) || data.createdAt is timestamp)
+        && hasOptionalString(data, 'text')
+        && hasOptionalList(data, 'chords');
+    }
+
+    function isValidNewSong() {
+      return isSignedIn()
+        && isValidSong(request.resource.data)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    function isValidSongUpdate() {
+      return isOwner(resource.data.ownerId)
+        && isValidSong(request.resource.data)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function isValidSession(data) {
+      return data.keys().hasAll([
+          'name',
+          'hostId',
+          'hostDisplayName',
+          'isActive',
+          'pin',
+          'joinedBy',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'name',
+          'hostId',
+          'hostDisplayName',
+          'isActive',
+          'pin',
+          'joinedBy',
+          'createdAt'
+        ])
+        && data.name is string
+        && data.name.size() >= 3
+        && data.name.size() <= 120
+        && data.hostId is string
+        && data.hostId.size() > 0
+        && data.hostDisplayName is string
+        && data.hostDisplayName.size() > 0
+        && data.hostDisplayName.size() <= 120
+        && data.isActive is bool
+        && data.pin is string
+        && data.pin.matches('^\\d{4}$')
+        && data.joinedBy is list
+        && data.joinedBy.size() == 1
+        && data.joinedBy[0] == data.hostId
+        && data.createdAt is timestamp;
+    }
+
+    function isSessionHost() {
+      return isSignedIn() && resource.data.hostId == request.auth.uid;
+    }
+
+    function isSessionParticipant() {
+      return isSignedIn()
+        && (resource.data.hostId == request.auth.uid || request.auth.uid in resource.data.joinedBy);
+    }
+
+    function isGuestSessionLookup() {
+      return !isSignedIn() && request.query.limit != null && request.query.limit <= 1;
+    }
+
+    function isSessionCloseByHost() {
+      return isSessionHost()
+        && resource.data.isActive == true
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['isActive'])
+        && request.resource.data.isActive == false;
+    }
+
+    match /songs/{songId} {
+      allow read: if true;
+      allow create: if isValidNewSong();
+      allow update: if isValidSongUpdate();
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    match /sessions/{sessionId} {
+      allow get: if resource.data.isActive == true || isSessionParticipant();
+      allow list: if isSessionParticipant() || isGuestSessionLookup();
+      allow create: if isSignedIn()
+        && isValidSession(request.resource.data)
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.isActive == true;
+      allow update: if isSessionCloseByHost();
+      allow delete: if isSessionHost() && resource.data.isActive == false;
+    }
+  }
+}
