@@ -133,7 +133,14 @@
 
   const scrollByDistance = (distance: number, behavior: ScrollMode = 'auto') => {
     const nextTop = Math.max(0, Math.min(getCurrentScrollTop() + distance, getMaxScrollTop()));
-    scrollToTop(nextTop, behavior);
+    const shouldUseInstantScroll = isAutoScrollPlaying.value;
+
+    scrollToTop(nextTop, shouldUseInstantScroll ? 'auto' : behavior);
+
+    if (shouldUseInstantScroll) {
+      autoScrollPosition = nextTop;
+      previousFrameTime = null;
+    }
   };
 
   const songId = computed(() => {
