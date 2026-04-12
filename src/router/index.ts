@@ -14,6 +14,7 @@ export const router = createRouter({
     { path: Routes.Home, component: () => import('../pages/Home.vue') },
     { path: Routes.Login, component: () => import('../pages/Login.vue') },
     { path: Routes.Join, component: () => import('../pages/Join.vue') },
+    { path: Routes.SongLibrary, component: () => import('../pages/SongLibrary.vue') },
     { path: Routes.Song, component: () => import('../pages/Song.vue') },
     { path: Routes.Session, component: () => import('../pages/Session.vue') },
     { path: Routes.SessionList, component: () => import('../pages/SessionList.vue') },
@@ -24,7 +25,7 @@ export const router = createRouter({
  * Global Navigation Guard for Authentication
  *
  * Enforces auth requirements on route transitions:
- * - Join, Session and Song pages: public (no auth required)
+ * - Join, Session and Song detail pages: public (no auth required)
  * - Other pages: require authentication, redirect to Login if not authenticated
  *
  * IMPORTANT: useAuth() is called INSIDE beforeEach to ensure fresh auth state
@@ -38,7 +39,7 @@ router.beforeEach((to, _from, next) => {
   // Fresh auth check on each navigation (useAuth() hooks into Firebase listener)
   const { isAuthenticated } = useAuth();
 
-  // Public routes (Join, Session and Song don't require auth)
+  // Public routes (Join, Session and Song detail don't require auth)
   if (to.path === Routes.Join || to.path === Routes.Session || to.path.startsWith('/song/')) {
     next();
   } else {
