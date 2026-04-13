@@ -11,6 +11,7 @@
   interface Props {
     isPlaying: boolean;
     autoScrollSpeed: number;
+    autoScrollEtaLabel: string;
   }
 
   interface Emits {
@@ -27,11 +28,17 @@
 <template>
   <div class="song-controls-wrap">
     <p
-      v-if="isPlaying"
       class="speed-indicator"
+      :class="{ 'speed-indicator--compact': isPlaying }"
       aria-live="polite"
     >
-      Rychlost {{ autoScrollSpeed }} px/s
+      <span class="speed-indicator__eta">Do konce zbývá {{ autoScrollEtaLabel }}</span>
+      <span
+        v-if="!isPlaying"
+        class="speed-indicator__meta"
+      >
+        při {{ autoScrollSpeed }} px/s
+      </span>
     </p>
 
     <div class="song-controls">
@@ -98,7 +105,10 @@
         </Teleport>
       </Tooltip.Root>
 
-      <Tooltip.Root :open-delay="300">
+      <Tooltip.Root
+        v-if="isPlaying === false"
+        :open-delay="300"
+      >
         <Tooltip.Trigger as-child>
           <button
             class="control-button"
@@ -136,18 +146,40 @@
 
   .speed-indicator {
     margin: 0;
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--bg-tertiary));
     background: color-mix(in srgb, var(--bg-primary) 92%, transparent);
-    color: var(--text-secondary);
-    font-size: 12px;
+    color: var(--text-primary);
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.02em;
     line-height: 1.2;
     box-shadow: var(--shadow-panel);
-    position: relative;
-    left: -20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition:
+      opacity var(--transition-fast),
+      transform var(--transition-fast),
+      padding var(--transition-fast),
+      font-size var(--transition-fast);
+  }
+
+  .speed-indicator--compact {
+    padding: 4px 9px;
+    font-size: 12px;
+    opacity: 0.82;
+    transform: scale(0.96);
+  }
+
+  .speed-indicator__eta {
+    white-space: nowrap;
+  }
+
+  .speed-indicator__meta {
+    white-space: nowrap;
+    color: var(--text-secondary);
   }
 
   .song-controls {
@@ -216,6 +248,15 @@
   @media (max-width: 560px) {
     .song-controls-wrap {
       max-width: calc(100vw - var(--space-md));
+    }
+
+    .speed-indicator {
+      max-width: calc(100vw - var(--space-xl));
+      font-size: 12px;
+    }
+
+    .speed-indicator--compact {
+      font-size: 11px;
     }
   }
 </style>

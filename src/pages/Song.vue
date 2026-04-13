@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { Pencil } from 'lucide-vue-next';
-  import { computed, onBeforeUnmount, ref, watch } from 'vue';
+  import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
   import Button from '../components/core/Button.vue';
   import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
@@ -27,6 +27,8 @@
   const isAutoScrollPlaying = ref(false);
   const autoScrollSpeed = ref(28);
   const songPageRef = ref<HTMLElement | null>(null);
+  const currentScrollTop = ref(0);
+  const maxScrollTop = ref(0);
 
   const AUTO_SCROLL_SPEED_STEP = 6;
   const AUTO_SCROLL_MIN_SPEED = 10;
@@ -99,6 +101,11 @@
     return Math.max(0, getDocumentScrollHeight() - getViewportHeight());
   };
 
+  const syncScrollMetrics = () => {
+    currentScrollTop.value = getCurrentScrollTop();
+    maxScrollTop.value = getMaxScrollTop();
+  };
+
   const scrollToTop = (top: number, behavior: ScrollMode = 'auto') => {
     const container = getScrollableContainer();
 
@@ -112,6 +119,8 @@
       if (Math.abs(container.scrollTop - top) > 1) {
         container.scrollTop = top;
       }
+
+      syncScrollMetrics();
 
       return;
     }
@@ -129,6 +138,8 @@
       doc.scrollTop = top;
       body.scrollTop = top;
     }
+
+    syncScrollMetrics();
   };
 
   const scrollByDistance = (distance: number, behavior: ScrollMode = 'auto') => {
@@ -157,12 +168,36 @@
 
   const songText = computed(() => song.value?.text?.trim() || 'Text písně zatím není k dispozici.');
   const songChords = computed(() => song.value?.chords?.filter((chord) => chord.length > 0) ?? []);
+  const remainingScrollDistance = computed(() =>
+    Math.max(0, maxScrollTop.value - currentScrollTop.value)
+  );
+  const remainingScrollSeconds = computed(() => {
+    if (autoScrollSpeed.value <= 0) {
+      return 0;
+    }
+
+    return Math.ceil(remainingScrollDistance.value / autoScrollSpeed.value);
+  });
   const sectionLabels: Record<SectionType, string> = {
     intro: 'Intro',
     verse: 'Verse',
     chorus: 'Chorus',
     outro: 'Outro',
   };
+
+  const formatRemainingTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const autoScrollEtaLabel = computed(() => formatRemainingTime(remainingScrollSeconds.value));
 
   const sections = ref<Section[]>([]);
 
@@ -290,7 +325,10 @@
       AUTO_SCROLL_MIN_SPEED,
       autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
     );
-    scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
+
+    if (isAutoScrollPlaying.value) {
+      scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
+    }
   };
 
   const scrollForwardAndSpeedUp = () => {
@@ -298,15 +336,44 @@
       AUTO_SCROLL_MAX_SPEED,
       autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
     );
-    scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
+
+    if (isAutoScrollPlaying.value) {
+      scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
+    }
   };
 
   const openChordsDialog = () => {
     isChordsDialogOpen.value = true;
   };
 
+  const handleViewportChange = () => {
+    syncScrollMetrics();
+  };
+
+  onMounted(() => {
+    window.addEventListener('scroll', handleViewportChange, { passive: true, capture: true });
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
+
+    void nextTick(() => {
+      syncScrollMetrics();
+    });
+  });
+
+  watch(
+    [song, sections],
+    async () => {
+      await nextTick();
+      syncScrollMetrics();
+    },
+    { deep: true }
+  );
+
   onBeforeUnmount(() => {
     stopAutoScroll();
+    window.removeEventListener('scroll', handleViewportChange, true);
+    window.removeEventListener('resize', handleViewportChange);
+    window.visualViewport?.removeEventListener('resize', handleViewportChange);
   });
 </script>
 
@@ -406,6 +473,7 @@
     <SongControls
       :is-playing="isAutoScrollPlaying"
       :auto-scroll-speed="autoScrollSpeed"
+      :auto-scroll-eta-label="autoScrollEtaLabel"
       @toggle-play="toggleAutoScroll"
       @step-back="scrollBackAndSlowDown"
       @step-forward="scrollForwardAndSpeedUp"
