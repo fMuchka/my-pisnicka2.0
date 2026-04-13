@@ -290,7 +290,10 @@
       AUTO_SCROLL_MIN_SPEED,
       autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
     );
-    scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
+
+    if (isAutoScrollPlaying.value) {
+      scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
+    }
   };
 
   const scrollForwardAndSpeedUp = () => {
@@ -298,7 +301,10 @@
       AUTO_SCROLL_MAX_SPEED,
       autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
     );
-    scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
+
+    if (isAutoScrollPlaying.value) {
+      scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
+    }
   };
 
   const openChordsDialog = () => {
