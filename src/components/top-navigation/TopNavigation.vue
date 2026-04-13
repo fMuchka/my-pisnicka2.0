@@ -101,7 +101,6 @@
         :title="props.pageTitle"
         :tagline="props.pageSubtitle"
       />
-      <div class="context-right" />
     </div>
   </header>
 </template>
@@ -139,21 +138,16 @@
   .context-row {
     border-top: 1px solid color-mix(in srgb, var(--bg-tertiary) 60%, transparent);
     min-height: 52px;
-    display: grid;
-    grid-template-columns: minmax(96px, 1fr) auto minmax(96px, 1fr);
+    display: flex;
     align-items: center;
-    gap: var(--space-xs);
+    position: relative;
     padding: 0 var(--space-md);
     background-color: color-mix(in srgb, var(--bg-primary) 96%, var(--bg-secondary));
   }
 
-  .context-left,
-  .context-right {
+  .context-left {
     min-width: 0;
-  }
-
-  .context-right {
-    min-height: 44px;
+    flex-shrink: 0;
   }
 
   .back-button {
@@ -163,10 +157,13 @@
   }
 
   .context-header {
-    min-width: 0;
-    max-width: min(55vw, 320px);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 200px);
     overflow: hidden;
     margin-bottom: 0;
+    pointer-events: none;
   }
 
   .context-header :deep(.header) {
@@ -200,13 +197,19 @@
     opacity: 0;
   }
 
-  @media (max-width: 360px) {
+  @media (max-width: 600px) {
     .back-button :deep(span) {
       display: none;
     }
 
-    .context-row {
-      grid-template-columns: minmax(56px, 1fr) auto minmax(56px, 1fr);
+    .back-button {
+      border: 1.5px solid color-mix(in srgb, var(--accent) 45%, var(--bg-tertiary));
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+
+    .context-header {
+      max-width: calc(100% - 120px);
     }
   }
 </style>
