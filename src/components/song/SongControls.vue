@@ -105,7 +105,10 @@
         </Teleport>
       </Tooltip.Root>
 
-      <Tooltip.Root :open-delay="300">
+      <Tooltip.Root
+        v-if="isPlaying === false"
+        :open-delay="300"
+      >
         <Tooltip.Trigger as-child>
           <button
             class="control-button"
