@@ -183,7 +183,8 @@ export const getSessionStatus = async (pin: string): Promise<SessionStatusResult
 
   // Query sessions collection for exact PIN match
   // Note: No isActive filter here; we check manually to provide specific error code
-  const q = query(collection(db, 'sessions'), where('pin', '==', pin));
+  // limit(1) is required for unauthenticated guest access per Firestore security rules
+  const q = query(collection(db, 'sessions'), where('pin', '==', pin), limit(1));
 
   return getDocs(q)
     .then((s) => {
