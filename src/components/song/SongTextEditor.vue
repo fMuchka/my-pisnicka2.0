@@ -34,8 +34,8 @@
   const BRACKETED_VISUAL_PATTERN = /\[([^\]\s][^\]]*)\]/g;
   // In visual mode, detect plain chords but avoid words and already-bracketed tokens.
   const VISUAL_CHORD_PATTERN = new RegExp(
-    `(?<![a-zA-Z\\[])((${CHORD_CORE_PATTERN}))(?![a-z\\]])`,
-    'g'
+    `(?<![\\p{L}\\[])((${CHORD_CORE_PATTERN}))(?![\\p{L}\\]])`,
+    'gu'
   );
 
   const props = withDefaults(defineProps<Props>(), {
@@ -145,15 +145,19 @@
   }
 
   function extractUniqueChords(text: string): string[] {
-    const normalized = toVisualChordText(text);
-    const matches = normalized.matchAll(VISUAL_CHORD_PATTERN);
     const uniqueChords = new Set<string>();
 
-    for (const match of matches) {
+    // Extract from stored bracket format first (handles [C]mama without a separating space)
+    for (const match of text.matchAll(STORED_CHORD_PATTERN)) {
+      const chord = match[1];
+      if (chord) uniqueChords.add(chord);
+    }
+
+    // Also extract plain visual chords (for text without bracket notation)
+    const normalized = toVisualChordText(text);
+    for (const match of normalized.matchAll(VISUAL_CHORD_PATTERN)) {
       const chord = match[1] ?? match[0];
-      if (chord) {
-        uniqueChords.add(chord);
-      }
+      if (chord) uniqueChords.add(chord);
     }
 
     return Array.from(uniqueChords);
