@@ -112,7 +112,7 @@ service cloud.firestore {
 
     match /sessions/{sessionId} {
       allow get: if resource.data.isActive == true || isSessionParticipant();
-      allow list: if isSessionParticipant() || isGuestSessionLookup();
+      allow list: if isSignedIn() || isGuestSessionLookup();
       allow create: if isSignedIn()
         && isValidSession(request.resource.data)
         && request.resource.data.hostId == request.auth.uid
