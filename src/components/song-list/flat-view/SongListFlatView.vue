@@ -33,6 +33,17 @@
 
   .song-list__item {
     cursor: pointer;
+    font-size: 20px;
+    color: var(--text-secondary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs);
+    padding-left: var(--space-md);
+
+    &&:hover {
+      background-color: color-mix(in srgb, var(--accent) 10%, var(--bg-secondary));
+      color: var(--text-primary);
+    }
   }
 
   .song-list__item--readonly {

@@ -142,7 +142,7 @@
 
   .song-list__tree-label {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 600;
   }
 
@@ -168,6 +168,7 @@
     color: var(--text-secondary);
     text-align: left;
     font: inherit;
+    font-size: 20px;
     user-select: none;
     cursor: pointer;
 

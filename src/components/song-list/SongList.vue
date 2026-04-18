@@ -171,7 +171,7 @@
     border-radius: var(--radius-sm);
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 18px;
     font-family: var(--font-body);
   }
 
@@ -187,6 +187,7 @@
     background-color: var(--bg-tertiary);
     border-radius: var(--radius-sm);
     padding: 2px;
+    font-size: 20px;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 10%, transparent);
   }
 
