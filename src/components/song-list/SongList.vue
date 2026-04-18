@@ -15,7 +15,7 @@
 
   type ViewMode = 'flat' | 'tree';
 
-  const viewMode = ref<ViewMode>('flat');
+  const viewMode = ref<ViewMode>('tree');
   const search = ref('');
 
   const byArtistThenTitle = (a: Song, b: Song): number => {
@@ -64,22 +64,21 @@
         <SegmentGroup.Indicator class="song-list__segment-indicator" />
 
         <SegmentGroup.Item
-          value="flat"
-          class="song-list__segment-item"
-        >
-          <SegmentGroup.ItemText class="song-list__segment-item-text">
-            Plochý seznam
-          </SegmentGroup.ItemText>
-          <SegmentGroup.ItemControl />
-          <SegmentGroup.ItemHiddenInput />
-        </SegmentGroup.Item>
-
-        <SegmentGroup.Item
           value="tree"
           class="song-list__segment-item"
         >
           <SegmentGroup.ItemText class="song-list__segment-item-text">
             Strom
+          </SegmentGroup.ItemText>
+          <SegmentGroup.ItemControl />
+          <SegmentGroup.ItemHiddenInput />
+        </SegmentGroup.Item>
+        <SegmentGroup.Item
+          value="flat"
+          class="song-list__segment-item"
+        >
+          <SegmentGroup.ItemText class="song-list__segment-item-text">
+            Plochý seznam
           </SegmentGroup.ItemText>
           <SegmentGroup.ItemControl />
           <SegmentGroup.ItemHiddenInput />
