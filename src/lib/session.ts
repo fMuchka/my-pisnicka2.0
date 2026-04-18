@@ -3,6 +3,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   addDoc,
   doc,
   deleteDoc,
@@ -373,4 +374,13 @@ export const createSessionRouterQuery = (session: Session, owner?: string): Sess
 export const updateActiveSongId = async (songId: string, sessionId: string): Promise<void> => {
   const sessionRef = doc(db, 'sessions', sessionId);
   await updateDoc(sessionRef, { activeSongId: songId });
+};
+
+export const fetchActiveSongId = async (sessionId: string): Promise<string | null> => {
+  const sessionRef = doc(db, 'sessions', sessionId);
+  const snapshot = await getDoc(sessionRef);
+  if (!snapshot.exists()) return null;
+  const activeSongId: unknown = snapshot.data()['activeSongId'];
+  if (typeof activeSongId === 'string' && activeSongId.length > 0) return activeSongId;
+  return null;
 };
