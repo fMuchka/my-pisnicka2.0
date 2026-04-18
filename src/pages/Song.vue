@@ -17,7 +17,7 @@
   import { updateActiveSongId } from '../lib/session';
   import { useSessionStore } from '../stores/session';
 
-  type SectionType = 'intro' | 'verse' | 'chorus' | 'outro';
+  type SectionType = 'intro' | 'verse' | 'chorus' | 'outro' | 'bridge';
   type Section = { type: SectionType; text: string };
 
   const route = useRoute();
@@ -186,6 +186,7 @@
     verse: 'Verse',
     chorus: 'Chorus',
     outro: 'Outro',
+    bridge: 'Bridge',
   };
 
   const formatRemainingTime = (totalSeconds: number) => {
