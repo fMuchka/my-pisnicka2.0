@@ -163,13 +163,13 @@ describe('SongList', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows flat view by default', () => {
+  it('shows tree view by default', () => {
     mockUserSongs.value = mockSongs;
 
     render(SongList);
 
-    expect(screen.getByTestId('flat-view')).toBeInTheDocument();
-    expect(screen.queryByTestId('tree-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('flat-view')).not.toBeInTheDocument();
+    expect(screen.getByTestId('tree-view')).toBeInTheDocument();
   });
 
   it('switches to tree view when selected', async () => {
