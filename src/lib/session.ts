@@ -30,6 +30,7 @@ export type Session = {
   pin: string;
   joinedBy: string[];
   createdAt: Timestamp;
+  activeSongId?: string;
 };
 
 export type SessionRouterQuery = {
@@ -367,4 +368,9 @@ export const createSessionRouterQuery = (session: Session, owner?: string): Sess
     hostId: owner ?? session.hostId,
     pin: session.pin,
   };
+};
+
+export const updateActiveSongId = async (songId: string, sessionId: string): Promise<void> => {
+  const sessionRef = doc(db, 'sessions', sessionId);
+  await updateDoc(sessionRef, { activeSongId: songId });
 };

@@ -14,11 +14,14 @@
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
   import type { Song } from '../lib/song';
+  import { updateActiveSongId } from '../lib/session';
+  import { useSessionStore } from '../stores/session';
 
   type SectionType = 'intro' | 'verse' | 'chorus' | 'outro';
   type Section = { type: SectionType; text: string };
 
   const route = useRoute();
+  const sessionStore = useSessionStore();
   const { isAuthenticated } = useAuth();
   const isEditDialogOpen = ref(false);
   const isChordsDialogOpen = ref(false);
@@ -303,6 +306,12 @@
   const startAutoScroll = () => {
     if (isAutoScrollPlaying.value) {
       return;
+    }
+
+    const sessionId = sessionStore.sessionDetails?.id;
+
+    if (sessionId && song.value?.id) {
+      updateActiveSongId(song.value?.id, sessionId);
     }
 
     isAutoScrollPlaying.value = true;
