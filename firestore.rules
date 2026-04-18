@@ -103,6 +103,12 @@ service cloud.firestore {
         && request.resource.data.isActive == false;
     }
 
+    function isSessionActiveSongIdByHost() {
+      return isSessionHost()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['activeSongId'])
+        && request.resource.data.activeSongId is string
+    }
+
     match /songs/{songId} {
       allow read: if true;
       allow create: if isValidNewSong();
@@ -117,7 +123,7 @@ service cloud.firestore {
         && isValidSession(request.resource.data)
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.isActive == true;
-      allow update: if isSessionCloseByHost();
+      allow update: if isSessionCloseByHost() || isSessionActiveSongIdByHost();
       allow delete: if isSessionHost() && resource.data.isActive == false;
     }
   }

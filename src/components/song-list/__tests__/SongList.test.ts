@@ -83,6 +83,7 @@ vi.mock('../tree-view/SongListTreeView.vue', () => ({
     props: {
       songs: { type: Array, required: true },
       artistsLabel: { type: String, required: true },
+      autoExpandOnFilter: { type: Boolean, required: false, default: false },
       onSongClick: { type: Function, required: true },
       isInteractive: { type: Boolean, required: true },
     },
@@ -95,6 +96,11 @@ vi.mock('../tree-view/SongListTreeView.vue', () => ({
             `${(props.songs as unknown[]).length} songs`
           ),
           h('p', { 'data-testid': 'tree-view-label' }, props.artistsLabel),
+          h(
+            'div',
+            { 'data-testid': 'tree-view-auto-expand-on-filter' },
+            String(props.autoExpandOnFilter)
+          ),
           h('div', { 'data-testid': 'tree-view-interactive' }, String(props.isInteractive)),
         ]);
     },
@@ -157,13 +163,13 @@ describe('SongList', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows flat view by default', () => {
+  it('shows tree view by default', () => {
     mockUserSongs.value = mockSongs;
 
     render(SongList);
 
-    expect(screen.getByTestId('flat-view')).toBeInTheDocument();
-    expect(screen.queryByTestId('tree-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('flat-view')).not.toBeInTheDocument();
+    expect(screen.getByTestId('tree-view')).toBeInTheDocument();
   });
 
   it('switches to tree view when selected', async () => {
@@ -228,7 +234,23 @@ describe('SongList', () => {
 
     expect(screen.getByTestId('tree-view-count')).toHaveTextContent('2 songs');
     expect(screen.getByTestId('tree-view-label')).toHaveTextContent('Interpreti');
+    expect(screen.getByTestId('tree-view-auto-expand-on-filter')).toHaveTextContent('false');
     expect(screen.getByTestId('tree-view-interactive')).toHaveTextContent('true');
+  });
+
+  it('enables tree auto expand when search filter is active', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+
+    render(SongList);
+
+    await user.click(screen.getByText('Strom'));
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'Artist'
+    );
+
+    expect(screen.getByTestId('tree-view-auto-expand-on-filter')).toHaveTextContent('true');
   });
 
   it('filters songs by title', async () => {
@@ -257,6 +279,88 @@ describe('SongList', () => {
     );
 
     expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+  });
+
+  it('filters songs by structured artist and title query with AND', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = [
+      {
+        id: 'song-structured-1',
+        title: "Knocking on Heaven's Door",
+        artist: 'Bob Dylan',
+        chords: [],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-structured-2',
+        title: 'Like a Rolling Stone',
+        artist: 'Bob Dylan',
+        chords: [],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-structured-3',
+        title: "Knocking on Heaven's Door",
+        artist: "Guns N' Roses",
+        chords: [],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+    ];
+
+    render(SongList);
+
+    await user.click(screen.getByText('Plochý seznam'));
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      "artist:Bob Dylan&&title:Knocking on Heaven's Door"
+    );
+
+    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+  });
+
+  it('filters songs by structured query with OR', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = [
+      {
+        id: 'song-or-1',
+        title: "Knocking on Heaven's Door",
+        artist: 'Bob Dylan',
+        chords: [],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-or-2',
+        title: 'Space Oddity',
+        artist: 'David Bowie',
+        chords: [],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-or-3',
+        title: 'Paranoid Android',
+        artist: 'Radiohead',
+        chords: [],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+    ];
+
+    render(SongList);
+
+    await user.click(screen.getByText('Plochý seznam'));
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
+      'artist:Bob Dylan||title:Space Oddity'
+    );
+
+    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('2 songs');
   });
 
   it('shows filtered empty state when no songs match the search', async () => {

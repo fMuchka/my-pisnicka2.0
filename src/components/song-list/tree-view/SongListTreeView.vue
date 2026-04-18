@@ -1,7 +1,14 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { TreeView, createTreeCollection } from '@ark-ui/vue/tree-view';
-  import { ChevronRight, Folder, FolderOpen, Music2 } from 'lucide-vue-next';
+  import {
+    ChevronsDownUp,
+    ChevronsUpDown,
+    ChevronRight,
+    Folder,
+    FolderOpen,
+    Music2,
+  } from 'lucide-vue-next';
   import type { Song } from '../../../lib/song';
 
   type SongTreeNode = {
@@ -10,12 +17,18 @@
     children?: SongTreeNode[];
   };
 
-  const props = defineProps<{
-    songs: Song[];
-    artistsLabel: string;
-    onSongClick: (song: Song) => void;
-    isInteractive: boolean;
-  }>();
+  const props = withDefaults(
+    defineProps<{
+      songs: Song[];
+      artistsLabel: string;
+      autoExpandOnFilter?: boolean;
+      onSongClick: (song: Song) => void;
+      isInteractive: boolean;
+    }>(),
+    {
+      autoExpandOnFilter: false,
+    }
+  );
 
   const groupedSongs = computed(() => {
     const groups = new Map<string, Song[]>();
@@ -55,11 +68,39 @@
     return collection.value.rootNode.children ?? [];
   });
 
+  const expandedValue = ref<string[]>([]);
+
+  const artistNodeIds = computed(() => artistNodes.value.map((node) => node.id));
+
+  watch(
+    [artistNodeIds, () => props.autoExpandOnFilter],
+    ([ids, autoExpandOnFilter]) => {
+      if (autoExpandOnFilter) {
+        expandedValue.value = ids;
+      }
+    },
+    { immediate: true }
+  );
+
   const songsByNodeId = computed(() => {
     return new Map<string, Song>(
       props.songs.map((song): [string, Song] => [`song:${song.id}`, song])
     );
   });
+
+  const allExpanded = computed(
+    () =>
+      artistNodeIds.value.length > 0 &&
+      artistNodeIds.value.every((id) => expandedValue.value.includes(id))
+  );
+
+  const expandAll = (): void => {
+    expandedValue.value = artistNodeIds.value;
+  };
+
+  const collapseAll = (): void => {
+    expandedValue.value = [];
+  };
 
   const handleSongNodeClick = (songNodeId: string) => {
     const song = songsByNodeId.value.get(songNodeId);
@@ -73,10 +114,38 @@
 
 <template>
   <TreeView.Root
+    v-model:expanded-value="expandedValue"
     :collection="collection"
     class="song-list__tree"
   >
-    <TreeView.Label class="song-list__tree-label">{{ artistsLabel }}</TreeView.Label>
+    <div class="song-list__tree-header">
+      <TreeView.Label class="song-list__tree-label">{{ artistsLabel }}</TreeView.Label>
+      <div
+        v-if="artistNodes.length > 0"
+        class="song-list__tree-controls"
+      >
+        <button
+          type="button"
+          class="song-list__tree-control-btn"
+          :disabled="allExpanded"
+          aria-label="Rozbalit vše"
+          @click="expandAll"
+        >
+          <ChevronsUpDown :size="14" />
+          Rozbalit
+        </button>
+        <button
+          type="button"
+          class="song-list__tree-control-btn"
+          :disabled="!allExpanded"
+          aria-label="Sbalit vše"
+          @click="collapseAll"
+        >
+          <ChevronsDownUp :size="14" />
+          Sbalit
+        </button>
+      </div>
+    </div>
     <TreeView.Tree class="song-list__tree-root song-list__list-reset">
       <TreeView.NodeProvider
         v-for="(artistNode, artistIndex) in artistNodes"
@@ -140,10 +209,54 @@
     gap: var(--space-xs);
   }
 
+  .song-list__tree-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
   .song-list__tree-label {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 600;
+  }
+
+  .song-list__tree-controls {
+    display: flex;
+    gap: 2px;
+  }
+
+  .song-list__tree-control-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .song-list__tree-control-btn:hover:not(:disabled) {
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  }
+
+  .song-list__tree-control-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .song-list__tree-control-btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    outline-offset: 1px;
   }
 
   .song-list__tree-root {
@@ -168,6 +281,7 @@
     color: var(--text-secondary);
     text-align: left;
     font: inherit;
+    font-size: 20px;
     user-select: none;
     cursor: pointer;
 

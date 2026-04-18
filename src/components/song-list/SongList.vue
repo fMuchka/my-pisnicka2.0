@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import { computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
-  import { Search } from 'lucide-vue-next';
+  import { Search, X } from 'lucide-vue-next';
   import { SegmentGroup } from '@ark-ui/vue/segment-group';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
@@ -9,20 +9,100 @@
   import Routes from '../../router/Routes';
   import type { Song } from '../../lib/song';
 
+  interface Props {
+    externalSearch?: string;
+  }
+
+  interface Emits {
+    (event: 'update:externalSearch', value: string): void;
+  }
+
+  const props = withDefaults(defineProps<Props>(), { externalSearch: undefined });
+  const emit = defineEmits<Emits>();
+
   const router = useRouter();
 
   const { userSongs } = useSongListData();
 
   type ViewMode = 'flat' | 'tree';
 
-  const viewMode = ref<ViewMode>('flat');
+  const viewMode = ref<ViewMode>('tree');
   const search = ref('');
+
+  watch(
+    () => props.externalSearch,
+    (value) => {
+      if (value !== undefined) {
+        search.value = value;
+      }
+    }
+  );
 
   const byArtistThenTitle = (a: Song, b: Song): number => {
     return (
       a.artist.localeCompare(b.artist, undefined, { sensitivity: 'base' }) ||
       a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
     );
+  };
+
+  const songMatchesFieldQuery = (song: Song, field: string, value: string): boolean => {
+    if (!value) {
+      return false;
+    }
+
+    if (field === 'artist') {
+      return song.artist.toLocaleLowerCase('cs').includes(value);
+    }
+
+    if (field === 'title') {
+      return song.title.toLocaleLowerCase('cs').includes(value);
+    }
+
+    return false;
+  };
+
+  const songMatchesStructuredQuery = (song: Song, query: string): boolean => {
+    const normalizedQuery = query.replace(/\s+\band\b\s+/g, '&&').replace(/\s+\bor\b\s+/g, '||');
+
+    const hasStructuredField = /(?:^|&&|\|\|)\s*[a-z]+\s*:/.test(normalizedQuery);
+    const hasStructuredOperator = normalizedQuery.includes('&&') || normalizedQuery.includes('||');
+
+    if (!hasStructuredField && !hasStructuredOperator) {
+      return false;
+    }
+
+    const orGroups = normalizedQuery
+      .split('||')
+      .map((group) => group.trim())
+      .filter((group) => group.length > 0);
+
+    if (orGroups.length === 0) {
+      return false;
+    }
+
+    return orGroups.some((group) => {
+      const andConditions = group
+        .split('&&')
+        .map((condition) => condition.trim())
+        .filter((condition) => condition.length > 0);
+
+      if (andConditions.length === 0) {
+        return false;
+      }
+
+      return andConditions.every((condition) => {
+        const delimiterIndex = condition.indexOf(':');
+
+        if (delimiterIndex <= 0) {
+          return false;
+        }
+
+        const field = condition.slice(0, delimiterIndex).trim();
+        const value = condition.slice(delimiterIndex + 1).trim();
+
+        return songMatchesFieldQuery(song, field, value);
+      });
+    });
   };
 
   const normalizedSearch = computed(() => search.value.trim().toLocaleLowerCase('cs'));
@@ -36,6 +116,12 @@
           return true;
         }
 
+        const matchesStructuredQuery = songMatchesStructuredQuery(song, query);
+
+        if (matchesStructuredQuery) {
+          return true;
+        }
+
         return (
           song.artist.toLocaleLowerCase('cs').includes(query) ||
           song.title.toLocaleLowerCase('cs').includes(query)
@@ -45,6 +131,11 @@
   });
 
   const canOpenSongs = true;
+
+  const clearSearch = (): void => {
+    search.value = '';
+    emit('update:externalSearch', '');
+  };
 
   const handleSongClick = (song: Song) => {
     router.push({ path: Routes.Song.replace(':songId', song.id) });
@@ -64,22 +155,21 @@
         <SegmentGroup.Indicator class="song-list__segment-indicator" />
 
         <SegmentGroup.Item
-          value="flat"
-          class="song-list__segment-item"
-        >
-          <SegmentGroup.ItemText class="song-list__segment-item-text">
-            Plochý seznam
-          </SegmentGroup.ItemText>
-          <SegmentGroup.ItemControl />
-          <SegmentGroup.ItemHiddenInput />
-        </SegmentGroup.Item>
-
-        <SegmentGroup.Item
           value="tree"
           class="song-list__segment-item"
         >
           <SegmentGroup.ItemText class="song-list__segment-item-text">
             Strom
+          </SegmentGroup.ItemText>
+          <SegmentGroup.ItemControl />
+          <SegmentGroup.ItemHiddenInput />
+        </SegmentGroup.Item>
+        <SegmentGroup.Item
+          value="flat"
+          class="song-list__segment-item"
+        >
+          <SegmentGroup.ItemText class="song-list__segment-item-text">
+            Plochý seznam
           </SegmentGroup.ItemText>
           <SegmentGroup.ItemControl />
           <SegmentGroup.ItemHiddenInput />
@@ -99,6 +189,15 @@
         placeholder="Hledat podle názvu nebo interpreta…"
         aria-label="Hledat písně podle názvu nebo interpreta"
       />
+      <button
+        v-if="search.length > 0 || (externalSearch && externalSearch?.length > 0)"
+        type="button"
+        class="song-list__search-clear"
+        aria-label="Vymazat hledání"
+        @click="clearSearch"
+      >
+        <X :size="14" />
+      </button>
     </div>
 
     <p
@@ -123,6 +222,7 @@
       v-else
       :songs="filteredSongs"
       artists-label="Interpreti"
+      :auto-expand-on-filter="normalizedSearch.length > 0"
       :on-song-click="handleSongClick"
       :is-interactive="canOpenSongs"
     />
@@ -167,18 +267,59 @@
 
   .song-list__search-input {
     width: 100%;
-    padding: 8px 12px 8px 34px;
+    padding: 8px 34px 8px 34px;
     border: 1px solid var(--bg-tertiary);
     border-radius: var(--radius-sm);
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 18px;
     font-family: var(--font-body);
+  }
+
+  .song-list__search-input::-webkit-search-cancel-button,
+  .song-list__search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .song-list__search-input::-ms-clear,
+  .song-list__search-input::-ms-reveal {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .song-list__search-input:focus {
     outline: none;
     border-color: var(--color-primary);
+  }
+
+  .song-list__search-clear {
+    position: absolute;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .song-list__search-clear:hover {
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  }
+
+  .song-list__search-clear:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    outline-offset: 1px;
   }
 
   .song-list__segment {
@@ -188,6 +329,7 @@
     background-color: var(--bg-tertiary);
     border-radius: var(--radius-sm);
     padding: 2px;
+    font-size: 20px;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 10%, transparent);
   }
 

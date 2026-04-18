@@ -14,11 +14,14 @@
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
   import type { Song } from '../lib/song';
+  import { updateActiveSongId } from '../lib/session';
+  import { useSessionStore } from '../stores/session';
 
-  type SectionType = 'intro' | 'verse' | 'chorus' | 'outro';
+  type SectionType = 'intro' | 'verse' | 'chorus' | 'outro' | 'bridge';
   type Section = { type: SectionType; text: string };
 
   const route = useRoute();
+  const sessionStore = useSessionStore();
   const { isAuthenticated } = useAuth();
   const isEditDialogOpen = ref(false);
   const isChordsDialogOpen = ref(false);
@@ -30,7 +33,7 @@
   const currentScrollTop = ref(0);
   const maxScrollTop = ref(0);
 
-  const AUTO_SCROLL_SPEED_STEP = 6;
+  const AUTO_SCROLL_SPEED_STEP = 2;
   const AUTO_SCROLL_MIN_SPEED = 10;
   const AUTO_SCROLL_MAX_SPEED = 80;
   const AUTO_SCROLL_SCROLL_STEP = 132;
@@ -183,6 +186,7 @@
     verse: 'Verse',
     chorus: 'Chorus',
     outro: 'Outro',
+    bridge: 'Bridge',
   };
 
   const formatRemainingTime = (totalSeconds: number) => {
@@ -303,6 +307,12 @@
   const startAutoScroll = () => {
     if (isAutoScrollPlaying.value) {
       return;
+    }
+
+    const sessionId = sessionStore.sessionDetails?.id;
+
+    if (sessionId && song.value?.id) {
+      updateActiveSongId(song.value?.id, sessionId);
     }
 
     isAutoScrollPlaying.value = true;

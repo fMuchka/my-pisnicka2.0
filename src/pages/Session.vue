@@ -3,8 +3,7 @@
   import { useRoute } from 'vue-router';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import SongList from '../components/song-list/SongList.vue';
-  import PinCodeInput from '../components/core/PinCodeInput.vue';
-  import QrCode from '../components/core/QrCode.vue';
+  import SessionControls from '../components/session/SessionControls.vue';
   import { useAuth } from '../composables/useAuth';
   import { stringToPin } from '../lib/pin';
   import {
@@ -22,6 +21,7 @@
   const { isAuthenticated } = useAuth();
   const sessionStore = useSessionStore();
   const errorCode = ref<SessionErrorCode | undefined>(undefined);
+  const songListSearch = ref('');
 
   const route = useRoute();
 
@@ -116,20 +116,6 @@
     data-testid="session-view"
   >
     <div
-      v-if="querySessionDetails.pin"
-      class="session-id"
-      data-testid="session-id"
-    >
-      <QrCode :value="currentUrl" />
-      <PinCodeInput
-        :model-value="sessionPin"
-        :read-only="true"
-        :show-label="false"
-        aria-label-prefix="pin číslice"
-      />
-    </div>
-
-    <div
       v-if="errorMessage"
       class="error-message"
       role="alert"
@@ -138,12 +124,24 @@
       {{ errorMessage }}
     </div>
 
-    <SongList v-else />
+    <template v-else>
+      <SongList
+        :external-search="songListSearch"
+        @update:external-search="(newVal) => (songListSearch = newVal)"
+      />
+    </template>
+
+    <SessionControls
+      v-if="querySessionDetails.pin"
+      :session-id="querySessionDetails.id"
+      :pin="sessionPin"
+      :current-url="currentUrl"
+      @filter-song="songListSearch = $event"
+    />
   </div>
 </template>
 
 <style scoped>
-  /* Main container */
   .container {
     max-width: 600px;
     margin: auto;
@@ -155,13 +153,7 @@
     display: flex;
     flex-direction: column;
     padding: var(--space-md);
-  }
-
-  .session-id {
-    margin-top: var(--space-md);
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    text-align: center;
+    padding-bottom: calc(var(--space-3xl) + 88px + env(safe-area-inset-bottom, 0px));
   }
 
   .error-message {
