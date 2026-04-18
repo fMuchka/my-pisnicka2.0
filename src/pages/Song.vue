@@ -30,7 +30,7 @@
   const currentScrollTop = ref(0);
   const maxScrollTop = ref(0);
 
-  const AUTO_SCROLL_SPEED_STEP = 6;
+  const AUTO_SCROLL_SPEED_STEP = 2;
   const AUTO_SCROLL_MIN_SPEED = 10;
   const AUTO_SCROLL_MAX_SPEED = 80;
   const AUTO_SCROLL_SCROLL_STEP = 132;
