@@ -1,7 +1,8 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
-  import { Search, X } from 'lucide-vue-next';
+  import Button from '../core/Button.vue';
+  import { Search, X, RefreshCw } from 'lucide-vue-next';
   import { SegmentGroup } from '@ark-ui/vue/segment-group';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
@@ -22,7 +23,7 @@
 
   const router = useRouter();
 
-  const { userSongs } = useSongListData();
+  const { userSongs, isRefreshing, refresh } = useSongListData();
 
   type ViewMode = 'flat' | 'tree';
 
@@ -146,6 +147,16 @@
   <section class="song-list">
     <header class="song-list__header">
       <h1 class="song-list__title">Seznam písní</h1>
+
+      <Button
+        type="button"
+        class="song-list__refresh"
+        :disabled="isRefreshing"
+        aria-label="Obnovit seznam písní"
+        label="Načíst písně"
+        :icon="{ component: RefreshCw, position: 'prepend' }"
+        @click="refresh"
+      />
 
       <SegmentGroup.Root
         v-model="viewMode"
@@ -386,6 +397,46 @@
   .song-list__empty {
     color: var(--text-secondary);
     font-style: italic;
+  }
+
+  .song-list__refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 15%, transparent);
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .song-list__refresh:hover:not(:disabled) {
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  }
+
+  .song-list__refresh:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .song-list__refresh:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    outline-offset: 2px;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .song-list__refresh-icon--spinning {
+    animation: spin 0.8s linear infinite;
   }
 
   @media (max-width: 560px) {

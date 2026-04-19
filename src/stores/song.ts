@@ -41,10 +41,27 @@ export const useSongStore = defineStore('song', () => {
     return song;
   }
 
+  async function refreshAllSongs(): Promise<Song[]> {
+    const fetched = await songStorage.forceFetchAllSongs();
+    for (const song of fetched) {
+      songs.value.set(song.id, song);
+    }
+    return fetched;
+  }
+
+  async function fetchAllSongsIntoStore(): Promise<void> {
+    const fetched = await songStorage.forceFetchAllSongs();
+    for (const song of fetched) {
+      songs.value.set(song.id, song);
+    }
+  }
+
   return {
     songs,
     getSong,
     refreshSong,
+    refreshAllSongs,
+    fetchAllSongsIntoStore,
     createSong,
     updateSong,
   };

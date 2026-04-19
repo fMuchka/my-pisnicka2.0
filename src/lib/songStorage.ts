@@ -4,6 +4,7 @@ import {
   type CreateSongInput,
   type UpdateSongInput,
   fetchSongById,
+  fetchAllSongs,
   createSong as firestoreCreateSong,
   updateSong as firestoreUpdateSong,
 } from './song';
@@ -63,6 +64,12 @@ export async function updateSong(id: string, input: UpdateSongInput): Promise<So
   const song = await firestoreUpdateSong(id, input);
   await putRecord(STORES.SONGS, toStoredSong(song));
   return song;
+}
+
+export async function forceFetchAllSongs(): Promise<Song[]> {
+  const songs = await fetchAllSongs();
+  await Promise.all(songs.map((song) => putRecord(STORES.SONGS, toStoredSong(song))));
+  return songs;
 }
 
 export async function removeSong(id: string): Promise<void> {
