@@ -1,8 +1,10 @@
 import { ref, watch, type Ref } from 'vue';
 import { fetchSongById, type Song } from '../lib/song';
+import { useSongStore } from '../stores/song';
 
 export function useSongDetail(songId: Ref<string | null>) {
   const song = ref<Song | null>(null);
+  const songStore = useSongStore();
   const songError = ref<string | null>(null);
   const songLoading = ref(true);
 
@@ -18,7 +20,13 @@ export function useSongDetail(songId: Ref<string | null>) {
 
     try {
       songError.value = null;
-      song.value = await fetchSongById(currentSongId);
+      const cache = await songStore.getSong(currentSongId);
+
+      if (!cache) {
+        song.value = await fetchSongById(currentSongId);
+      } else {
+        song.value = cache;
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Chyba při načítání písně';
       songError.value = `Chyba při načítání písně. ${errorMessage}`;
