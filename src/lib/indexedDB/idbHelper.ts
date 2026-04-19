@@ -57,6 +57,16 @@ export async function deleteRecord(store: StoreName, key: string): Promise<void>
   });
 }
 
+export async function getAllRecords<T>(store: StoreName): Promise<T[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const request = tx.objectStore(store).getAll();
+    request.onsuccess = () => resolve(request.result as T[]);
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export async function clearStore(store: StoreName): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {

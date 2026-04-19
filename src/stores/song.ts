@@ -49,6 +49,15 @@ export const useSongStore = defineStore('song', () => {
     return fetched;
   }
 
+  async function loadSongsFromCache(): Promise<boolean> {
+    const cached = await songStorage.getAllSongsFromCache();
+    if (cached.length === 0) return false;
+    for (const song of cached) {
+      songs.value.set(song.id, song);
+    }
+    return true;
+  }
+
   async function fetchAllSongsIntoStore(): Promise<void> {
     const fetched = await songStorage.forceFetchAllSongs();
     for (const song of fetched) {
@@ -61,6 +70,7 @@ export const useSongStore = defineStore('song', () => {
     getSong,
     refreshSong,
     refreshAllSongs,
+    loadSongsFromCache,
     fetchAllSongsIntoStore,
     createSong,
     updateSong,

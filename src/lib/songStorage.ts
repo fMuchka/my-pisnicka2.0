@@ -8,7 +8,7 @@ import {
   createSong as firestoreCreateSong,
   updateSong as firestoreUpdateSong,
 } from './song';
-import { getRecord, putRecord, deleteRecord } from './indexedDB/idbHelper';
+import { getRecord, getAllRecords, putRecord, deleteRecord } from './indexedDB/idbHelper';
 import { STORES } from './indexedDB/config';
 
 // Firestore Timestamp instances cannot be round-tripped through IndexedDB's structured clone,
@@ -64,6 +64,11 @@ export async function updateSong(id: string, input: UpdateSongInput): Promise<So
   const song = await firestoreUpdateSong(id, input);
   await putRecord(STORES.SONGS, toStoredSong(song));
   return song;
+}
+
+export async function getAllSongsFromCache(): Promise<Song[]> {
+  const stored = await getAllRecords<StoredSong>(STORES.SONGS);
+  return stored.map(fromStoredSong);
 }
 
 export async function forceFetchAllSongs(): Promise<Song[]> {

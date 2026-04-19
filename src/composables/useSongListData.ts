@@ -10,7 +10,10 @@ export function useSongListData() {
   const fetchData = async () => {
     isRefreshing.value = true;
     try {
-      await songStore.fetchAllSongsIntoStore();
+      const hadCache = await songStore.loadSongsFromCache();
+      if (!hadCache) {
+        await songStore.fetchAllSongsIntoStore();
+      }
     } catch (err: unknown) {
       console.error(err);
     } finally {
