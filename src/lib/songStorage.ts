@@ -15,7 +15,7 @@ import {
   deleteRecord,
   clearStore,
 } from './indexedDB/idbHelper';
-import { STORES } from './indexedDB/config';
+import { STORES, CACHE_TIMESTAMP_KEY, VALID_CACHE_DURATION } from './indexedDB/config';
 
 // Firestore Timestamp instances cannot be round-tripped through IndexedDB's structured clone,
 // so we store createdAt as milliseconds and convert on read.
@@ -81,7 +81,18 @@ export async function forceFetchAllSongs(): Promise<Song[]> {
   const songs = await fetchAllSongs();
   await clearStore(STORES.SONGS);
   await Promise.all(songs.map((song) => putRecord(STORES.SONGS, toStoredSong(song))));
+  localStorage.setItem(CACHE_TIMESTAMP_KEY, String(Date.now()));
   return songs;
+}
+
+export async function clearExpiredCache(): Promise<void> {
+  const raw = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+  if (raw === null) return;
+  const cachedAt = Number(raw);
+  if (Date.now() - cachedAt > VALID_CACHE_DURATION) {
+    await clearStore(STORES.SONGS);
+    localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+  }
 }
 
 export async function removeSong(id: string): Promise<void> {
