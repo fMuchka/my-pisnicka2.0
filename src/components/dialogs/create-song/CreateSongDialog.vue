@@ -4,9 +4,10 @@
   import { computed, ref, watch } from 'vue';
   import Button from '../../core/Button.vue';
   import SongTextEditor from '../../song/SongTextEditor.vue';
-  import { createSong, updateSong, type CreateSongInput, type Song } from '../../../lib/song';
+  import { type CreateSongInput, type Song } from '../../../lib/song';
   import { useAuth } from '../../../composables/useAuth';
   import { placeholderSong } from './placeholderSong';
+  import { useSongStore } from '../../../stores/song';
 
   interface Props {
     open?: boolean;
@@ -31,6 +32,8 @@
   const songChords = ref<string[]>([]);
   const createError = ref<string | null>(null);
   const isCreating = ref(false);
+
+  const songStore = useSongStore();
 
   const { user } = useAuth();
 
@@ -99,14 +102,14 @@
         title: trimmedTitle.value,
         artist: trimmedArtist.value,
         text: songText.value.trim() || undefined,
-        chords: songChords.value,
+        chords: [...songChords.value],
         ownerId: user.value.uid,
       };
 
       const savedSong =
         isEditMode.value && props.songToEdit != null
-          ? await updateSong(props.songToEdit.id, songInput)
-          : await createSong(songInput);
+          ? await songStore.updateSong(props.songToEdit.id, songInput)
+          : await songStore.createSong(songInput);
 
       emit('saved', savedSong);
 
@@ -196,12 +199,13 @@
                 </Field.HelperText>
               </Field.Root>
               <!-- General Error -->
-              <Field.ErrorText
+              <p
                 v-if="createError"
                 class="field-error"
+                role="alert"
               >
                 {{ createError }}
-              </Field.ErrorText>
+              </p>
             </div>
           </div>
 
