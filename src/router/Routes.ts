@@ -6,6 +6,7 @@ enum Routes {
   Song = '/song/:songId',
   Session = '/session',
   SessionList = '/sessionList',
+  Info = '/info',
 }
 
 export default Routes;

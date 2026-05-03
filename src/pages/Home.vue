@@ -8,6 +8,7 @@
 
   const goToSessionListPage = () => router.push({ path: Routes.SessionList });
   const goToSongLibraryPage = () => router.push({ path: Routes.SongLibrary });
+  const goToInfoPage = () => router.push({ path: Routes.Info });
 </script>
 
 <template>
@@ -50,13 +51,14 @@
 
       <button
         type="button"
-        class="nav-item nav-item-disabled"
+        class="nav-item"
+        @click="goToInfoPage()"
       >
         <span class="nav-item-content">
           <Info class="nav-item-icon" />
           <span class="nav-item-label">Informace</span>
         </span>
-        <span class="nav-item-meta">Co se stalo, děje a bude dít</span>
+        <span class="nav-item-meta">Co se stalo, děje a plánuje</span>
       </button>
     </nav>
   </div>
