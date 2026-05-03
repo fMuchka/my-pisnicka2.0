@@ -46,12 +46,12 @@ describe('Home Page', () => {
     expect(router.push).toHaveBeenCalledWith({ path: Routes.SessionList });
   });
 
-  it('keeps info item non-navigating', async () => {
+  it('navigates to info page from info nav item', async () => {
     const user = userEvent.setup();
     render(Home);
 
     const infoButton = screen.getByRole('button', { name: /informace/i });
     await user.click(infoButton);
-    expect(router.push).not.toHaveBeenCalled();
+    expect(router.push).toHaveBeenCalledWith({ path: Routes.Info });
   });
 });

@@ -29,9 +29,13 @@ vi.mock('../../../../composables/useAuth', () => ({
   }),
 }));
 
-vi.mock('../../../../lib/song', () => ({
-  createSong: mocks.createSong,
-  updateSong: mocks.updateSong,
+vi.mock('../../../../lib/song', () => ({}));
+
+vi.mock('../../../../stores/song', () => ({
+  useSongStore: () => ({
+    createSong: mocks.createSong,
+    updateSong: mocks.updateSong,
+  }),
 }));
 
 vi.mock('../../../song/SongTextEditor.vue', () => ({
@@ -79,6 +83,7 @@ describe('CreateSongDialog', () => {
       "Knockin on Heaven's Door"
     );
     await user.type(screen.getByPlaceholderText('Např. Bob Dylan'), 'Bob Dylan');
+    await user.clear(screen.getByTestId('song-text-editor'));
     await user.type(screen.getByTestId('song-text-editor'), 'line');
     await user.click(screen.getByTestId('create-song-submit'));
 

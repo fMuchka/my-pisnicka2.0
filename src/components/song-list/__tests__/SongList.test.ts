@@ -215,10 +215,13 @@ describe('SongList', () => {
     expect(segmentGroup).toBeInTheDocument();
   });
 
-  it('passes correct props to flat view component', () => {
+  it('passes correct props to flat view component', async () => {
+    const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
 
     render(SongList);
+
+    await user.click(screen.getByText('Plochý seznam'));
 
     expect(screen.getByTestId('flat-view-count')).toHaveTextContent('2 songs');
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -259,6 +262,7 @@ describe('SongList', () => {
 
     render(SongList);
 
+    await user.click(screen.getByText('Plochý seznam'));
     await user.type(
       screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
       'Song 2'
@@ -273,6 +277,7 @@ describe('SongList', () => {
 
     render(SongList);
 
+    await user.click(screen.getByText('Plochý seznam'));
     await user.type(
       screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
       'Artist B'
@@ -385,6 +390,7 @@ describe('SongList', () => {
 
     render(SongList);
 
+    await user.click(screen.getByText('Plochý seznam'));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -398,6 +404,7 @@ describe('SongList', () => {
 
     render(SongList);
 
+    await user.click(screen.getByText('Plochý seznam'));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -411,13 +418,15 @@ describe('SongList', () => {
 
     render(SongList);
 
+    await user.click(screen.getByText('Plochý seznam'));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
     expect(mockRouterPush).toHaveBeenCalledWith({ path: '/song/song-1' });
   });
 
-  it('sorts songs alphabetically by artist then title', () => {
+  it('sorts songs alphabetically by artist then title', async () => {
+    const user = userEvent.setup();
     const unsortedSongs: Song[] = [
       {
         id: 'z-1',
@@ -449,6 +458,8 @@ describe('SongList', () => {
 
     render(SongList);
 
+    await user.click(screen.getByText('Plochý seznam'));
+
     // The component sorts by artist then title
     const flatView = screen.getByTestId('flat-view');
     expect(flatView).toBeInTheDocument();
@@ -465,7 +476,8 @@ describe('SongList', () => {
     expect(container.querySelector('section.song-list')).toBeInTheDocument();
   });
 
-  it('shows and hides empty state based on song count', () => {
+  it('shows and hides empty state based on song count', async () => {
+    const user = userEvent.setup();
     mockUserSongs.value = [];
     mockUser.value = { uid: 'user-123', displayName: 'Test User' };
 
@@ -480,6 +492,8 @@ describe('SongList', () => {
     mockUserSongs.value = mockSongs;
     render(SongList);
 
+    await user.click(screen.getByText('Plochý seznam'));
+
     expect(screen.queryByText('Zatím nejsou dostupné žádné písně.')).not.toBeInTheDocument();
     expect(screen.getByTestId('flat-view')).toBeInTheDocument();
   });
@@ -491,9 +505,20 @@ describe('SongList', () => {
     expect(section).toBeInTheDocument();
   });
 
-  it('keeps interactivity enabled across authentication states', () => {
+  it('keeps interactivity enabled across authentication states', async () => {
+    const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
     mockUser.value = null;
+
+    const { unmount } = render(SongList);
+    await user.click(screen.getByText('Plochý seznam'));
+    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
+    unmount();
+    mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
+    render(SongList);
+    await user.click(screen.getByText('Plochý seznam'));
+    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
+  });
 
     const { unmount } = render(SongList);
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');

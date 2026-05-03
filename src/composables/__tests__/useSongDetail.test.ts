@@ -12,6 +12,12 @@ vi.mock('../../lib/song', () => ({
   fetchSongById: mocks.fetchSongById,
 }));
 
+vi.mock('../../stores/song', () => ({
+  useSongStore: () => ({
+    getSong: vi.fn().mockResolvedValue(null),
+  }),
+}));
+
 function mountComposable(songId: Ref<string | null>): ReturnType<typeof useSongDetail> {
   let state: ReturnType<typeof useSongDetail> | null = null;
 
