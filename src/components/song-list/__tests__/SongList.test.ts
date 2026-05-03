@@ -520,12 +520,11 @@ describe('SongList', () => {
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
   });
 
-    const { unmount } = render(SongList);
-    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
+  const { unmount } = render(SongList);
+  expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
 
-    unmount();
-    mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
-    render(SongList);
-    expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
-  });
+  unmount();
+  mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
+  render(SongList);
+  expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
 });
