@@ -49,7 +49,16 @@ vi.mock('../../composables/useSongDetail', () => ({
 }));
 
 vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
-  default: { template: '<header role="banner" />' },
+  default: {
+    props: ['pageTitle', 'pageSubtitle', 'showBack', 'backToPath', 'fadeAway'],
+    template: '<header role="banner"><h1>{{ pageTitle }}</h1><p>{{ pageSubtitle }}</p></header>',
+  },
+}));
+
+vi.mock('../../stores/session', () => ({
+  useSessionStore: () => ({
+    sessionDetails: null,
+  }),
 }));
 
 vi.mock('../../components/PageHeader.vue', () => ({
@@ -146,7 +155,7 @@ describe('Song Page', () => {
     expect(screen.getByTestId('song-chord-overview')).toHaveTextContent('G,D,Am');
   });
 
-  it('navigates back to home when back button is clicked', async () => {
+  it('opens edit dialog when edit button is clicked', async () => {
     const user = userEvent.setup();
 
     songState.song.value = {
@@ -156,12 +165,13 @@ describe('Song Page', () => {
       text: 'Lyrics',
       ownerId: '',
     };
+    authState.isAuthenticated.value = true;
 
     render(SongPage);
 
-    await user.click(screen.getByRole('button', { name: 'Zpět na přehled' }));
+    await user.click(screen.getByRole('button', { name: 'Upravit píseň' }));
 
-    expect(router.push).toHaveBeenCalledWith({ path: '/' });
+    expect(screen.getByTestId('create-song-dialog')).toHaveAttribute('data-open', 'yes');
   });
 
   it('shows edit button only for authenticated users', () => {
