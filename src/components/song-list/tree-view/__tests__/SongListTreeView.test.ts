@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { createPinia, setActivePinia } from 'pinia';
 import SongListTreeView from '../SongListTreeView.vue';
 import type { Song } from '../../../../lib/song';
 import type { Timestamp } from 'firebase/firestore';
@@ -45,6 +46,7 @@ describe('SongListTreeView', () => {
   ];
 
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
   });
 

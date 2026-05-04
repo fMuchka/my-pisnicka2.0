@@ -2,13 +2,18 @@
   import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import Button from '../core/Button.vue';
-  import { Search, X, RefreshCw } from 'lucide-vue-next';
-  import { SegmentGroup } from '@ark-ui/vue/segment-group';
+  import { Combobox, useListCollection } from '@ark-ui/vue/combobox';
+  import { useFilter } from '@ark-ui/vue/locale';
+  import { Menu } from '@ark-ui/vue/menu';
+  import { Search, X, RefreshCw, Settings, ChevronDown, Check } from 'lucide-vue-next';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
   import { useSongListData } from '../../composables/useSongListData';
+  import { STATIC_CHORD_FILTER_LIST } from '../../lib/chords';
   import Routes from '../../router/Routes';
   import type { Song } from '../../lib/song';
+  import { songListStore } from '../../stores/songList';
+  import { storeToRefs } from 'pinia';
 
   interface Props {
     externalSearch?: string;
@@ -24,17 +29,97 @@
   const router = useRouter();
 
   const { userSongs, isRefreshing, refresh } = useSongListData();
+  const store = songListStore();
+  const { viewMode, searchQuery, selectedChordFilters } = storeToRefs(store);
+  const CHORD_VIRTUAL_ITEM_HEIGHT = 36;
+  const CHORD_VIRTUAL_VIEWPORT_HEIGHT = 180;
+  const CHORD_VIRTUAL_OVERSCAN = 6;
 
-  type ViewMode = 'flat' | 'tree';
+  type ChordComboboxItem = { label: string; value: string };
 
-  const viewMode = ref<ViewMode>('tree');
-  const search = ref('');
+  type VirtualizedItem<T> = { index: number; item: T };
+
+  function useVirtualizedComboboxList<T>(params: {
+    items: () => readonly T[];
+    scrollTop: () => number;
+    itemHeight: number;
+    viewportHeight: number;
+    overscan?: number;
+  }) {
+    const overscan = params.overscan ?? 4;
+
+    const total = computed(() => params.items().length);
+
+    const visibleCount = computed(() =>
+      Math.max(1, Math.ceil(params.viewportHeight / params.itemHeight) + overscan * 2)
+    );
+
+    const startIndex = computed(() => {
+      const rawIndex = Math.floor(params.scrollTop() / params.itemHeight) - overscan;
+
+      return Math.max(0, rawIndex);
+    });
+
+    const endIndex = computed(() => Math.min(total.value, startIndex.value + visibleCount.value));
+
+    const items = computed<VirtualizedItem<T>[]>(() => {
+      const source = params.items();
+      const result: VirtualizedItem<T>[] = [];
+
+      for (let index = startIndex.value; index < endIndex.value; index++) {
+        const item = source[index];
+
+        if (item !== undefined) {
+          result.push({ index, item });
+        }
+      }
+
+      return result;
+    });
+
+    const paddingTop = computed(() => startIndex.value * params.itemHeight);
+    const paddingBottom = computed(() =>
+      Math.max(0, (total.value - endIndex.value) * params.itemHeight)
+    );
+
+    return {
+      total,
+      visibleItems: items,
+      paddingTop,
+      paddingBottom,
+    };
+  }
+
+  const isOptionsMenuOpen = ref(false);
+  const chordScrollerRef = ref<HTMLDivElement | null>(null);
+  const chordScrollTop = ref(0);
+  const filters = useFilter({ sensitivity: 'base' });
+  const {
+    collection: chordCollection,
+    filter: filterChordCollection,
+    set: setChordCollection,
+  } = useListCollection<ChordComboboxItem>({
+    initialItems: [],
+    filter: filters.value.contains,
+  });
+
+  const virtualizedChordItems = useVirtualizedComboboxList<ChordComboboxItem>({
+    items: () => chordCollection.value.items,
+    scrollTop: () => chordScrollTop.value,
+    itemHeight: CHORD_VIRTUAL_ITEM_HEIGHT,
+    viewportHeight: CHORD_VIRTUAL_VIEWPORT_HEIGHT,
+    overscan: CHORD_VIRTUAL_OVERSCAN,
+  });
+  const virtualizedChordVisibleItems = computed(() => virtualizedChordItems.visibleItems.value);
+  const virtualizedChordTotal = computed(() => virtualizedChordItems.total.value);
+  const virtualizedChordPaddingTop = computed(() => virtualizedChordItems.paddingTop.value);
+  const virtualizedChordPaddingBottom = computed(() => virtualizedChordItems.paddingBottom.value);
 
   watch(
     () => props.externalSearch,
     (value) => {
       if (value !== undefined) {
-        search.value = value;
+        searchQuery.value = value;
       }
     }
   );
@@ -106,13 +191,53 @@
     });
   };
 
-  const normalizedSearch = computed(() => search.value.trim().toLocaleLowerCase('cs'));
+  const normalizedSearch = computed(() => searchQuery.value.trim().toLocaleLowerCase('cs'));
+
+  const normalizeChord = (value: string): string => value.trim().toLocaleLowerCase('cs');
+
+  const availableChords = computed(() => STATIC_CHORD_FILTER_LIST);
+
+  watch(
+    availableChords,
+    (chords) => {
+      const items = chords.map((chord) => ({ label: chord, value: chord }));
+      setChordCollection(items);
+
+      const availableLookup = new Set(chords.map((chord) => normalizeChord(chord)));
+      const nextSelected = selectedChordFilters.value.filter((chord) =>
+        availableLookup.has(normalizeChord(chord))
+      );
+
+      if (nextSelected.length !== selectedChordFilters.value.length) {
+        store.setChordFilters(nextSelected);
+      }
+    },
+    { immediate: true }
+  );
+
+  const selectedChordLookup = computed(
+    () => new Set(selectedChordFilters.value.map((chord) => normalizeChord(chord)))
+  );
+
+  const hasActiveFilters = computed(
+    () => normalizedSearch.value.length > 0 || selectedChordFilters.value.length > 0
+  );
 
   const filteredSongs = computed(() => {
     const query = normalizedSearch.value;
+    const selectedChords = selectedChordLookup.value;
 
     return [...userSongs.value]
       .filter((song) => {
+        if (selectedChords.size > 0) {
+          const songChords = new Set(song.chords?.map((chord) => normalizeChord(chord)) ?? []);
+          const hasAllSelectedChords = [...selectedChords].every((chord) => songChords.has(chord));
+
+          if (!hasAllSelectedChords) {
+            return false;
+          }
+        }
+
         if (!query) {
           return true;
         }
@@ -133,8 +258,53 @@
 
   const canOpenSongs = true;
 
+  const clearChordFilters = () => {
+    store.clearChordFilters();
+  };
+
+  const handleChordInputChange = (details: Combobox.InputValueChangeDetails) => {
+    filterChordCollection(details.inputValue);
+  };
+
+  const handleChordValueChange = (details: Combobox.ValueChangeDetails<ChordComboboxItem>) => {
+    store.setChordFilters(details.items.map((item) => item.value));
+  };
+
+  const handleChordListScroll = () => {
+    chordScrollTop.value = chordScrollerRef.value?.scrollTop ?? 0;
+  };
+
+  const handleChordScrollToIndex: Combobox.RootProps<ChordComboboxItem>['scrollToIndexFn'] = (
+    details
+  ) => {
+    const scroller = chordScrollerRef.value;
+
+    if (!scroller) {
+      return;
+    }
+
+    const top = details.index * CHORD_VIRTUAL_ITEM_HEIGHT;
+    scroller.scrollTo({ top, behavior: 'auto' });
+    chordScrollTop.value = scroller.scrollTop;
+  };
+
+  const setViewMode = (nextViewMode: 'tree' | 'flat') => {
+    viewMode.value = nextViewMode;
+  };
+
+  const handleRefresh = async () => {
+    await refresh();
+  };
+
+  watch(isOptionsMenuOpen, (isOpen) => {
+    if (!isOpen) {
+      filterChordCollection('');
+      chordScrollTop.value = 0;
+    }
+  });
+
   const clearSearch = (): void => {
-    search.value = '';
+    searchQuery.value = '';
     emit('update:externalSearch', '');
   };
 
@@ -148,44 +318,152 @@
     <header class="song-list__header">
       <h1 class="song-list__title">Seznam písní</h1>
 
-      <Button
-        type="button"
-        class="song-list__refresh"
-        :disabled="isRefreshing"
-        aria-label="Obnovit seznam písní"
-        label="Načíst písně"
-        :icon="{ component: RefreshCw, position: 'prepend' }"
-        @click="refresh"
-      />
-
-      <SegmentGroup.Root
-        v-model="viewMode"
-        class="song-list__segment"
-        aria-label="Rezim zobrazeni seznamu pisni"
+      <Menu.Root
+        :open="isOptionsMenuOpen"
+        :close-on-select="false"
+        @update:open="isOptionsMenuOpen = $event"
       >
-        <SegmentGroup.Indicator class="song-list__segment-indicator" />
+        <Menu.Trigger as-child>
+          <Button
+            type="button"
+            class="song-list__options-trigger"
+            aria-label="Možnosti seznamu písní"
+            label="Možnosti"
+            style-variation="Text"
+            :icon="{ component: Settings, position: 'prepend' }"
+          />
+        </Menu.Trigger>
 
-        <SegmentGroup.Item
-          value="tree"
-          class="song-list__segment-item"
-        >
-          <SegmentGroup.ItemText class="song-list__segment-item-text">
-            Strom
-          </SegmentGroup.ItemText>
-          <SegmentGroup.ItemControl />
-          <SegmentGroup.ItemHiddenInput />
-        </SegmentGroup.Item>
-        <SegmentGroup.Item
-          value="flat"
-          class="song-list__segment-item"
-        >
-          <SegmentGroup.ItemText class="song-list__segment-item-text">
-            Plochý seznam
-          </SegmentGroup.ItemText>
-          <SegmentGroup.ItemControl />
-          <SegmentGroup.ItemHiddenInput />
-        </SegmentGroup.Item>
-      </SegmentGroup.Root>
+        <Menu.Positioner>
+          <Menu.Content class="song-list-options-menu">
+            <div class="song-list-options__section-title">Režim zobrazení</div>
+            <div
+              class="song-list-options__view-grid"
+              role="group"
+              aria-label="Režim zobrazení seznamu písní"
+            >
+              <button
+                type="button"
+                class="song-list-options__view-card"
+                :class="{ 'song-list-options__view-card--active': viewMode === 'tree' }"
+                @click="setViewMode('tree')"
+              >
+                Strom
+              </button>
+              <button
+                type="button"
+                class="song-list-options__view-card"
+                :class="{ 'song-list-options__view-card--active': viewMode === 'flat' }"
+                @click="setViewMode('flat')"
+              >
+                Plochý seznam
+              </button>
+            </div>
+
+            <div class="song-list-options__divider" />
+
+            <div class="song-list-options__section-title">Filtr podle akordů</div>
+
+            <div
+              v-if="selectedChordFilters.length > 0"
+              class="song-list-options__selected-chords"
+              aria-label="Vybrané akordy"
+            >
+              <span
+                v-for="chord in selectedChordFilters"
+                :key="`selected-${chord}`"
+                class="song-list-options__selected-chip"
+              >
+                {{ chord }}
+              </span>
+            </div>
+            <Combobox.Root
+              multiple
+              :close-on-select="false"
+              :lazy-mount="true"
+              :unmount-on-exit="true"
+              :collection="chordCollection"
+              :model-value="selectedChordFilters"
+              :scroll-to-index-fn="handleChordScrollToIndex"
+              @input-value-change="handleChordInputChange"
+              @value-change="handleChordValueChange"
+            >
+              <Combobox.Control class="song-list-options__combobox-control">
+                <Combobox.Input
+                  class="song-list-options__combobox-input"
+                  aria-label="Vybrat akordy"
+                  placeholder="Vybrat akordy"
+                />
+                <Combobox.Trigger
+                  class="song-list-options__combobox-trigger"
+                  aria-label="Otevřít výběr akordů"
+                >
+                  <ChevronDown
+                    :size="14"
+                    class="song-list-options__chord-chevron"
+                  />
+                </Combobox.Trigger>
+              </Combobox.Control>
+
+              <Combobox.Positioner>
+                <Combobox.Content class="song-list-options__combobox-content">
+                  <Combobox.Empty class="song-list-options__empty">
+                    Žádné akordy k dispozici.
+                  </Combobox.Empty>
+                  <div
+                    ref="chordScrollerRef"
+                    class="song-list-options__combobox-scroller"
+                    @scroll="handleChordListScroll"
+                  >
+                    <div :style="{ height: `${virtualizedChordPaddingTop}px` }" />
+
+                    <Combobox.Item
+                      v-for="virtualItem in virtualizedChordVisibleItems"
+                      :key="virtualItem.item.value"
+                      :item="virtualItem.item"
+                      :aria-setsize="virtualizedChordTotal"
+                      :aria-posinset="virtualItem.index + 1"
+                      class="song-list-options__chord-item"
+                    >
+                      <Combobox.ItemText>{{ virtualItem.item.label }}</Combobox.ItemText>
+                      <Combobox.ItemIndicator>
+                        <Check
+                          :size="14"
+                          class="song-list-options__chord-check"
+                        />
+                      </Combobox.ItemIndicator>
+                    </Combobox.Item>
+
+                    <div :style="{ height: `${virtualizedChordPaddingBottom}px` }" />
+                  </div>
+                </Combobox.Content>
+              </Combobox.Positioner>
+            </Combobox.Root>
+
+            <button
+              v-if="selectedChordFilters.length > 0"
+              type="button"
+              class="song-list-options__clear-chords"
+              @click="clearChordFilters"
+            >
+              Vymazat výběr
+            </button>
+
+            <div class="song-list-options__divider" />
+
+            <Button
+              type="button"
+              class="song-list-options__refresh"
+              :disabled="isRefreshing"
+              label="Načíst písně"
+              color-variation="Secondary"
+              style-variation="Text"
+              :icon="{ component: RefreshCw, position: 'prepend' }"
+              @click="handleRefresh"
+            />
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
     </header>
 
     <div class="song-list__search-wrapper">
@@ -194,14 +472,14 @@
         :size="16"
       />
       <input
-        v-model="search"
+        v-model="searchQuery"
         class="song-list__search-input"
         type="search"
         placeholder="Hledat podle názvu nebo interpreta…"
         aria-label="Hledat písně podle názvu nebo interpreta"
       />
       <button
-        v-if="search.length > 0 || (externalSearch && externalSearch?.length > 0)"
+        v-if="searchQuery.length > 0 || (externalSearch && externalSearch?.length > 0)"
         type="button"
         class="song-list__search-clear"
         aria-label="Vymazat hledání"
@@ -216,7 +494,7 @@
       class="song-list__empty"
     >
       {{
-        normalizedSearch
+        hasActiveFilters
           ? 'Žádné písně neodpovídají hledání.'
           : 'Zatím nejsou dostupné žádné písně.'
       }}
@@ -333,65 +611,259 @@
     outline-offset: 1px;
   }
 
-  .song-list__segment {
-    display: inline-flex;
-    position: relative;
-    isolation: isolate;
-    background-color: var(--bg-tertiary);
+  .song-list__options-trigger {
+    padding-inline: 10px;
     border-radius: var(--radius-sm);
-    padding: 2px;
-    font-size: 20px;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 10%, transparent);
-  }
-
-  .song-list__segment-indicator {
-    position: absolute;
-    top: var(--top);
-    left: var(--left);
-    width: var(--width);
-    height: var(--height);
-    border-radius: calc(var(--radius-sm) - 2px);
-    background-color: var(--bg-primary);
-    box-shadow: 0 1px 2px color-mix(in srgb, var(--text-primary) 12%, transparent);
-    transition-property: width, height, left, top;
-    transition-duration: var(--transition-fast);
-    transition-timing-function: ease-out;
-  }
-
-  .song-list__segment-item {
-    z-index: 1;
-    border-radius: calc(var(--radius-sm) - 2px);
-    border: none;
-    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent);
     color: var(--text-secondary);
+  }
+
+  .song-list__options-trigger:hover {
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  }
+
+  .song-list-options-menu {
+    margin-top: var(--space-xs);
+    min-width: 260px;
+    max-width: min(360px, calc(100vw - 32px));
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--text-primary) 12%, transparent);
+    padding: var(--space-sm);
+    z-index: 20;
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .song-list-options-menu[data-state='closed'],
+  .song-list-options-menu[hidden] {
+    display: none !important;
+    pointer-events: none;
+  }
+
+  .song-list-options__title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin: 0;
+    padding: 0 var(--space-xs);
+  }
+
+  .song-list-options__section-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin: 0;
+    padding: 0 var(--space-xs);
+  }
+
+  .song-list-options__view-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-xs);
+  }
+
+  .song-list-options__view-card {
+    min-height: 52px;
+    border: 1px solid var(--bg-tertiary);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    user-select: none;
     transition:
-      color var(--transition-fast),
+      border-color var(--transition-fast),
+      background-color var(--transition-fast),
       transform var(--transition-fast);
   }
 
-  .song-list__segment-item:hover {
-    color: var(--text-primary);
+  .song-list-options__view-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--bg-tertiary));
+    transform: translateY(-1px);
   }
 
-  .song-list__segment-item[data-state='checked'] {
-    color: var(--accent);
-  }
-
-  .song-list__segment-item[data-focus-visible] {
-    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  .song-list-options__view-card:focus-visible,
+  .song-list-options__chord-trigger:focus-visible,
+  .song-list-options__chord-item:focus-visible,
+  .song-list-options__clear-chords:focus-visible {
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 
-  .song-list__segment-item:active {
-    transform: translateY(1px);
+  .song-list-options__view-card--active {
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--bg-tertiary));
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, var(--bg-secondary));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) inset;
   }
 
-  .song-list__segment-item-text {
+  .song-list-options__divider {
+    width: 100%;
+    height: 1px;
+    background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+    margin: var(--space-xs) 0;
+  }
+
+  .song-list-options__combobox-control {
     position: relative;
-    z-index: 1;
+  }
+
+  .song-list-options__combobox-input {
+    border: 1px solid var(--bg-tertiary);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    min-height: 36px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 32px 0 var(--space-sm);
+    font: inherit;
+  }
+
+  .song-list-options__combobox-input::placeholder {
+    color: var(--text-secondary);
+  }
+
+  .song-list-options__combobox-input:focus-visible,
+  .song-list-options__combobox-trigger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .song-list-options__combobox-trigger {
+    position: absolute;
+    top: 50%;
+    right: var(--space-xs);
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .song-list-options__combobox-trigger:hover {
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    color: var(--text-primary);
+  }
+
+  .song-list-options__combobox-content {
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+    background: color-mix(in srgb, var(--bg-secondary) 80%, var(--bg-primary));
+    border-radius: var(--radius-sm);
+    min-width: var(--reference-width);
+    padding: var(--space-xs);
+    display: grid;
+    gap: 4px;
+    max-height: 180px;
+    overflow: hidden;
+    z-index: 30;
+  }
+
+  .song-list-options__combobox-scroller {
+    max-height: 180px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .song-list-options__combobox-content[data-state='closed'],
+  .song-list-options__combobox-content[hidden] {
+    display: none !important;
+    pointer-events: none;
+  }
+
+  .song-list-options__chord-item {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    padding: 6px var(--space-xs);
+    font: inherit;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-xs);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .song-list-options__chord-item:hover {
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    color: var(--text-primary);
+  }
+
+  .song-list-options__chord-item[data-state='checked'] {
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  .song-list-options__chord-check {
+    opacity: 0;
+    color: var(--accent);
+  }
+
+  .song-list-options__chord-item[data-state='checked'] .song-list-options__chord-check {
+    opacity: 1;
+  }
+
+  .song-list-options__clear-chords {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.8rem;
+    text-align: left;
+    padding: 4px var(--space-xs);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+  }
+
+  .song-list-options__clear-chords:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .song-list-options__selected-chords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .song-list-options__selected-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-secondary));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+  }
+
+  .song-list-options__empty {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
   }
 
   .song-list__empty {
@@ -399,34 +871,9 @@
     font-style: italic;
   }
 
-  .song-list__refresh {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 32px;
-    border: 1px solid color-mix(in srgb, var(--text-primary) 15%, transparent);
-    border-radius: var(--radius-sm);
-    background-color: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition:
-      color var(--transition-fast),
-      background-color var(--transition-fast);
-  }
-
-  .song-list__refresh:hover:not(:disabled) {
-    color: var(--text-primary);
-    background-color: color-mix(in srgb, var(--text-primary) 8%, transparent);
-  }
-
-  .song-list__refresh:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .song-list__refresh:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
-    outline-offset: 2px;
+  .song-list-options__refresh {
+    justify-content: flex-start;
+    width: 100%;
   }
 
   @keyframes spin {
@@ -445,8 +892,15 @@
     }
 
     .song-list__header {
-      flex-direction: column;
       align-items: flex-start;
+    }
+
+    .song-list-options-menu {
+      min-width: min(280px, calc(100vw - 32px));
+    }
+
+    .song-list-options__view-grid {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>
