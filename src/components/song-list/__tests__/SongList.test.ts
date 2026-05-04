@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
+import { createPinia, setActivePinia } from 'pinia';
 import SongList from '../SongList.vue';
 import type { Song } from '../../../lib/song';
 import type { Timestamp } from 'firebase/firestore';
@@ -137,6 +138,7 @@ describe('SongList', () => {
   ];
 
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
     mockUserSongs.value = [];
     mockUser.value = { uid: 'user-123', displayName: 'Test User' };

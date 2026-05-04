@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue';
+  import { computed, watch } from 'vue';
   import { TreeView, createTreeCollection } from '@ark-ui/vue/tree-view';
   import {
     ChevronsDownUp,
@@ -10,6 +10,8 @@
     Music2,
   } from 'lucide-vue-next';
   import type { Song } from '../../../lib/song';
+  import { songListStore } from '../../../stores/songList';
+  import { storeToRefs } from 'pinia';
 
   type SongTreeNode = {
     id: string;
@@ -68,7 +70,9 @@
     return collection.value.rootNode.children ?? [];
   });
 
-  const expandedValue = ref<string[]>([]);
+  const store = songListStore();
+  const { expandTreeView, collapseTreeView } = store;
+  const { expandedTreeViewValues } = storeToRefs(store);
 
   const artistNodeIds = computed(() => artistNodes.value.map((node) => node.id));
 
@@ -76,11 +80,21 @@
     [artistNodeIds, () => props.autoExpandOnFilter],
     ([ids, autoExpandOnFilter]) => {
       if (autoExpandOnFilter) {
-        expandedValue.value = ids;
+        expandedTreeViewValues.value = ids;
       }
     },
     { immediate: true }
   );
+
+  const handleExpandTreeView = () => {
+    expandTreeView();
+    expandedTreeViewValues.value = artistNodeIds.value;
+  };
+
+  const handleCollapseTreeView = () => {
+    collapseTreeView();
+    expandedTreeViewValues.value = [];
+  };
 
   const songsByNodeId = computed(() => {
     return new Map<string, Song>(
@@ -91,16 +105,8 @@
   const allExpanded = computed(
     () =>
       artistNodeIds.value.length > 0 &&
-      artistNodeIds.value.every((id) => expandedValue.value.includes(id))
+      artistNodeIds.value.every((id) => expandedTreeViewValues.value.includes(id))
   );
-
-  const expandAll = (): void => {
-    expandedValue.value = artistNodeIds.value;
-  };
-
-  const collapseAll = (): void => {
-    expandedValue.value = [];
-  };
 
   const handleSongNodeClick = (songNodeId: string) => {
     const song = songsByNodeId.value.get(songNodeId);
@@ -114,7 +120,7 @@
 
 <template>
   <TreeView.Root
-    v-model:expanded-value="expandedValue"
+    v-model:expanded-value="expandedTreeViewValues"
     :collection="collection"
     class="song-list__tree"
   >
@@ -129,7 +135,7 @@
           class="song-list__tree-control-btn"
           :disabled="allExpanded"
           aria-label="Rozbalit vše"
-          @click="expandAll"
+          @click="handleExpandTreeView"
         >
           <ChevronsUpDown :size="14" />
           Rozbalit
@@ -139,7 +145,7 @@
           class="song-list__tree-control-btn"
           :disabled="!allExpanded"
           aria-label="Sbalit vše"
-          @click="collapseAll"
+          @click="handleCollapseTreeView"
         >
           <ChevronsDownUp :size="14" />
           Sbalit

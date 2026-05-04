@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue';
+  import { computed, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import Button from '../core/Button.vue';
   import { Search, X, RefreshCw } from 'lucide-vue-next';
@@ -9,6 +9,8 @@
   import { useSongListData } from '../../composables/useSongListData';
   import Routes from '../../router/Routes';
   import type { Song } from '../../lib/song';
+  import { songListStore } from '../../stores/songList';
+  import { storeToRefs } from 'pinia';
 
   interface Props {
     externalSearch?: string;
@@ -24,17 +26,14 @@
   const router = useRouter();
 
   const { userSongs, isRefreshing, refresh } = useSongListData();
-
-  type ViewMode = 'flat' | 'tree';
-
-  const viewMode = ref<ViewMode>('tree');
-  const search = ref('');
+  const store = songListStore();
+  const { viewMode, searchQuery } = storeToRefs(store);
 
   watch(
     () => props.externalSearch,
     (value) => {
       if (value !== undefined) {
-        search.value = value;
+        searchQuery.value = value;
       }
     }
   );
@@ -106,7 +105,7 @@
     });
   };
 
-  const normalizedSearch = computed(() => search.value.trim().toLocaleLowerCase('cs'));
+  const normalizedSearch = computed(() => searchQuery.value.trim().toLocaleLowerCase('cs'));
 
   const filteredSongs = computed(() => {
     const query = normalizedSearch.value;
@@ -134,7 +133,7 @@
   const canOpenSongs = true;
 
   const clearSearch = (): void => {
-    search.value = '';
+    searchQuery.value = '';
     emit('update:externalSearch', '');
   };
 
@@ -194,14 +193,14 @@
         :size="16"
       />
       <input
-        v-model="search"
+        v-model="searchQuery"
         class="song-list__search-input"
         type="search"
         placeholder="Hledat podle názvu nebo interpreta…"
         aria-label="Hledat písně podle názvu nebo interpreta"
       />
       <button
-        v-if="search.length > 0 || (externalSearch && externalSearch?.length > 0)"
+        v-if="searchQuery.length > 0 || (externalSearch && externalSearch?.length > 0)"
         type="button"
         class="song-list__search-clear"
         aria-label="Vymazat hledání"
