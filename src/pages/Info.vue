@@ -70,9 +70,18 @@
                 class="event-dot"
                 aria-hidden="true"
               ></span>
+
               <div>
                 <strong>{{ event.time }}</strong>
-                <p>{{ event.text }}</p>
+
+                <ul>
+                  <li
+                    v-for="(item, itemIndex) in event.text"
+                    :key="`${event.time}-${event.text}-${itemIndex}`"
+                  >
+                    <span>{{ item }}</span>
+                  </li>
+                </ul>
               </div>
             </li>
           </ul>
