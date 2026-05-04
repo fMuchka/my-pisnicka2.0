@@ -23,6 +23,56 @@ const NOTE_INDEX: Record<string, number> = {
 
 const CHORD_REGEX = /^([A-GH])([#b]?)([^/]*)(?:\/([A-GH])([#b]?))?$/i;
 
+const CHORD_FILTER_ROOTS = [
+  'C',
+  'C#',
+  'Db',
+  'D',
+  'D#',
+  'Eb',
+  'E',
+  'F',
+  'F#',
+  'Gb',
+  'G',
+  'G#',
+  'Ab',
+  'A',
+  'A#',
+  'Bb',
+  'B',
+  'H',
+] as const;
+
+const CHORD_FILTER_QUALITIES = [
+  '', // dur (major triad)
+  'm',
+  // '5',
+  // '6',
+  // 'm6',
+  // '7',
+  // 'maj7',
+  // 'm7',
+  // 'mMaj7',
+  // 'sus2',
+  // 'sus4',
+  // '7sus4',
+  // 'add9',
+  // 'madd9',
+  // '9',
+  // 'm9',
+  // '11',
+  // '13',
+  // 'dim',
+  // 'dim7',
+  // 'aug',
+  // 'm7b5',
+] as const;
+
+export const STATIC_CHORD_FILTER_LIST = Object.freeze(
+  CHORD_FILTER_ROOTS.flatMap((root) => CHORD_FILTER_QUALITIES.map((quality) => `${root}${quality}`))
+);
+
 function normalizeSemitones(value: number): number {
   const withinOctave = value % 12;
 

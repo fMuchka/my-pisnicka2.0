@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/vue';
+import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
@@ -7,6 +7,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import SongList from '../SongList.vue';
 import type { Song } from '../../../lib/song';
 import type { Timestamp } from 'firebase/firestore';
+import { songListStore } from '../../../stores/songList';
 
 type MockRef<T> = { __v_isRef: true; value: T };
 
@@ -18,8 +19,10 @@ function mockRef<T>(value: T): MockRef<T> {
 }
 
 const mockRouterPush = vi.fn();
+const mockRefresh = vi.fn();
 
 const mockUserSongs = mockRef<Song[]>([]);
+const mockIsRefreshing = mockRef(false);
 const mockUser = mockRef<{ uid: string; displayName: string } | null>({
   uid: 'user-123',
   displayName: 'Test User',
@@ -28,6 +31,8 @@ const mockUser = mockRef<{ uid: string; displayName: string } | null>({
 vi.mock('../../../composables/useSongListData', () => ({
   useSongListData: () => ({
     userSongs: mockUserSongs,
+    isRefreshing: mockIsRefreshing,
+    refresh: mockRefresh,
   }),
 }));
 
@@ -108,7 +113,7 @@ vi.mock('../tree-view/SongListTreeView.vue', () => ({
   }),
 }));
 
-// Polyfill ResizeObserver for jsdom (needed by Ark UI SegmentGroup)
+// Polyfill ResizeObserver for jsdom (needed by Ark UI menu positioning)
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {
     observe() {}
@@ -141,6 +146,7 @@ describe('SongList', () => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
     mockUserSongs.value = [];
+    mockIsRefreshing.value = false;
     mockUser.value = { uid: 'user-123', displayName: 'Test User' };
   });
 
@@ -150,11 +156,10 @@ describe('SongList', () => {
     expect(screen.getByText('Seznam písní')).toBeInTheDocument();
   });
 
-  it('renders segment group for view mode selection', () => {
+  it('renders options trigger button', () => {
     render(SongList);
 
-    expect(screen.getByText('Plochý seznam')).toBeInTheDocument();
-    expect(screen.getByText('Strom')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Možnosti seznamu písní' })).toBeInTheDocument();
   });
 
   it('renders search input for title and artist filtering', () => {
@@ -180,7 +185,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    const treeButton = screen.getByText('Strom');
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    const treeButton = screen.getByRole('button', { name: 'Strom' });
     await user.click(treeButton);
 
     expect(screen.queryByTestId('flat-view')).not.toBeInTheDocument();
@@ -193,12 +199,11 @@ describe('SongList', () => {
 
     render(SongList);
 
-    // Switch to tree view
-    await user.click(screen.getByText('Strom'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Strom' }));
     expect(screen.getByTestId('tree-view')).toBeInTheDocument();
 
-    // Switch back to flat view
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     expect(screen.getByTestId('flat-view')).toBeInTheDocument();
   });
 
@@ -210,11 +215,26 @@ describe('SongList', () => {
     expect(screen.getByText('Zatím nejsou dostupné žádné písně.')).toBeInTheDocument();
   });
 
-  it('passes correct aria-label to segment group', () => {
+  it('passes correct aria-label to view mode group in options menu', async () => {
+    const user = userEvent.setup();
     render(SongList);
 
-    const segmentGroup = screen.getByLabelText('Rezim zobrazeni seznamu pisni');
-    expect(segmentGroup).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+
+    const viewModeGroup = screen.getByLabelText('Režim zobrazení seznamu písní');
+    expect(viewModeGroup).toBeInTheDocument();
+  });
+
+  it('closes options menu when trigger is clicked again', async () => {
+    const user = userEvent.setup();
+    render(SongList);
+
+    const optionsTrigger = screen.getByRole('button', { name: 'Možnosti seznamu písní' });
+    await user.click(optionsTrigger);
+    expect(screen.getByRole('menu')).toHaveAttribute('data-state', 'open');
+
+    await user.click(optionsTrigger);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('passes correct props to flat view component', async () => {
@@ -223,7 +243,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
 
     expect(screen.getByTestId('flat-view-count')).toHaveTextContent('2 songs');
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -235,7 +256,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Strom'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Strom' }));
 
     expect(screen.getByTestId('tree-view-count')).toHaveTextContent('2 songs');
     expect(screen.getByTestId('tree-view-label')).toHaveTextContent('Interpreti');
@@ -249,7 +271,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Strom'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Strom' }));
     await user.type(
       screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
       'Artist'
@@ -261,35 +284,40 @@ describe('SongList', () => {
   it('filters songs by title', async () => {
     const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
+    songListStore().viewMode = 'flat';
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
     await user.type(
       screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
       'Song 2'
     );
 
-    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    });
   });
 
   it('filters songs by artist', async () => {
     const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
+    songListStore().viewMode = 'flat';
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
     await user.type(
       screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
       'Artist B'
     );
 
-    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    });
   });
 
   it('filters songs by structured artist and title query with AND', async () => {
     const user = userEvent.setup();
+    songListStore().viewMode = 'flat';
     mockUserSongs.value = [
       {
         id: 'song-structured-1',
@@ -319,18 +347,19 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
-
     await user.type(
       screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
       "artist:Bob Dylan&&title:Knocking on Heaven's Door"
     );
 
-    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    });
   });
 
   it('filters songs by structured query with OR', async () => {
     const user = userEvent.setup();
+    songListStore().viewMode = 'flat';
     mockUserSongs.value = [
       {
         id: 'song-or-1',
@@ -360,14 +389,14 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
-
     await user.type(
       screen.getByRole('searchbox', { name: 'Hledat písně podle názvu nebo interpreta' }),
       'artist:Bob Dylan||title:Space Oddity'
     );
 
-    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('2 songs');
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('2 songs');
+    });
   });
 
   it('shows filtered empty state when no songs match the search', async () => {
@@ -392,7 +421,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -406,7 +436,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -420,7 +451,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
@@ -460,7 +492,8 @@ describe('SongList', () => {
 
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
 
     // The component sorts by artist then title
     const flatView = screen.getByTestId('flat-view');
@@ -494,7 +527,8 @@ describe('SongList', () => {
     mockUserSongs.value = mockSongs;
     render(SongList);
 
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
 
     expect(screen.queryByText('Zatím nejsou dostupné žádné písně.')).not.toBeInTheDocument();
     expect(screen.getByTestId('flat-view')).toBeInTheDocument();
@@ -513,20 +547,100 @@ describe('SongList', () => {
     mockUser.value = null;
 
     const { unmount } = render(SongList);
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
     unmount();
     mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
     render(SongList);
-    await user.click(screen.getByText('Plochý seznam'));
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
   });
 
-  const { unmount } = render(SongList);
-  expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
+  it('filters songs by selected chords with match-all logic', async () => {
+    const store = songListStore();
+    store.viewMode = 'flat';
+    mockUserSongs.value = [
+      {
+        id: 'song-chord-1',
+        title: 'Song One',
+        artist: 'Artist A',
+        chords: ['C', 'G', 'Em', 'D'],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-chord-2',
+        title: 'Song Two',
+        artist: 'Artist B',
+        chords: ['C', 'G'],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-chord-3',
+        title: 'Song Three',
+        artist: 'Artist C',
+        chords: ['C', 'G', 'D'],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+    ];
 
-  unmount();
-  mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
-  render(SongList);
-  expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
+    render(SongList);
+
+    store.setChordFilters(['C', 'G', 'Em']);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    });
+  });
+
+  it('keeps selected chord filters in songListStore across remount', async () => {
+    const store = songListStore();
+    mockUserSongs.value = [
+      {
+        id: 'song-persist-1',
+        title: 'Persist One',
+        artist: 'Artist A',
+        chords: ['Am', 'G'],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-persist-2',
+        title: 'Persist Two',
+        artist: 'Artist B',
+        chords: ['C'],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+    ];
+
+    store.viewMode = 'flat';
+    store.setChordFilters(['Am']);
+
+    const { unmount } = render(SongList);
+
+    expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+
+    unmount();
+    render(SongList);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    });
+  });
+
+  it('refreshes songs from options menu action', async () => {
+    const user = userEvent.setup();
+
+    render(SongList);
+
+    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
+    await user.click(screen.getByRole('button', { name: 'Načíst písně' }));
+
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
 });
