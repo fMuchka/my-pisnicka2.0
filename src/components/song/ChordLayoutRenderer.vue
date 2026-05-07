@@ -1,6 +1,6 @@
 <script setup lang="tsx">
   import { computed } from 'vue';
-  import { transposeChord } from '../../lib/chords';
+  import { transposeChord } from '../../lib/chords/chords';
 
   interface Props {
     text: string;

@@ -2,7 +2,7 @@
   import { computed, ref } from 'vue';
   import { Accordion } from '@ark-ui/vue/accordion';
   import { ChevronDownIcon } from 'lucide-vue-next';
-  import { transposeChord } from '../../lib/chords';
+  import { transposeChord } from '../../lib/chords/chords';
 
   interface Props {
     chords: string[];

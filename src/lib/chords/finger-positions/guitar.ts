@@ -1,0 +1,258 @@
+export const GUITAR_FINGER_POSITIONS = {
+  C: {
+    fingers: [
+      [1, 0],
+      [2, 1],
+      [3, 0],
+      [4, 2],
+      [5, 3],
+      [6, 'x'],
+    ],
+  },
+  Cm: {
+    fingers: [
+      [1, 3],
+      [2, 4],
+      [3, 5],
+      [4, 5],
+      [5, 3],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 3 }],
+  },
+  'C#': {
+    fingers: [
+      [1, 4],
+      [2, 6],
+      [3, 6],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  'C#m': {
+    fingers: [
+      [1, 4],
+      [2, 5],
+      [3, 6],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  D: {
+    fingers: [
+      [1, 2],
+      [2, 3],
+      [3, 2],
+      [4, 0],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+  },
+  Dm: {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 2],
+      [4, 0],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+  },
+  Eb: {
+    fingers: [
+      [1, 6],
+      [2, 8],
+      [3, 8],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  Ebm: {
+    fingers: [
+      [1, 6],
+      [2, 7],
+      [3, 8],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  E: {
+    fingers: [
+      [1, 0],
+      [2, 0],
+      [3, 1],
+      [4, 2],
+      [5, 2],
+      [6, 0],
+    ],
+  },
+  Em: {
+    fingers: [
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [4, 2],
+      [5, 2],
+      [6, 0],
+    ],
+  },
+  F: {
+    fingers: [
+      [1, 1],
+      [2, 1],
+      [3, 2],
+      [4, 3],
+      [5, 3],
+      [6, 1],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 1 }],
+  },
+  Fm: {
+    fingers: [
+      [1, 1],
+      [2, 1],
+      [3, 1],
+      [4, 3],
+      [5, 3],
+      [6, 1],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 1 }],
+  },
+  'F#': {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 3],
+      [4, 4],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  'F#m': {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 2],
+      [4, 4],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  G: {
+    fingers: [
+      [1, 3],
+      [2, 0],
+      [3, 0],
+      [4, 0],
+      [5, 2],
+      [6, 3],
+    ],
+  },
+  Gm: {
+    fingers: [
+      [1, 3],
+      [2, 3],
+      [3, 3],
+      [4, 5],
+      [5, 5],
+      [6, 3],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 3 }],
+  },
+  Ab: {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 5],
+      [4, 6],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  Abm: {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 4],
+      [4, 6],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  A: {
+    fingers: [
+      [1, 0],
+      [2, 2],
+      [3, 2],
+      [4, 2],
+      [5, 0],
+      [6, 'x'],
+    ],
+  },
+  Am: {
+    fingers: [
+      [1, 0],
+      [2, 1],
+      [3, 2],
+      [4, 2],
+      [5, 0],
+      [6, 'x'],
+    ],
+  },
+  Bb: {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 3],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  Bbm: {
+    fingers: [
+      [1, 1],
+      [2, 2],
+      [3, 3],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  B: {
+    fingers: [
+      [1, 2],
+      [2, 4],
+      [3, 4],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 2 }],
+  },
+  Bm: {
+    fingers: [
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 2 }],
+  },
+} as const;
