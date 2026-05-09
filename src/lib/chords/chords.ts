@@ -1,7 +1,28 @@
-import { CHORD_ROOTS, CHROMATIC_SCALE, FINGER_POSITIONS } from './chords.database';
+import { CHROMATIC_SCALE, FINGER_POSITIONS } from './chords.database';
 import { CHORD_NAMES, isChord } from './finger-positions/types';
 
 const CHORD_REGEX = /^([A-GH])([#b]?)([^/]*)(?:\/([A-GH])([#b]?))?$/i;
+
+const NOTE_TO_INDEX: Record<string, number> = {
+  C: 0,
+  'C#': 1,
+  Db: 1,
+  D: 2,
+  'D#': 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  'F#': 6,
+  Gb: 6,
+  G: 7,
+  'G#': 8,
+  Ab: 8,
+  A: 9,
+  'A#': 10,
+  Bb: 10,
+  B: 10,
+  H: 11,
+};
 
 export const STATIC_CHORD_FILTER_LIST = Array.from(CHORD_NAMES.entries().map((e) => e[0]));
 
@@ -12,13 +33,13 @@ function normalizeSemitones(value: number): number {
 }
 
 function transposeNote(note: string, semitones: number): string {
-  const index = CHORD_ROOTS.findIndex((e) => e === note);
+  const index = NOTE_TO_INDEX[note];
 
   if (index === undefined) {
     return note;
   }
 
-  const targetIndex = (index + semitones) % CHROMATIC_SCALE.length;
+  const targetIndex = normalizeSemitones(index + semitones);
 
   return CHROMATIC_SCALE[targetIndex] ?? note;
 }
