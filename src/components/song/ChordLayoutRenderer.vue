@@ -1,6 +1,6 @@
 <script setup lang="tsx">
   import { computed } from 'vue';
-  import { transposeChord } from '../../lib/chords';
+  import { transposeChord } from '../../lib/chords/chords';
 
   interface Props {
     text: string;
@@ -63,6 +63,10 @@
     return token.trim().replace(/^\[|\]$/g, '');
   }
 
+  function standaloneChordPlaceholder(chord: string): string {
+    return ' '.repeat(Math.max(chord.length, 1));
+  }
+
   function classifyLine(line: string): LineDetails {
     const tokens = getTokenMatches(line);
     const chordCount = tokens.filter((token) => isChordToken(token.value)).length;
@@ -89,7 +93,7 @@
         if (pendingChord) {
           parts.push({
             chord: pendingChord,
-            text: '      ',
+            text: standaloneChordPlaceholder(pendingChord),
           });
         }
 
@@ -141,7 +145,7 @@
     if (pendingChord) {
       parts.push({
         chord: pendingChord,
-        text: '      ',
+        text: standaloneChordPlaceholder(pendingChord),
       });
     }
 
@@ -186,10 +190,29 @@
 
     return renderLines.value.map((line) => ({
       ...line,
-      parts: line.parts.map((part) => ({
-        ...part,
-        chord: part.chord ? transposeChord(part.chord, shift) : undefined,
-      })),
+      parts: line.parts.map((part) => {
+        if (!part.chord) {
+          return part;
+        }
+
+        const transposedChord = transposeChord(part.chord, shift);
+        const isStandalonePlaceholder = /^\s+$/.test(part.text);
+
+        if (!isStandalonePlaceholder) {
+          return {
+            ...part,
+            chord: transposedChord,
+          };
+        }
+
+        const width = Math.max(part.text.length, transposedChord.length);
+
+        return {
+          ...part,
+          chord: transposedChord,
+          text: ' '.repeat(width),
+        };
+      }),
     }));
   });
 </script>

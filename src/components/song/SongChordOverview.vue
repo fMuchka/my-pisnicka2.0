@@ -2,7 +2,8 @@
   import { computed, ref } from 'vue';
   import { Accordion } from '@ark-ui/vue/accordion';
   import { ChevronDownIcon } from 'lucide-vue-next';
-  import { transposeChord } from '../../lib/chords';
+  import { transposeChord } from '../../lib/chords/chords';
+  import ChordChart from '../chord/ChordChart.vue';
 
   interface Props {
     chords: string[];
@@ -17,7 +18,7 @@
     props.chords.map((chord) => transposeChord(chord, props.transpose))
   );
 
-  const openValue = ref<string[]>(['chords']);
+  const openValue = ref<string[]>(['']);
 </script>
 
 <template>
@@ -41,9 +42,9 @@
           <span
             v-for="(chord, index) in renderedChords"
             :key="`${chord}-${index}`"
-            class="song-chord-pill"
+            class="chord-chart"
           >
-            {{ chord }}
+            <ChordChart :chord="chord" />
           </span>
         </div>
       </Accordion.ItemContent>
@@ -117,32 +118,18 @@
   }
 
   .song-chord-list {
-    display: grid;
-    grid-template-rows: 1fr;
-    grid-template-columns: repeat(5, 1fr);
-    grid-gap: 2rem;
+    display: flex;
+    flex-wrap: wrap;
     padding-bottom: 0.75rem;
-  }
-
-  .song-chord-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem;
-    background-color: var(
-      --song-chord-inline-bg,
-      color-mix(in srgb, var(--accent) 18%, var(--bg-primary))
-    );
-    box-shadow:
-      2px 0 0 2px
-        var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, var(--bg-primary))),
-      -2px 0 0 2px
-        var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, var(--bg-primary)));
     color: var(--song-chord-inline-color, var(--text-chord));
     border-radius: var(--song-chord-inline-radius, 3px);
     font-family: var(--song-chord-inline-font-family, inherit);
     font-size: var(--song-chord-font-size, var(--song-chord-inline-font-size, 0.95em));
     font-weight: var(--song-chord-font-weight, var(--song-chord-inline-font-weight, 700));
+  }
+
+  .chord-chart {
+    padding: 1rem;
   }
 
   @keyframes slideDown {

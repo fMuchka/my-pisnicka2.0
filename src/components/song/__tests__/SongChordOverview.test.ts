@@ -1,7 +1,24 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import '@testing-library/jest-dom';
 import SongChordOverview from '../SongChordOverview.vue';
+
+vi.mock('svguitar', () => {
+  const draw = vi.fn();
+  const chord = vi.fn().mockReturnValue({ draw });
+  const configure = vi.fn();
+  const SVGuitarChord = vi.fn(function SVGuitarChordMock() {
+    return {
+      configure,
+      chord,
+    };
+  });
+
+  return {
+    SVGuitarChord,
+    ChordStyle: { handdrawn: 'handdrawn' },
+  };
+});
 
 describe('SongChordOverview', () => {
   it('renders Akordy label and every chord pill', () => {
@@ -25,7 +42,7 @@ describe('SongChordOverview', () => {
       },
     });
 
-    const pills = container.querySelectorAll('.song-chord-pill');
+    const pills = container.querySelectorAll('.chord-chart');
     expect(pills).toHaveLength(3);
   });
 });

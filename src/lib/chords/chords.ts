@@ -1,6 +1,9 @@
-const CHROMATIC_SCALE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'B', 'H'] as const;
+import { CHROMATIC_SCALE, FINGER_POSITIONS } from './chords.database';
+import { CHORD_NAMES, isChord } from './finger-positions/types';
 
-const NOTE_INDEX: Record<string, number> = {
+const CHORD_REGEX = /^([A-GH])([#b]?)([^/]*)(?:\/([A-GH])([#b]?))?$/i;
+
+const NOTE_TO_INDEX: Record<string, number> = {
   C: 0,
   'C#': 1,
   Db: 1,
@@ -21,57 +24,7 @@ const NOTE_INDEX: Record<string, number> = {
   H: 11,
 };
 
-const CHORD_REGEX = /^([A-GH])([#b]?)([^/]*)(?:\/([A-GH])([#b]?))?$/i;
-
-const CHORD_FILTER_ROOTS = [
-  'C',
-  'C#',
-  'Db',
-  'D',
-  'D#',
-  'Eb',
-  'E',
-  'F',
-  'F#',
-  'Gb',
-  'G',
-  'G#',
-  'Ab',
-  'A',
-  'A#',
-  'Bb',
-  'B',
-  'H',
-] as const;
-
-const CHORD_FILTER_QUALITIES = [
-  '', // dur (major triad)
-  'm',
-  // '5',
-  // '6',
-  // 'm6',
-  // '7',
-  // 'maj7',
-  // 'm7',
-  // 'mMaj7',
-  // 'sus2',
-  // 'sus4',
-  // '7sus4',
-  // 'add9',
-  // 'madd9',
-  // '9',
-  // 'm9',
-  // '11',
-  // '13',
-  // 'dim',
-  // 'dim7',
-  // 'aug',
-  // 'm7b5',
-] as const;
-
-export const STATIC_CHORD_FILTER_LIST = Object.freeze(
-  CHORD_FILTER_ROOTS.flatMap((root) => CHORD_FILTER_QUALITIES.map((quality) => `${root}${quality}`))
-);
+export const STATIC_CHORD_FILTER_LIST = Array.from(CHORD_NAMES.entries().map((e) => e[0]));
 
 function normalizeSemitones(value: number): number {
   const withinOctave = value % 12;
@@ -80,13 +33,13 @@ function normalizeSemitones(value: number): number {
 }
 
 function transposeNote(note: string, semitones: number): string {
-  const index = NOTE_INDEX[note];
+  const index = NOTE_TO_INDEX[note];
 
   if (index === undefined) {
     return note;
   }
 
-  const targetIndex = (index + semitones) % CHROMATIC_SCALE.length;
+  const targetIndex = normalizeSemitones(index + semitones);
 
   return CHROMATIC_SCALE[targetIndex] ?? note;
 }
@@ -114,4 +67,15 @@ export function transposeChord(chord: string, semitoneShift: number): string {
   return transposedBass
     ? `${transposedRoot}${quality}/${transposedBass}`
     : `${transposedRoot}${quality}`;
+}
+
+export function getChordFingerPositions(chord: string, instrument: keyof typeof FINGER_POSITIONS) {
+  if (isChord(chord)) {
+    const guitarChord = FINGER_POSITIONS[instrument][chord];
+    if (guitarChord) {
+      return guitarChord;
+    }
+  }
+
+  return null;
 }

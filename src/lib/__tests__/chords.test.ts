@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { transposeChord } from '../chords';
+import { transposeChord } from '../chords/chords';
 
 describe('transposeChord', () => {
   it('returns original chord for zero shift', () => {

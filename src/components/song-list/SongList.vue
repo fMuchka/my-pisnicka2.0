@@ -9,7 +9,7 @@
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
   import { useSongListData } from '../../composables/useSongListData';
-  import { STATIC_CHORD_FILTER_LIST } from '../../lib/chords';
+  import { STATIC_CHORD_FILTER_LIST } from '../../lib/chords/chords';
   import Routes from '../../router/Routes';
   import type { Song } from '../../lib/song';
   import { songListStore } from '../../stores/songList';
