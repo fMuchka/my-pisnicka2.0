@@ -1,4 +1,6 @@
-export const GUITAR_FINGER_POSITIONS = {
+import type { ChordDiagramDetails } from './types';
+
+export const GUITAR_FINGER_POSITIONS: ChordDiagramDetails = {
   C: {
     fingers: [
       [1, 0],
@@ -8,6 +10,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 3],
       [6, 'x'],
     ],
+    barres: [],
   },
   Cm: {
     fingers: [
@@ -51,6 +54,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 'x'],
       [6, 'x'],
     ],
+    barres: [],
   },
   Dm: {
     fingers: [
@@ -61,6 +65,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 'x'],
       [6, 'x'],
     ],
+    barres: [],
   },
   Eb: {
     fingers: [
@@ -93,6 +98,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 2],
       [6, 0],
     ],
+    barres: [],
   },
   Em: {
     fingers: [
@@ -103,6 +109,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 2],
       [6, 0],
     ],
+    barres: [],
   },
   F: {
     fingers: [
@@ -157,6 +164,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 2],
       [6, 3],
     ],
+    barres: [],
   },
   Gm: {
     fingers: [
@@ -200,6 +208,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 0],
       [6, 'x'],
     ],
+    barres: [],
   },
   Am: {
     fingers: [
@@ -210,6 +219,7 @@ export const GUITAR_FINGER_POSITIONS = {
       [5, 0],
       [6, 'x'],
     ],
+    barres: [],
   },
   Bb: {
     fingers: [
@@ -255,4 +265,928 @@ export const GUITAR_FINGER_POSITIONS = {
     ],
     barres: [{ fromString: 5, toString: 1, fret: 2 }],
   },
-} as const;
+  Db: {
+    fingers: [
+      [1, 4],
+      [2, 6],
+      [3, 6],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  'D#': {
+    fingers: [
+      [1, 6],
+      [2, 8],
+      [3, 8],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  Gb: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 3],
+      [4, 4],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  'G#': {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 5],
+      [4, 6],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  'A#': {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 3],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  H: {
+    fingers: [
+      [1, 2],
+      [2, 4],
+      [3, 4],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 2 }],
+  },
+  Dbm: {
+    fingers: [
+      [1, 4],
+      [2, 5],
+      [3, 6],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  'D#m': {
+    fingers: [
+      [1, 6],
+      [2, 7],
+      [3, 8],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  Gbm: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 2],
+      [4, 4],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  'G#m': {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 4],
+      [4, 6],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  'A#m': {
+    fingers: [
+      [1, 1],
+      [2, 2],
+      [3, 3],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  Hm: {
+    fingers: [
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 2 }],
+  },
+  B7: {
+    fingers: [
+      [1, 2],
+      [2, 0],
+      [3, 2],
+      [4, 1],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  D7: {
+    fingers: [
+      [1, 2],
+      [2, 1],
+      [3, 2],
+      [4, 0],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  C7: {
+    fingers: [
+      [1, 0],
+      [2, 1],
+      [3, 3],
+      [4, 2],
+      [5, 3],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  'C#7': {
+    fingers: [
+      [1, 4],
+      [2, 6],
+      [3, 4],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  Db7: {
+    fingers: [
+      [1, 4],
+      [2, 6],
+      [3, 4],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  'D#7': {
+    fingers: [
+      [1, 6],
+      [2, 8],
+      [3, 6],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  Eb7: {
+    fingers: [
+      [1, 6],
+      [2, 8],
+      [3, 6],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  E7: {
+    fingers: [
+      [1, 0],
+      [2, 0],
+      [3, 1],
+      [4, 0],
+      [5, 2],
+      [6, 0],
+    ],
+    barres: [],
+  },
+  F7: {
+    fingers: [
+      [1, 1],
+      [2, 1],
+      [3, 2],
+      [4, 1],
+      [5, 3],
+      [6, 1],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 1 }],
+  },
+  'F#7': {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 3],
+      [4, 2],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  Gb7: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 3],
+      [4, 2],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  G7: {
+    fingers: [
+      [1, 1],
+      [2, 0],
+      [3, 0],
+      [4, 0],
+      [5, 2],
+      [6, 3],
+    ],
+    barres: [],
+  },
+  'G#7': {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 5],
+      [4, 4],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  Ab7: {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 5],
+      [4, 4],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  A7: {
+    fingers: [
+      [1, 0],
+      [2, 2],
+      [3, 0],
+      [4, 2],
+      [5, 0],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  'A#7': {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 1],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  Bb7: {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 1],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  H7: {
+    fingers: [
+      [1, 2],
+      [2, 0],
+      [3, 2],
+      [4, 1],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Cmaj7: {
+    fingers: [
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [4, 2],
+      [5, 3],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Cm7: {
+    fingers: [
+      [1, 3],
+      [2, 4],
+      [3, 3],
+      [4, 5],
+      [5, 3],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 3 }],
+  },
+  Cadd9: {
+    fingers: [
+      [1, 3],
+      [2, 3],
+      [3, 0],
+      [4, 2],
+      [5, 3],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  'C#maj7': {
+    fingers: [
+      [1, 4],
+      [2, 6],
+      [3, 5],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  'C#m7': {
+    fingers: [
+      [1, 4],
+      [2, 5],
+      [3, 4],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  'C#add9': {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 1],
+      [4, 3],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Dbmaj7: {
+    fingers: [
+      [1, 4],
+      [2, 6],
+      [3, 5],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  Dbm7: {
+    fingers: [
+      [1, 4],
+      [2, 5],
+      [3, 4],
+      [4, 6],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 4 }],
+  },
+  Dbadd9: {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 1],
+      [4, 3],
+      [5, 4],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Dmaj7: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 2],
+      [4, 0],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Dm7: {
+    fingers: [
+      [1, 1],
+      [2, 1],
+      [3, 2],
+      [4, 0],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Dadd9: {
+    fingers: [
+      [1, 0],
+      [2, 3],
+      [3, 2],
+      [4, 0],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  'D#maj7': {
+    fingers: [
+      [1, 6],
+      [2, 8],
+      [3, 7],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  'D#m7': {
+    fingers: [
+      [1, 6],
+      [2, 7],
+      [3, 6],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  'D#add9': {
+    fingers: [
+      [1, 1],
+      [2, 4],
+      [3, 3],
+      [4, 1],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Ebmaj7: {
+    fingers: [
+      [1, 6],
+      [2, 8],
+      [3, 7],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  Ebm7: {
+    fingers: [
+      [1, 6],
+      [2, 7],
+      [3, 6],
+      [4, 8],
+      [5, 6],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+  },
+  Ebadd9: {
+    fingers: [
+      [1, 1],
+      [2, 4],
+      [3, 3],
+      [4, 1],
+      [5, 'x'],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Emaj7: {
+    fingers: [
+      [1, 0],
+      [2, 0],
+      [3, 1],
+      [4, 1],
+      [5, 2],
+      [6, 0],
+    ],
+    barres: [],
+  },
+  Em7: {
+    fingers: [
+      [1, 0],
+      [2, 3],
+      [3, 0],
+      [4, 0],
+      [5, 2],
+      [6, 0],
+    ],
+    barres: [],
+  },
+  Eadd9: {
+    fingers: [
+      [1, 0],
+      [2, 0],
+      [3, 1],
+      [4, 4],
+      [5, 2],
+      [6, 0],
+    ],
+    barres: [],
+  },
+  Fmaj7: {
+    fingers: [
+      [1, 0],
+      [2, 1],
+      [3, 2],
+      [4, 2],
+      [5, 'x'],
+      [6, 1],
+    ],
+    barres: [],
+  },
+  Fm7: {
+    fingers: [
+      [1, 1],
+      [2, 1],
+      [3, 1],
+      [4, 1],
+      [5, 3],
+      [6, 1],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 1 }],
+  },
+  Fadd9: {
+    fingers: [
+      [1, 1],
+      [2, 1],
+      [3, 0],
+      [4, 3],
+      [5, 3],
+      [6, 1],
+    ],
+    barres: [],
+  },
+  'F#maj7': {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 3],
+      [4, 3],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  'F#m7': {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 2],
+      [4, 2],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  'F#add9': {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 1],
+      [4, 4],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [],
+  },
+  Gbmaj7: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 3],
+      [4, 3],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  Gbm7: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 2],
+      [4, 2],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 2 }],
+  },
+  Gbadd9: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 1],
+      [4, 4],
+      [5, 4],
+      [6, 2],
+    ],
+    barres: [],
+  },
+  Gmaj7: {
+    fingers: [
+      [1, 2],
+      [2, 0],
+      [3, 0],
+      [4, 0],
+      [5, 2],
+      [6, 3],
+    ],
+    barres: [],
+  },
+  Gm7: {
+    fingers: [
+      [1, 3],
+      [2, 3],
+      [3, 3],
+      [4, 3],
+      [5, 5],
+      [6, 3],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 3 }],
+  },
+  Gadd9: {
+    fingers: [
+      [1, 3],
+      [2, 0],
+      [3, 2],
+      [4, 0],
+      [5, 2],
+      [6, 3],
+    ],
+    barres: [],
+  },
+  'G#maj7': {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 5],
+      [4, 5],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  'G#m7': {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 4],
+      [4, 4],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  'G#add9': {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 3],
+      [4, 6],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [],
+  },
+  Abmaj7: {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 5],
+      [4, 5],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  Abm7: {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 4],
+      [4, 4],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [{ fromString: 6, toString: 1, fret: 4 }],
+  },
+  Abadd9: {
+    fingers: [
+      [1, 4],
+      [2, 4],
+      [3, 3],
+      [4, 6],
+      [5, 6],
+      [6, 4],
+    ],
+    barres: [],
+  },
+  Amaj7: {
+    fingers: [
+      [1, 0],
+      [2, 2],
+      [3, 1],
+      [4, 2],
+      [5, 0],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Am7: {
+    fingers: [
+      [1, 0],
+      [2, 1],
+      [3, 0],
+      [4, 2],
+      [5, 0],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Aadd9: {
+    fingers: [
+      [1, 0],
+      [2, 2],
+      [3, 4],
+      [4, 2],
+      [5, 0],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  'A#maj7': {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 2],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  'A#m7': {
+    fingers: [
+      [1, 1],
+      [2, 2],
+      [3, 1],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  'A#add9': {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 5],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Bbmaj7: {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 2],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  Bbm7: {
+    fingers: [
+      [1, 1],
+      [2, 2],
+      [3, 1],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 1 }],
+  },
+  Bbadd9: {
+    fingers: [
+      [1, 1],
+      [2, 3],
+      [3, 5],
+      [4, 3],
+      [5, 1],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Bmaj7: {
+    fingers: [
+      [1, 2],
+      [2, 4],
+      [3, 3],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 2 }],
+  },
+  Bm7: {
+    fingers: [
+      [1, 2],
+      [2, 0],
+      [3, 2],
+      [4, 0],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Badd9: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 4],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Hmaj7: {
+    fingers: [
+      [1, 2],
+      [2, 4],
+      [3, 3],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [{ fromString: 5, toString: 1, fret: 2 }],
+  },
+  Hm7: {
+    fingers: [
+      [1, 2],
+      [2, 0],
+      [3, 2],
+      [4, 0],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+  Hadd9: {
+    fingers: [
+      [1, 2],
+      [2, 2],
+      [3, 4],
+      [4, 4],
+      [5, 2],
+      [6, 'x'],
+    ],
+    barres: [],
+  },
+};

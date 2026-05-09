@@ -1,10 +1,9 @@
-import { CHORD_ROOTS, CHORD_QUALITIES, CHROMATIC_SCALE } from './chords.database';
+import { CHORD_ROOTS, CHROMATIC_SCALE, FINGER_POSITIONS } from './chords.database';
+import { CHORD_NAMES, isChord } from './finger-positions/types';
 
 const CHORD_REGEX = /^([A-GH])([#b]?)([^/]*)(?:\/([A-GH])([#b]?))?$/i;
 
-export const STATIC_CHORD_FILTER_LIST = Object.freeze(
-  CHORD_ROOTS.flatMap((root) => CHORD_QUALITIES.map((quality) => `${root}${quality}`))
-);
+export const STATIC_CHORD_FILTER_LIST = Array.from(CHORD_NAMES.entries().map((e) => e[0]));
 
 function normalizeSemitones(value: number): number {
   const withinOctave = value % 12;
@@ -47,4 +46,15 @@ export function transposeChord(chord: string, semitoneShift: number): string {
   return transposedBass
     ? `${transposedRoot}${quality}/${transposedBass}`
     : `${transposedRoot}${quality}`;
+}
+
+export function getChordFingerPositions(chord: string, instrument: keyof typeof FINGER_POSITIONS) {
+  if (isChord(chord)) {
+    const guitarChord = FINGER_POSITIONS[instrument][chord];
+    if (guitarChord) {
+      return guitarChord;
+    }
+  }
+
+  return null;
 }
