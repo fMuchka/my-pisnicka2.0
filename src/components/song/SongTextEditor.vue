@@ -66,6 +66,8 @@
   interface Section {
     type: SectionType;
     text: string;
+    startLine: number;
+    endLine: number;
   }
 
   // Parse markdown to sections
@@ -76,8 +78,9 @@
     const parsed: Section[] = [];
     let currentType: SectionType | null = null;
     let currentLines: string[] = [];
+    let sectionStartLine = 0;
 
-    const pushSection = () => {
+    const pushSection = (endLine: number) => {
       if (!currentType) {
         return;
       }
@@ -91,18 +94,21 @@
       parsed.push({
         type: currentType,
         text,
+        startLine: sectionStartLine,
+        endLine,
       });
     };
 
-    for (const line of lines) {
+    for (const [lineIndex, line] of lines.entries()) {
       const match = line.match(/^\[([A-Za-z]+)\s*(\d+)?\]$/);
 
       if (match) {
-        pushSection();
+        pushSection(lineIndex);
 
         const type = match[1]?.toLowerCase() as SectionType;
         currentType = type in sectionLabels ? type : 'verse';
         currentLines = [];
+        sectionStartLine = lineIndex + 1;
         continue;
       }
 
@@ -111,7 +117,7 @@
       }
     }
 
-    pushSection();
+    pushSection(lines.length);
 
     return parsed;
   }
@@ -130,6 +136,26 @@
   const previewSections = computed(() => parseMarkdown(rawMarkdown.value));
   const previewText = computed(() => rawMarkdown.value.trim());
   const uniqueChords = computed(() => extractUniqueChords(rawMarkdown.value));
+
+  function handleSectionTextUpdate(sectionIndex: number, updatedSectionText: string): void {
+    const section = previewSections.value[sectionIndex];
+    if (!section) {
+      return;
+    }
+
+    const markdownLines = rawMarkdown.value.split('\n');
+    const nextSectionLines = updatedSectionText.split('\n');
+
+    markdownLines.splice(
+      section.startLine,
+      Math.max(0, section.endLine - section.startLine),
+      ...nextSectionLines
+    );
+
+    rawMarkdown.value = markdownLines.join('\n');
+    emit('update:modelValue', rawMarkdown.value);
+    emit('unique-chords', extractUniqueChords(rawMarkdown.value));
+  }
 
   function toggleMode() {
     if (!isVisualMode.value) {
@@ -210,16 +236,11 @@
             <ChordLayoutRenderer
               class="song-text"
               :text="section.text"
+              :editable="true"
+              @update:text="(value) => handleSectionTextUpdate(index, value)"
             />
           </section>
         </template>
-
-        <ChordLayoutRenderer
-          v-else
-          class="song-text"
-          :text="previewText"
-          editable
-        />
       </article>
     </div>
 
