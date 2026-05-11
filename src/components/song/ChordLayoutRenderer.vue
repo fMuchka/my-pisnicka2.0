@@ -5,6 +5,7 @@
   interface Props {
     text: string;
     transpose?: number;
+    editable?: boolean;
   }
 
   type LineKind = 'lyrics' | 'mixed';

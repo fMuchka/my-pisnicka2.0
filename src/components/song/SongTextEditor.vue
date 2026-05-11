@@ -218,6 +218,7 @@
           v-else
           class="song-text"
           :text="previewText"
+          editable
         />
       </article>
     </div>
