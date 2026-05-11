@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "@ark-ui/vue": "^5.34.0",
+    "@tiptap/starter-kit": "^3.23.1",
+    "@tiptap/vue-3": "^3.23.1",
     "@vueuse/core": "^14.1.0",
     "@vueuse/integrations": "^14.1.0",
     "firebase": "^12.11.0",
