@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue';
-  import { Eye, Code } from 'lucide-vue-next';
+  import { Eye, FileType } from 'lucide-vue-next';
   import ChordLayoutRenderer from './ChordLayoutRenderer.vue';
   import SongChordOverview from './SongChordOverview.vue';
   import Button from '../core/Button.vue';
@@ -50,7 +50,7 @@
   // Button icons
   const modeToggleIcon = computed<ButtonIcon>(() => ({
     position: 'prepend',
-    component: isVisualMode.value ? Code : Eye,
+    component: isVisualMode.value ? FileType : Eye,
   }));
 
   const sectionLabels = {
@@ -178,7 +178,7 @@
         color-variation="Primary"
         style-variation="Text"
         :aria-label="isVisualMode ? 'Přepnout na text' : 'Přepnout na vizuální režim'"
-        :label="isVisualMode ? 'Upravit' : 'Náhled'"
+        :label="isVisualMode ? 'Zdroj' : 'Náhled'"
         :icon="modeToggleIcon"
         @click="toggleMode"
       />
