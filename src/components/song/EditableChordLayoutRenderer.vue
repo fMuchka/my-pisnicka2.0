@@ -553,42 +553,6 @@
     border: none;
   }
 
-  .chord-layout-editor :deep(.clr-anchored) {
-    position: relative;
-    display: inline-block;
-    white-space: pre-wrap;
-    vertical-align: baseline;
-  }
-
-  .chord-layout-editor :deep(.clr-badge) {
-    position: absolute;
-    left: 0;
-    color: var(--song-chord-inline-color, var(--text-chord));
-    font-family: var(--song-chord-inline-font-family, inherit);
-    font-size: var(--song-chord-font-size, var(--song-chord-inline-font-size, 0.95em));
-    font-weight: var(--song-chord-font-weight, var(--song-chord-inline-font-weight, 700));
-    line-height: 1;
-    min-width: var(--song-chord-min-width, auto);
-    font-variant-ligatures: none;
-    border-radius: var(--song-chord-inline-radius, 3px);
-    white-space: nowrap;
-    vertical-align: baseline;
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.2rem;
-    padding: 0.25rem;
-    background-color: var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
-    box-shadow:
-      2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white)),
-      -2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
-    cursor: default;
-  }
-
-  .chord-layout-editor :deep(.clr-badge-label) {
-    display: inline-block;
-  }
-
   .chord-layout-editor :deep(.clr-badge-delete) {
     display: inline-flex;
     align-items: center;
@@ -620,11 +584,9 @@
     background: color-mix(in srgb, #dc2626 30%, transparent);
   }
 
-  .chord-layout-editor :deep(.clr-lyric) {
-    display: inline;
-  }
-
   .chord-layout-editor :deep(.clr-anchored:hover .clr-badge) {
     background-color: color-mix(in srgb, #dc2626 24%, var(--song-chord-inline-bg, white));
   }
 </style>
+
+<style scoped src="./chord-layout-shared.css"></style>
