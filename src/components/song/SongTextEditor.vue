@@ -237,6 +237,7 @@
               class="song-text"
               :text="section.text"
               :editable="true"
+              :context-chords="uniqueChords"
               @update:text="(value) => handleSectionTextUpdate(index, value)"
             />
           </section>
