@@ -278,14 +278,21 @@ export const GUITAR_FINGER_POSITIONS: ChordDiagramDetails = {
   },
   'D#': {
     fingers: [
-      [1, 6],
-      [2, 8],
-      [3, 8],
-      [4, 8],
-      [5, 6],
+      [1, 1],
+      [2, 2],
+      [3, 1],
+      [4, 3],
+      [5, 4],
       [6, 'x'],
     ],
-    barres: [{ fromString: 5, toString: 1, fret: 6 }],
+    barres: [
+      {
+        fromString: 3,
+        toString: 1,
+        fret: 1,
+      },
+    ],
+    position: 3,
   },
   Gb: {
     fingers: [

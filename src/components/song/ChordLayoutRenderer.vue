@@ -1,10 +1,18 @@
-<script setup lang="tsx">
+<script setup lang="ts">
   import { computed } from 'vue';
-  import { transposeChord } from '../../lib/chords/chords';
+  import { isSupportedChord, transposeChord } from '../../lib/chords/chords';
+  import EditableChordLayoutRenderer from './EditableChordLayoutRenderer.vue';
 
   interface Props {
     text: string;
     transpose?: number;
+    editable?: boolean;
+    editablePlaceholder?: string;
+    contextChords?: string[];
+  }
+
+  interface Emits {
+    (event: 'update:text', value: string): void;
   }
 
   type LineKind = 'lyrics' | 'mixed';
@@ -29,10 +37,12 @@
 
   const props = withDefaults(defineProps<Props>(), {
     transpose: 0,
+    editable: false,
+    editablePlaceholder: 'Začněte psát text písně...',
+    contextChords: () => [],
   });
 
-  const CHORD_TOKEN_REGEX =
-    /^\[?[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?\]?$/;
+  const emit = defineEmits<Emits>();
 
   function getTokenMatches(line: string): TokenMatch[] {
     const matches = Array.from(line.matchAll(/(\[[^\]]+\]|[^\s[\]]+)(\s*)/g));
@@ -56,7 +66,7 @@
   }
 
   function isChordToken(token: string): boolean {
-    return CHORD_TOKEN_REGEX.test(token.trim());
+    return isSupportedChord(token);
   }
 
   function chordValue(token: string): string {
@@ -218,7 +228,18 @@
 </script>
 
 <template>
-  <div class="chord-layout-renderer">
+  <EditableChordLayoutRenderer
+    v-if="props.editable"
+    :text="props.text"
+    :editable-placeholder="props.editablePlaceholder"
+    :context-chords="props.contextChords"
+    @update:text="(value) => emit('update:text', value)"
+  />
+
+  <div
+    v-else
+    class="chord-layout-renderer"
+  >
     <template
       v-for="(line, lineIndex) in renderedParts"
       :key="lineIndex"
@@ -241,45 +262,4 @@
   </div>
 </template>
 
-<style scoped>
-  .chord-layout-renderer {
-    font-family: var(--song-text-font-family, monospace);
-    font-size: var(--song-text-font-size, 1rem);
-    line-height: var(--song-anchored-line-height, 2.2);
-    color: var(--song-text-color, var(--text-chord));
-    white-space: pre-wrap;
-    word-break: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .clr-anchored {
-    position: relative;
-    display: inline-block;
-    white-space: pre-wrap;
-    vertical-align: baseline;
-  }
-
-  .clr-anchored::before {
-    content: attr(data-before-content);
-    position: absolute;
-    left: 0;
-    color: var(--song-chord-inline-color, var(--text-chord));
-    font-family: var(--song-chord-inline-font-family, inherit);
-    font-size: var(--song-chord-font-size, var(--song-chord-inline-font-size, 0.95em));
-    font-weight: var(--song-chord-font-weight, var(--song-chord-inline-font-weight, 700));
-    line-height: 1;
-    min-width: var(--song-chord-min-width, auto);
-    font-variant-ligatures: none;
-    border-radius: var(--song-chord-inline-radius, 3px);
-    white-space: nowrap;
-    vertical-align: baseline;
-
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem;
-    background-color: var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
-    box-shadow:
-      2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white)),
-      -2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
-  }
-</style>
+<style scoped src="./chord-layout-shared.css"></style>

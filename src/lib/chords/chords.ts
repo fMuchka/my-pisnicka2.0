@@ -1,7 +1,10 @@
-import { CHROMATIC_SCALE, FINGER_POSITIONS } from './chords.database';
+import { CHORD_QUALITIES, CHORD_ROOTS, CHROMATIC_SCALE, FINGER_POSITIONS } from './chords.database';
 import { CHORD_NAMES, isChord } from './finger-positions/types';
 
 const CHORD_REGEX = /^([A-GH])([#b]?)([^/]*)(?:\/([A-GH])([#b]?))?$/i;
+
+const CHORD_ROOT_SET = new Set<string>(CHORD_ROOTS);
+const CHORD_QUALITY_SET = new Set<string>(CHORD_QUALITIES);
 
 const NOTE_TO_INDEX: Record<string, number> = {
   C: 0,
@@ -25,6 +28,51 @@ const NOTE_TO_INDEX: Record<string, number> = {
 };
 
 export const STATIC_CHORD_FILTER_LIST = Array.from(CHORD_NAMES.entries().map((e) => e[0]));
+
+function normalizeRoot(letter: string, accidental: string): string {
+  return `${letter.toUpperCase()}${accidental}`;
+}
+
+function unwrapChordToken(value: string): string {
+  const trimmed = value.trim();
+
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
+export function normalizeChord(chord: string): string | null {
+  const candidate = unwrapChordToken(chord);
+  const match = candidate.match(CHORD_REGEX);
+
+  if (!match) {
+    return null;
+  }
+
+  const root = normalizeRoot(match[1] ?? '', match[2] ?? '');
+  const quality = match[3] ?? '';
+  const bassRoot = match[4] ? normalizeRoot(match[4], match[5] ?? '') : null;
+
+  if (!CHORD_ROOT_SET.has(root)) {
+    return null;
+  }
+
+  if (!CHORD_QUALITY_SET.has(quality)) {
+    return null;
+  }
+
+  if (bassRoot && !CHORD_ROOT_SET.has(bassRoot)) {
+    return null;
+  }
+
+  return bassRoot ? `${root}${quality}/${bassRoot}` : `${root}${quality}`;
+}
+
+export function isSupportedChord(chord: string): boolean {
+  return normalizeChord(chord) !== null;
+}
 
 function normalizeSemitones(value: number): number {
   const withinOctave = value % 12;

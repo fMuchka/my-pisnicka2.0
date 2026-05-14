@@ -194,8 +194,7 @@
                   @unique-chords="handleUniqueChordsChange"
                 />
                 <Field.HelperText class="field-helper">
-                  Upravujte markdown v textovém režimu, vizuální režim slouží jako náhled sekcí a
-                  akordů
+                  Akordy lze přidat po vybrání textu.
                 </Field.HelperText>
               </Field.Root>
               <!-- General Error -->

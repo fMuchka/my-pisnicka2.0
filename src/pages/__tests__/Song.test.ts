@@ -150,8 +150,8 @@ describe('Song Page', () => {
 
     expect(screen.getByText('Song title')).toBeInTheDocument();
     expect(screen.getByText('Artist name')).toBeInTheDocument();
-    expect(screen.getByText('Intro')).toBeInTheDocument();
-    expect(screen.getByText('Verse')).toBeInTheDocument();
+    expect(screen.getByText('Úvod')).toBeInTheDocument();
+    expect(screen.getByText('Sloka')).toBeInTheDocument();
     expect(screen.getByTestId('song-chord-overview')).toHaveTextContent('G,D,Am');
   });
 

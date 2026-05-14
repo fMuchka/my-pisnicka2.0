@@ -50,4 +50,17 @@ describe('ChordLayoutRenderer', () => {
 
     expect(container.querySelector('.chord-layout-renderer')?.textContent).toBe('');
   });
+
+  it('does not anchor unsupported chords outside chords.database', () => {
+    const { container } = render(ChordLayoutRenderer, {
+      props: {
+        text: '[Gsus4] line [Hm9] end',
+      },
+    });
+
+    const anchored = Array.from(container.querySelectorAll('.clr-anchored'));
+    const dataBeforeContent = anchored.map((node) => node.getAttribute('data-before-content'));
+
+    expect(dataBeforeContent).toEqual([]);
+  });
 });

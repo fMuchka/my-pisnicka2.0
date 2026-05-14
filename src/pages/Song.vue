@@ -13,11 +13,12 @@
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
+  import { SECTIONS_DICTIONARY, type SectionTypes } from '../lib/sections/sectionsDictionary';
   import type { Song } from '../lib/song';
   import { updateActiveSongId } from '../lib/session';
   import { useSessionStore } from '../stores/session';
 
-  type SectionType = 'intro' | 'verse' | 'chorus' | 'outro' | 'bridge';
+  type SectionType = SectionTypes;
   type Section = { type: SectionType; text: string };
 
   const route = useRoute();
@@ -181,14 +182,6 @@
 
     return Math.ceil(remainingScrollDistance.value / autoScrollSpeed.value);
   });
-  const sectionLabels: Record<SectionType, string> = {
-    intro: 'Intro',
-    verse: 'Verse',
-    chorus: 'Chorus',
-    outro: 'Outro',
-    bridge: 'Bridge',
-  };
-
   const formatRemainingTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -205,7 +198,12 @@
 
   const sections = ref<Section[]>([]);
 
-  const SECTION_MARKER_REGEX = /\[(intro|verse|chorus|outro)\]/gi;
+  const SECTION_MARKER_REGEX = new RegExp(
+    `\\[(${Object.keys(SECTIONS_DICTIONARY).join('|')})\\]`,
+    'gi'
+  );
+
+  const isSectionType = (value: string): value is SectionType => value in SECTIONS_DICTIONARY;
 
   watch(
     songText,
@@ -235,15 +233,15 @@
           continue;
         }
 
-        const sectionType = marker[1]?.toLowerCase() as SectionType | undefined;
+        const sectionTypeCandidate = marker[1]?.toLowerCase();
         const sectionTextStart = marker.index + marker[0].length;
         const nextMarker = markers[i + 1];
         const sectionTextEnd = nextMarker?.index ?? normalizedText.length;
         const sectionText = normalizedText.slice(sectionTextStart, sectionTextEnd).trim();
 
-        if (sectionType && sectionText.length > 0) {
+        if (sectionTypeCandidate && isSectionType(sectionTypeCandidate) && sectionText.length > 0) {
           newSections.push({
-            type: sectionType,
+            type: sectionTypeCandidate,
             text: sectionText,
           });
         }
@@ -438,9 +436,9 @@
               v-for="(section, index) in sections"
               :key="`${section.type}-${index}`"
               class="song-section"
-              :class="`song-section--${section.type}`"
+              :style="{ '--section-accent': SECTIONS_DICTIONARY[section.type].color }"
             >
-              <h2 class="song-section-title">{{ sectionLabels[section.type] }}</h2>
+              <h2 class="song-section-title">{{ SECTIONS_DICTIONARY[section.type].label }}</h2>
               <ChordLayoutRenderer
                 class="song-text"
                 :text="section.text"
@@ -544,29 +542,12 @@
     --section-accent: color-mix(in srgb, var(--accent) 35%, transparent);
     padding: 0;
     padding-left: var(--space-md);
-    border-radius: var(--radius-md);
     border-left: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
     border-left-width: 4px;
   }
 
   .song-section:not(:last-child) {
     margin-bottom: var(--space-md);
-  }
-
-  .song-section--intro {
-    --section-accent: color-mix(in srgb, #f59e0b 55%, var(--accent));
-  }
-
-  .song-section--verse {
-    --section-accent: color-mix(in srgb, #16a34a 42%, var(--accent));
-  }
-
-  .song-section--chorus {
-    --section-accent: color-mix(in srgb, #0284c7 45%, var(--accent));
-  }
-
-  .song-section--outro {
-    --section-accent: color-mix(in srgb, #dc2626 35%, var(--accent));
   }
 
   .song-section-title {
