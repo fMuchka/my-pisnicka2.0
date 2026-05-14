@@ -3,7 +3,6 @@
   import { Eye, FileType } from 'lucide-vue-next';
   import SongSectionBlock from './song-text-editor/SongSectionBlock.vue';
   import SongSectionPicker from './song-text-editor/SongSectionPicker.vue';
-  import SongChordOverview from './SongChordOverview.vue';
   import Button from '../core/Button.vue';
   import { useSongTextEditorState } from '../../composables/useSongTextEditorState';
   import { parseMarkdownSections, type SectionType } from '../../lib/songTextEditor/sections';

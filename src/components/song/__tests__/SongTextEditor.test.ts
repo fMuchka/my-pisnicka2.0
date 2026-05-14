@@ -25,19 +25,31 @@ describe('SongTextEditor', () => {
   it('does not derive Cm or Gm from Czech words after bracketed C and G', () => {
     const input = 'Ahoj, [C]město je velké a [G]máma vaří oběd.';
 
-    const { container } = render(SongTextEditor, {
+    const { emitted } = render(SongTextEditor, {
       props: {
         modelValue: input,
       },
     });
 
-    const pills = Array.from(container.querySelectorAll('.chord-chart > .chord-title')).map(
-      (node) => node.textContent?.trim() ?? ''
-    );
+    const uniqueChordsEvents = emitted()['unique-chords'] ?? [];
+    const lastEvent = uniqueChordsEvents.at(-1);
 
-    expect(pills).toContain('C');
-    expect(pills).toContain('G');
-    expect(pills).not.toContain('Cm');
-    expect(pills).not.toContain('Gm');
+    if (!lastEvent) {
+      throw new Error('Expected unique-chords event to be emitted at least once');
+    }
+
+    if (!Array.isArray(lastEvent)) {
+      throw new Error('Expected unique-chords event payload container to be an array');
+    }
+
+    const payload = lastEvent[0];
+    const uniqueChords = Array.isArray(payload)
+      ? payload.filter((item): item is string => typeof item === 'string')
+      : [];
+
+    expect(uniqueChords).toContain('C');
+    expect(uniqueChords).toContain('G');
+    expect(uniqueChords).not.toContain('Cm');
+    expect(uniqueChords).not.toContain('Gm');
   });
 });
