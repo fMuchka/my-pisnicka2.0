@@ -1,9 +1,12 @@
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue';
+  import { computed, toRef } from 'vue';
   import { Eye, FileType } from 'lucide-vue-next';
-  import ChordLayoutRenderer from './ChordLayoutRenderer.vue';
+  import SongSectionBlock from './song-text-editor/SongSectionBlock.vue';
+  import SongSectionPicker from './song-text-editor/SongSectionPicker.vue';
   import SongChordOverview from './SongChordOverview.vue';
   import Button from '../core/Button.vue';
+  import { useSongTextEditorState } from '../../composables/useSongTextEditorState';
+  import { parseMarkdownSections, type SectionType } from '../../lib/songTextEditor/sections';
   import type { LucideProps } from 'lucide-vue-next';
   import type { EmitsOptions, FunctionalComponent } from 'vue';
 
@@ -28,24 +31,30 @@
     (e: 'unique-chords', value: string[]): void;
   }
 
-  const CHORD_CORE_PATTERN =
-    '[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:/[A-GH][#b]?)?';
-  const STORED_CHORD_PATTERN = new RegExp(`\\[(${CHORD_CORE_PATTERN})\\]`, 'g');
-  const BRACKETED_VISUAL_PATTERN = /\[([^\]\s][^\]]*)\]/g;
-  // In visual mode, detect plain chords but avoid words and already-bracketed tokens.
-  const VISUAL_CHORD_PATTERN = new RegExp(
-    `(?<![\\p{L}\\[])((${CHORD_CORE_PATTERN}))(?![\\p{L}\\]])`,
-    'gu'
-  );
-
   const props = withDefaults(defineProps<Props>(), {
     placeholder: 'Začněte psát text písně...',
   });
 
   const emit = defineEmits<Emits>();
 
-  // Toggle between visual and markdown mode
-  const isVisualMode = ref(true);
+  const {
+    addSectionAfterIndex,
+    closeAddSectionPicker,
+    handleMarkdownInput,
+    insertSection,
+    isVisualMode,
+    openAddSectionPicker,
+    rawMarkdown,
+    removeSection,
+    toggleMode,
+    uniqueChords,
+    updateSectionText,
+    updateSectionType,
+  } = useSongTextEditorState({
+    modelValue: toRef(props, 'modelValue'),
+    onModelValueChange: (value) => emit('update:modelValue', value),
+    onUniqueChordsChange: (value) => emit('unique-chords', value),
+  });
 
   // Button icons
   const modeToggleIcon = computed<ButtonIcon>(() => ({
@@ -53,89 +62,12 @@
     component: isVisualMode.value ? FileType : Eye,
   }));
 
-  const sectionLabels = {
-    intro: 'Intro',
-    verse: 'Verse',
-    bridge: 'Bridge',
-    chorus: 'Chorus',
-    outro: 'Outro',
-  } as const;
-
-  type SectionType = keyof typeof sectionLabels;
-
-  interface Section {
-    type: SectionType;
-    text: string;
-    startLine: number;
-    endLine: number;
-  }
-
-  // Parse markdown to sections
-  function parseMarkdown(markdown: string): Section[] {
-    if (!markdown.trim()) return [];
-
-    const lines = markdown.split('\n');
-    const parsed: Section[] = [];
-    let currentType: SectionType | null = null;
-    let currentLines: string[] = [];
-    let sectionStartLine = 0;
-
-    const pushSection = (endLine: number) => {
-      if (!currentType) {
-        return;
-      }
-
-      const text = currentLines.join('\n').trim();
-
-      if (!text) {
-        return;
-      }
-
-      parsed.push({
-        type: currentType,
-        text,
-        startLine: sectionStartLine,
-        endLine,
-      });
-    };
-
-    for (const [lineIndex, line] of lines.entries()) {
-      const match = line.match(/^\[([A-Za-z]+)\s*(\d+)?\]$/);
-
-      if (match) {
-        pushSection(lineIndex);
-
-        const type = match[1]?.toLowerCase() as SectionType;
-        currentType = type in sectionLabels ? type : 'verse';
-        currentLines = [];
-        sectionStartLine = lineIndex + 1;
-        continue;
-      }
-
-      if (currentType) {
-        currentLines.push(line);
-      }
-    }
-
-    pushSection(lines.length);
-
-    return parsed;
-  }
-
-  const rawMarkdown = ref(props.modelValue);
-
-  watch(
-    () => props.modelValue,
-    (newValue) => {
-      rawMarkdown.value = newValue;
-      emit('unique-chords', extractUniqueChords(newValue));
-    },
-    { immediate: true }
-  );
-
-  const previewSections = computed(() => parseMarkdown(rawMarkdown.value));
+  const previewSections = computed(() => parseMarkdownSections(rawMarkdown.value));
   const previewText = computed(() => rawMarkdown.value.trim());
-  const uniqueChords = computed(() => extractUniqueChords(rawMarkdown.value));
+
+  function handleAddSection(type: SectionType): void {
+    insertSection(addSectionAfterIndex.value ?? -1, type, previewSections.value);
+  }
 
   function handleSectionTextUpdate(sectionIndex: number, updatedSectionText: string): void {
     const section = previewSections.value[sectionIndex];
@@ -143,62 +75,31 @@
       return;
     }
 
-    const markdownLines = rawMarkdown.value.split('\n');
-    const nextSectionLines = updatedSectionText.split('\n');
-
-    markdownLines.splice(
-      section.startLine,
-      Math.max(0, section.endLine - section.startLine),
-      ...nextSectionLines
-    );
-
-    rawMarkdown.value = markdownLines.join('\n');
-    emit('update:modelValue', rawMarkdown.value);
-    emit('unique-chords', extractUniqueChords(rawMarkdown.value));
+    updateSectionText(section, updatedSectionText);
   }
 
-  function toggleMode() {
-    if (!isVisualMode.value) {
-      emit('update:modelValue', rawMarkdown.value);
-      emit('unique-chords', extractUniqueChords(rawMarkdown.value));
+  function handleSectionTypeChange(sectionIndex: number, nextType: SectionType): void {
+    const section = previewSections.value[sectionIndex];
+    if (!section) {
+      return;
     }
 
-    isVisualMode.value = !isVisualMode.value;
+    updateSectionType(section, nextType);
   }
 
-  function toVisualChordText(text: string): string {
-    return text.replace(STORED_CHORD_PATTERN, '$1').replace(BRACKETED_VISUAL_PATTERN, '$1');
-  }
-
-  function extractUniqueChords(text: string): string[] {
-    const uniqueChords = new Set<string>();
-
-    // Extract from stored bracket format first (handles [C]mama without a separating space)
-    for (const match of text.matchAll(STORED_CHORD_PATTERN)) {
-      const chord = match[1];
-      if (chord) uniqueChords.add(chord);
+  function handleRemoveSection(sectionIndex: number): void {
+    const section = previewSections.value[sectionIndex];
+    if (!section) {
+      return;
     }
 
-    // Also extract plain visual chords (for text without bracket notation)
-    const normalized = toVisualChordText(text);
-    for (const match of normalized.matchAll(VISUAL_CHORD_PATTERN)) {
-      const chord = match[1] ?? match[0];
-      if (chord) uniqueChords.add(chord);
-    }
-
-    return Array.from(uniqueChords);
+    removeSection(section);
   }
 </script>
 
 <template>
   <div class="song-text-editor">
     <div class="editor-toolbar">
-      <SongChordOverview
-        v-if="uniqueChords.length > 0"
-        class="editor-chords"
-        :chords="uniqueChords"
-      />
-
       <Button
         class="mode-toggle-button"
         color-variation="Primary"
@@ -218,7 +119,21 @@
         v-if="!previewText"
         class="empty-state"
       >
-        <p>Žádný text písně. Přepněte do textového režimu a upravte markdown.</p>
+        <p>Žádný text písně. Přidejte první sekci.</p>
+        <div class="add-section-row add-section-row--empty">
+          <button
+            type="button"
+            class="add-section-button"
+            @click="openAddSectionPicker(-1)"
+          >
+            + Přidat sekci
+          </button>
+          <SongSectionPicker
+            v-if="addSectionAfterIndex === -1"
+            @select="handleAddSection"
+            @cancel="closeAddSectionPicker"
+          />
+        </div>
       </div>
 
       <article
@@ -226,21 +141,20 @@
         class="song-body"
       >
         <template v-if="previewSections.length > 0">
-          <section
+          <SongSectionBlock
             v-for="(section, index) in previewSections"
             :key="`${section.type}-${index}`"
-            class="song-section"
-            :class="`song-section--${section.type}`"
-          >
-            <h2 class="song-section-title">{{ sectionLabels[section.type] }}</h2>
-            <ChordLayoutRenderer
-              class="song-text"
-              :text="section.text"
-              :editable="true"
-              :context-chords="uniqueChords"
-              @update:text="(value) => handleSectionTextUpdate(index, value)"
-            />
-          </section>
+            :section="section"
+            :section-index="index"
+            :context-chords="uniqueChords"
+            :is-add-picker-open="addSectionAfterIndex === index"
+            @open-add-picker="openAddSectionPicker(index)"
+            @close-add-picker="closeAddSectionPicker"
+            @add-section="handleAddSection"
+            @remove-section="handleRemoveSection(index)"
+            @update:section-text="(value) => handleSectionTextUpdate(index, value)"
+            @update:section-type="(value) => handleSectionTypeChange(index, value)"
+          />
         </template>
       </article>
     </div>
@@ -254,12 +168,7 @@
         class="markdown-textarea"
         :placeholder="placeholder"
         rows="12"
-        @input="
-          () => {
-            emit('update:modelValue', rawMarkdown);
-            emit('unique-chords', extractUniqueChords(rawMarkdown));
-          }
-        "
+        @input="handleMarkdownInput"
       />
     </div>
   </div>
@@ -329,53 +238,36 @@
     overflow-x: auto;
   }
 
-  .song-section {
-    --section-accent: color-mix(in srgb, var(--accent) 35%, transparent);
-    padding: 0;
-    padding-left: var(--space-md);
-    border-radius: var(--radius-md);
-    border-left: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
-    border-left-width: 4px;
+  .add-section-row {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    margin-left: var(--space-md);
+    margin-bottom: var(--space-xl);
   }
 
-  .song-section:not(:last-child) {
-    margin-bottom: var(--space-md);
+  .add-section-row--empty {
+    margin-top: var(--space-sm);
+    margin-left: 0;
+    justify-content: center;
   }
 
-  .song-section--intro {
-    --section-accent: color-mix(in srgb, #f59e0b 55%, var(--accent));
+  .add-section-button {
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-primary));
+    color: var(--text-primary);
+    padding: 0.34rem 0.72rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent) inset;
+    cursor: pointer;
   }
 
-  .song-section--verse {
-    --section-accent: color-mix(in srgb, #16a34a 42%, var(--accent));
-  }
-
-  .song-section--bridge {
-    --section-accent: color-mix(in srgb, var(--section-bridge-border) 70%, var(--accent));
-  }
-
-  .song-section--chorus {
-    --section-accent: color-mix(in srgb, #0284c7 45%, var(--accent));
-  }
-
-  .song-section--outro {
-    --section-accent: color-mix(in srgb, #dc2626 35%, var(--accent));
-  }
-
-  .song-section-title {
-    margin: 0 0 var(--space-sm);
-    font-size: 13px;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-
-  .song-text {
-    --song-text-color: var(--text-chord);
-    margin: 0;
-    font-family: var(--song-text-font-family);
-    font-size: var(--song-text-font-size);
-    line-height: var(--song-text-line-height);
+  .add-section-button:hover {
+    background: color-mix(in srgb, var(--accent) 26%, var(--bg-primary));
+    border-color: color-mix(in srgb, var(--accent) 72%, transparent);
   }
 
   .markdown-textarea {

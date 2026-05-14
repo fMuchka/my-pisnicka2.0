@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { transposeChord } from '../chords/chords';
+import { isSupportedChord, normalizeChord, transposeChord } from '../chords/chords';
 
 describe('transposeChord', () => {
   it('returns original chord for zero shift', () => {
@@ -27,5 +27,23 @@ describe('transposeChord', () => {
 
   it('keeps unknown tokens unchanged', () => {
     expect(transposeChord('N.C.', 3)).toBe('N.C.');
+  });
+});
+
+describe('database-backed chord validation', () => {
+  it('accepts only chords built from configured roots and qualities', () => {
+    expect(isSupportedChord('C')).toBe(true);
+    expect(isSupportedChord('Hm7')).toBe(true);
+    expect(isSupportedChord('D/F#')).toBe(true);
+
+    expect(isSupportedChord('Csus4')).toBe(false);
+    expect(isSupportedChord('Hm9')).toBe(false);
+    expect(isSupportedChord('BmMaj7')).toBe(false);
+  });
+
+  it('normalizes bracketed tokens to canonical chord values', () => {
+    expect(normalizeChord('[g]')).toBe('G');
+    expect(normalizeChord('[dbm7]')).toBe('Dbm7');
+    expect(normalizeChord('[Gsus4]')).toBeNull();
   });
 });

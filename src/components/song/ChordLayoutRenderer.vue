@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue';
-  import { transposeChord } from '../../lib/chords/chords';
+  import { isSupportedChord, transposeChord } from '../../lib/chords/chords';
   import EditableChordLayoutRenderer from './EditableChordLayoutRenderer.vue';
 
   interface Props {
@@ -44,9 +44,6 @@
 
   const emit = defineEmits<Emits>();
 
-  const CHORD_TOKEN_REGEX =
-    /^\[?[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?\]?$/;
-
   function getTokenMatches(line: string): TokenMatch[] {
     const matches = Array.from(line.matchAll(/(\[[^\]]+\]|[^\s[\]]+)(\s*)/g));
 
@@ -69,7 +66,7 @@
   }
 
   function isChordToken(token: string): boolean {
-    return CHORD_TOKEN_REGEX.test(token.trim());
+    return isSupportedChord(token);
   }
 
   function chordValue(token: string): string {

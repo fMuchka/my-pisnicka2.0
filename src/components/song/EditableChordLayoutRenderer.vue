@@ -1,10 +1,12 @@
 <script setup lang="tsx">
-  import { computed, onBeforeUnmount, ref, watch } from 'vue';
+  import { onBeforeUnmount, ref, toRef, watch } from 'vue';
   import { EditorContent, useEditor } from '@tiptap/vue-3';
-  import { Mark, mergeAttributes, type JSONContent } from '@tiptap/core';
+  import { Mark, mergeAttributes } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
-  import { STATIC_CHORD_FILTER_LIST } from '../../lib/chords/chords';
-  import { Menu } from '@ark-ui/vue/menu';
+  import { fromEditorDoc, toEditorDoc } from '../../lib/songTextEditor/editableChordDocument';
+  import { useEditableChordPicker } from '../../composables/useEditableChordPicker';
+  import { Popover } from '@ark-ui/vue/popover';
+  import EditableChordPickerContent from './editable-chord/EditableChordPickerContent.vue';
 
   interface Props {
     text: string;
@@ -21,11 +23,6 @@
     to: number;
   }
 
-  interface RenderPart {
-    text: string;
-    chord?: string;
-  }
-
   const props = withDefaults(defineProps<Props>(), {
     editablePlaceholder: 'Začněte psát text písně...',
     contextChords: () => [],
@@ -33,15 +30,17 @@
 
   const emit = defineEmits<Emits>();
 
-  const FALLBACK_CONTEXT_CHORDS = STATIC_CHORD_FILTER_LIST.slice(0, 20);
   const contextSelection = ref<SelectionRange | null>(null);
-  const isContextMenuOpen = ref(false);
-  const canRemoveChordAtSelection = ref(false);
-
-  const contextChordItems = computed(() => {
-    const items = props.contextChords.length > 0 ? props.contextChords : FALLBACK_CONTEXT_CHORDS;
-    return Array.from(new Set(items.map((item) => item.trim()).filter((item) => item.length > 0)));
-  });
+  const isPointerSelecting = ref(false);
+  const {
+    allTabSelectedChord,
+    chordPickerTab,
+    isChordPickerOpen,
+    QUICK_ALL_TAB_ROOTS,
+    selectedAllQuality,
+    selectedAllRoot,
+    usedChordItems,
+  } = useEditableChordPicker(toRef(props, 'contextChords'));
 
   const ChordMark = Mark.create({
     name: 'chord',
@@ -92,152 +91,6 @@
     },
   });
 
-  const CHORD_TOKEN_REGEX =
-    /^\[?[A-GH][#b]?(?:m(?:aj)?(?:7|9|11|13)?|dim7?|aug|sus[24]?|M7|(?:add)?(?:2|4|6|7|9|11|13))?(?:\/[A-GH][#b]?)?\]?$/;
-
-  function isChordToken(token: string): boolean {
-    return CHORD_TOKEN_REGEX.test(token.trim());
-  }
-
-  function chordValue(token: string): string {
-    return token.trim().replace(/^\[|\]$/g, '');
-  }
-
-  function standaloneChordPlaceholder(chord: string): string {
-    return ' '.repeat(Math.max(chord.length, 1));
-  }
-
-  function getRenderParts(line: string): RenderPart[] {
-    const parts: RenderPart[] = [];
-    let index = 0;
-    let pendingChord: string | undefined;
-
-    while (index < line.length) {
-      const chordMatch = line.slice(index).match(/^\[[^\]]+\]/);
-
-      if (chordMatch && isChordToken(chordMatch[0])) {
-        if (pendingChord) {
-          parts.push({
-            chord: pendingChord,
-            text: standaloneChordPlaceholder(pendingChord),
-          });
-        }
-
-        pendingChord = chordValue(chordMatch[0]);
-        index += chordMatch[0].length;
-        continue;
-      }
-
-      if (pendingChord) {
-        const whitespaceMatch = line.slice(index).match(/^\s+/);
-
-        if (whitespaceMatch) {
-          parts.push({ text: whitespaceMatch[0] });
-          index += whitespaceMatch[0].length;
-          continue;
-        }
-
-        const anchoredMatch = line.slice(index).match(/^[^\s[]+/);
-
-        if (anchoredMatch) {
-          parts.push({
-            chord: pendingChord,
-            text: anchoredMatch[0],
-          });
-          pendingChord = undefined;
-          index += anchoredMatch[0].length;
-          continue;
-        }
-
-        parts.push({ text: '[' });
-        pendingChord = undefined;
-        index += 1;
-        continue;
-      }
-
-      const nextChordIndex = line.indexOf('[', index);
-      const plainTextEnd = nextChordIndex === -1 ? line.length : nextChordIndex;
-
-      if (plainTextEnd > index) {
-        parts.push({ text: line.slice(index, plainTextEnd) });
-        index = plainTextEnd;
-        continue;
-      }
-
-      parts.push({ text: line[index] ?? '' });
-      index += 1;
-    }
-
-    if (pendingChord) {
-      parts.push({
-        chord: pendingChord,
-        text: standaloneChordPlaceholder(pendingChord),
-      });
-    }
-
-    return parts;
-  }
-
-  function toEditorDoc(text: string): JSONContent {
-    const lines = text.split('\n').map((line) => getRenderParts(line));
-
-    return {
-      type: 'doc',
-      content: lines.map((line) => ({
-        type: 'paragraph',
-        content: line
-          .filter((part) => part.text.length > 0)
-          .map((part) => {
-            if (!part.chord) {
-              return {
-                type: 'text',
-                text: part.text,
-              };
-            }
-
-            return {
-              type: 'text',
-              text: part.text,
-              marks: [{ type: 'chord', attrs: { chord: part.chord } }],
-            };
-          }),
-      })),
-    };
-  }
-
-  function fromEditorDoc(content: JSONContent): string {
-    const lines = (content.content ?? []).map((block) => {
-      if (block.type !== 'paragraph') {
-        return '';
-      }
-
-      let value = '';
-      for (const node of block.content ?? []) {
-        if (node.type === 'hardBreak') {
-          value += '\n';
-          continue;
-        }
-
-        if (node.type !== 'text') {
-          continue;
-        }
-
-        const chordMark = node.marks?.find((mark) => mark.type === 'chord');
-        const chord = chordMark?.attrs?.chord;
-
-        if (typeof chord === 'string' && chord.length > 0) {
-          value += `[${chord}]`;
-        }
-
-        value += node.text ?? '';
-      }
-
-      return value;
-    });
-
-    return lines.join('\n');
-  }
-
   const editor = useEditor({
     editable: true,
     extensions: [
@@ -260,6 +113,25 @@
       attributes: {
         class: 'chord-layout-renderer chord-layout-editor-surface',
       },
+    },
+    onSelectionUpdate: ({ editor: instance }) => {
+      const selection = instance.state.selection;
+      contextSelection.value = {
+        from: selection.from,
+        to: selection.to,
+      };
+
+      // During drag-select, wait for pointer release so the picker does not steal focus mid-drag.
+      if (isPointerSelecting.value) {
+        return;
+      }
+
+      if (!selection.empty) {
+        isChordPickerOpen.value = true;
+        return;
+      }
+
+      isChordPickerOpen.value = false;
     },
     onUpdate: ({ editor: instance }) => {
       emit('update:text', fromEditorDoc(instance.getJSON()));
@@ -313,28 +185,60 @@
 
     instance.chain().focus().setMark('chord', { chord }).run();
     contextSelection.value = null;
-    canRemoveChordAtSelection.value = false;
   }
 
-  function isChordAppliedInSelection(from: number, to: number): boolean {
+  function openChordPicker(event: MouseEvent): void {
     const instance = editor.value;
     if (!instance) {
-      return false;
+      return;
     }
 
-    const chordType = instance.state.schema.marks.chord;
-    if (!chordType) {
-      return false;
-    }
+    event.preventDefault();
 
-    if (from === to) {
-      return instance.state.selection.$from.marks().some((mark) => mark.type === chordType);
-    }
-
-    return instance.state.doc.rangeHasMark(from, to, chordType);
+    const selection = instance.state.selection;
+    contextSelection.value = {
+      from: selection.from,
+      to: selection.to,
+    };
+    isChordPickerOpen.value = true;
   }
 
-  function captureSelectionForContextMenu(): void {
+  function closeChordPicker(): void {
+    isChordPickerOpen.value = false;
+  }
+
+  function handlePickerTabChange(value: 'used' | 'all'): void {
+    chordPickerTab.value = value;
+  }
+
+  function handlePickerRootChange(value: (typeof QUICK_ALL_TAB_ROOTS)[number]): void {
+    selectedAllRoot.value = value;
+  }
+
+  function handlePickerQualityChange(value: string): void {
+    selectedAllQuality.value = value as typeof selectedAllQuality.value;
+  }
+
+  function clearEditorSelection(): void {
+    const instance = editor.value;
+    if (!instance) {
+      contextSelection.value = null;
+      return;
+    }
+
+    const selection = instance.state.selection;
+    const collapsedAt = selection.to;
+
+    instance.chain().focus().setTextSelection({ from: collapsedAt, to: collapsedAt }).run();
+    contextSelection.value = null;
+  }
+
+  function handleChordPick(chord: string): void {
+    applyChordToSelection(chord);
+    closeChordPicker();
+  }
+
+  function syncPickerWithCurrentSelection(): void {
     const instance = editor.value;
     if (!instance) {
       return;
@@ -345,13 +249,35 @@
       from: selection.from,
       to: selection.to,
     };
-    canRemoveChordAtSelection.value = isChordAppliedInSelection(selection.from, selection.to);
+
+    if (!selection.empty) {
+      isChordPickerOpen.value = true;
+      return;
+    }
+
+    isChordPickerOpen.value = false;
   }
 
-  function handleChordItemSelect(chord: string): void {
-    applyChordToSelection(chord);
-    isContextMenuOpen.value = false;
+  function finishPointerSelection(): void {
+    if (!isPointerSelecting.value) {
+      return;
+    }
+
+    isPointerSelecting.value = false;
+
+    // Defer opening after pointerup so Popover does not treat the same interaction as outside-close.
+    requestAnimationFrame(() => {
+      syncPickerWithCurrentSelection();
+    });
   }
+
+  watch(isChordPickerOpen, (isOpen) => {
+    if (isOpen) {
+      return;
+    }
+
+    clearEditorSelection();
+  });
 
   function removeChordAtAnchor(anchor: HTMLElement): void {
     const instance = editor.value;
@@ -370,14 +296,19 @@
       .unsetMark('chord')
       .run();
     contextSelection.value = null;
-    canRemoveChordAtSelection.value = false;
-    isContextMenuOpen.value = false;
+    closeChordPicker();
   }
 
   function handleEditorPointerDown(event: PointerEvent): void {
     const target = event.target;
     if (!(target instanceof HTMLElement)) {
       return;
+    }
+
+    if (event.button === 0) {
+      isPointerSelecting.value = true;
+      window.addEventListener('pointerup', finishPointerSelection, { once: true });
+      window.addEventListener('pointercancel', finishPointerSelection, { once: true });
     }
 
     if (!target.closest('[data-chord-delete="true"]')) {
@@ -399,15 +330,17 @@
   });
 
   onBeforeUnmount(() => {
+    window.removeEventListener('pointerup', finishPointerSelection);
+    window.removeEventListener('pointercancel', finishPointerSelection);
     editor.value?.destroy();
   });
 </script>
 
 <template>
-  <Menu.Root v-model:open="isContextMenuOpen">
-    <Menu.ContextTrigger
+  <Popover.Root v-model:open="isChordPickerOpen">
+    <Popover.Anchor
       class="chord-layout-editor-context-trigger"
-      @contextmenu="captureSelectionForContextMenu"
+      @contextmenu="openChordPicker"
     >
       <EditorContent
         v-if="editor"
@@ -421,26 +354,28 @@
       >
         {{ props.text }}
       </div>
-    </Menu.ContextTrigger>
+    </Popover.Anchor>
+    <Popover.Trigger class="chord-picker-trigger">Open chord picker</Popover.Trigger>
     <Teleport to="body">
-      <Menu.Positioner>
-        <Menu.Content class="chord-context-menu">
-          <Menu.ItemGroup>
-            <Menu.ItemGroupLabel class="chord-context-menu-label">Přidat akord</Menu.ItemGroupLabel>
-            <Menu.Item
-              v-for="chord in contextChordItems"
-              :key="chord"
-              class="chord-context-menu-item"
-              :value="chord"
-              @select="() => handleChordItemSelect(chord)"
-            >
-              {{ chord }}
-            </Menu.Item>
-          </Menu.ItemGroup>
-        </Menu.Content>
-      </Menu.Positioner>
+      <Popover.Positioner class="chord-picker-positioner">
+        <Popover.Content class="chord-picker-popover">
+          <EditableChordPickerContent
+            :used-chords="usedChordItems"
+            :chord-picker-tab="chordPickerTab"
+            :selected-root="selectedAllRoot"
+            :selected-quality="selectedAllQuality"
+            :quick-roots="QUICK_ALL_TAB_ROOTS"
+            :selected-chord="allTabSelectedChord"
+            @update:chord-picker-tab="handlePickerTabChange"
+            @update:selected-root="handlePickerRootChange"
+            @update:selected-quality="handlePickerQualityChange"
+            @pick="handleChordPick"
+            @close="closeChordPicker"
+          />
+        </Popover.Content>
+      </Popover.Positioner>
     </Teleport>
-  </Menu.Root>
+  </Popover.Root>
 </template>
 
 <style scoped>
@@ -489,63 +424,31 @@
     margin: 0;
   }
 
-  .chord-context-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    max-height: min(320px, 50vh);
-    overflow-y: auto;
-    min-width: 140px;
-    padding: 0.25rem;
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--bg-primary) 90%, var(--bg-secondary));
-    box-shadow: var(--shadow-panel);
-    z-index: 1202;
-  }
-
-  .chord-context-menu[hidden] {
-    display: none;
-  }
-
-  .chord-context-menu[data-state='closed'] {
-    display: none;
-  }
-
-  .chord-context-menu-label {
-    padding: 0.35rem 0.5rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-
-  .chord-context-menu-item {
-    display: block;
-    border-radius: 6px;
-    padding: 0.35rem 0.5rem;
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
-
-  .chord-context-menu-item[data-highlighted] {
-    background: color-mix(in srgb, var(--accent) 22%, transparent);
-    color: var(--text-primary);
-  }
-
-  .chord-context-menu-item[data-disabled] {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .chord-context-menu-item--danger[data-highlighted] {
-    background: color-mix(in srgb, #dc2626 22%, transparent);
-  }
-
-  .chord-context-menu-separator {
+  .chord-picker-trigger {
+    position: absolute;
+    width: 1px;
     height: 1px;
-    margin: 0.25rem 0;
-    background: color-mix(in srgb, var(--text-primary) 12%, transparent);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+    padding: 0;
+  }
+
+  .chord-picker-positioner {
+    z-index: 2000;
+  }
+
+  .chord-picker-popover {
+    z-index: 2001;
+  }
+
+  .chord-picker-popover[hidden] {
+    display: none;
+  }
+
+  .chord-picker-popover[data-state='closed'] {
+    display: none;
   }
 
   .chord-layout-editor :deep(.tiptap:focus-visible) {
