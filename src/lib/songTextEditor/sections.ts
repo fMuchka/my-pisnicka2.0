@@ -116,21 +116,7 @@ export function insertSectionIntoMarkdown(
       ? (sections[afterIndex]?.endLine ?? markdownLines.length)
       : markdownLines.length;
 
-  const insertion: string[] = [];
-  const prevLine = markdownLines[insertAt - 1];
-  const nextLine = markdownLines[insertAt];
-
-  if (insertAt > 0 && prevLine && prevLine.trim().length > 0) {
-    insertion.push('');
-  }
-
-  insertion.push(sectionHeading(type), '');
-
-  if (nextLine && nextLine.trim().length > 0) {
-    insertion.push('');
-  }
-
-  markdownLines.splice(insertAt, 0, ...insertion);
+  markdownLines.splice(insertAt, 0, sectionHeading(type));
   return markdownLines.join('\n');
 }
 
