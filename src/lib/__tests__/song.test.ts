@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { selectHomeSongs, fetchHomeSongs, fetchSongById, createSong, updateSong } from '../song';
+import { selectHomeSongs, fetchSongById, createSong, updateSong } from '../song';
 import type { Song } from '../song';
 
 // Mock Firestore
@@ -198,96 +198,6 @@ describe('Song Service - Unit Tests', () => {
 
       expect(result).toHaveLength(6);
       expect(new Set(result.map((s) => s.artist)).size).toBe(3);
-    });
-  });
-
-  describe('fetchHomeSongs - Firestore Query', () => {
-    it('queries songs ordered by artist ASC, title ASC with limit 30', async () => {
-      const mockDocs = [
-        {
-          id: 's1',
-          data: () => ({ title: 'Song A', artist: 'Artist A', chords: ['C', 'G', 'Am'] }),
-        },
-      ];
-
-      mockGetDocs.mockResolvedValue({ docs: mockDocs });
-      mockQuery.mockReturnValue('mock-query');
-      mockOrderBy.mockReturnValue('mock-orderBy');
-      mockLimit.mockReturnValue('mock-limit');
-
-      await fetchHomeSongs();
-
-      expect(mockCollection).toHaveBeenCalledWith(expect.anything(), 'songs');
-      expect(mockOrderBy).toHaveBeenCalledWith('artist', 'asc');
-      expect(mockOrderBy).toHaveBeenCalledWith('title', 'asc');
-      expect(mockLimit).toHaveBeenCalledWith(30);
-      expect(mockGetDocs).toHaveBeenCalled();
-    });
-
-    it('maps Firestore documents to Song objects', async () => {
-      const mockDocs = [
-        {
-          id: 's1',
-          data: () => ({ title: 'Hádam', artist: 'Chinaski', chords: ['Am', 'C', 'G'] }),
-        },
-        {
-          id: 's2',
-          data: () => ({ title: 'Andělé', artist: 'Kabát' }),
-        },
-      ];
-
-      mockGetDocs.mockResolvedValue({ docs: mockDocs });
-
-      const result = await fetchHomeSongs();
-
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        id: 's1',
-        title: 'Hádam',
-        artist: 'Chinaski',
-        text: undefined,
-        chords: ['Am', 'C', 'G'],
-        createdAt: undefined,
-      });
-      expect(result[1]).toEqual({
-        id: 's2',
-        title: 'Andělé',
-        artist: 'Kabát',
-        text: undefined,
-        chords: undefined,
-        createdAt: undefined,
-      });
-    });
-
-    it('applies selectHomeSongs filtering to results', async () => {
-      const mockDocs = Array.from({ length: 10 }, (_, i) => ({
-        id: `s${i}`,
-        data: () => ({
-          title: `Song ${i}`,
-          artist: `Artist ${Math.floor(i / 2)}`, // 2 songs per artist
-        }),
-      }));
-
-      mockGetDocs.mockResolvedValue({ docs: mockDocs });
-
-      const result = await fetchHomeSongs();
-
-      // Should be filtered by selectHomeSongs: max 6 songs, 3 artists, 2 per artist
-      expect(result.length).toBeLessThanOrEqual(6);
-    });
-
-    it('returns empty array when no songs in Firestore', async () => {
-      mockGetDocs.mockResolvedValue({ docs: [] });
-
-      const result = await fetchHomeSongs();
-
-      expect(result).toEqual([]);
-    });
-
-    it('throws error on Firestore failure', async () => {
-      mockGetDocs.mockRejectedValue(new Error('Firestore error'));
-
-      await expect(fetchHomeSongs()).rejects.toThrow('Firestore error');
     });
   });
 

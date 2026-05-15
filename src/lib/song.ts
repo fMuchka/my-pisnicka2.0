@@ -106,24 +106,6 @@ const mapSongDoc = (
   };
 };
 
-/**
- * Fetch songs for home screen from Firestore.
- * Queries up to 30 songs ordered by artist ASC, title ASC,
- * then applies selectHomeSongs filtering.
- */
-export async function fetchHomeSongs(): Promise<Song[]> {
-  const songsRef = collection(db, 'songs');
-  const q = query(songsRef, orderBy('artist', 'asc'), orderBy('title', 'asc'), limit(30));
-
-  const snapshot = await getDocs(q);
-  const allSongs = snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return mapSongDoc(doc, data);
-  });
-
-  return selectHomeSongs(allSongs);
-}
-
 export async function fetchAllSongs(): Promise<Song[]> {
   const songsRef = collection(db, 'songs');
   const q = query(songsRef);
