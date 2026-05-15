@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">MyPísnička app icon</title>
+  <desc id="desc">Red guitar pick with six vertical string cutouts on a transparent background.</desc>
+  <defs>
+    <path
+      id="pick-shape"
+      d="M256 36c96 0 174 71 174 166 0 133-124 236-155 259a27 27 0 0 1-38 0c-31-23-155-126-155-259 0-95 78-166 174-166Z"
+    />
+    <mask id="pick-cutout" maskUnits="userSpaceOnUse" x="82" y="36" width="348" height="426">
+      <rect x="0" y="0" width="512" height="512" fill="black" />
+      <use href="#pick-shape" fill="white" />
+      <g stroke="black" stroke-width="12" stroke-linecap="round">
+        <line x1="180" y1="80" x2="180" y2="432" />
+        <line x1="211" y1="66" x2="211" y2="446" />
+        <line x1="241" y1="58" x2="241" y2="454" />
+        <line x1="271" y1="58" x2="271" y2="454" />
+        <line x1="301" y1="66" x2="301" y2="446" />
+        <line x1="332" y1="80" x2="332" y2="432" />
+      </g>
+    </mask>
+  </defs>
+
+  <use href="#pick-shape" fill="#ef4444" mask="url(#pick-cutout)" />
+</svg>
