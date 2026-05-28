@@ -14,6 +14,12 @@ dist-ssr
 *.local
 emulator-data
 
+# Environment files (keep only templates in git)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
