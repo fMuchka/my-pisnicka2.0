@@ -1,5 +1,5 @@
 import { ref, watch, type Ref } from 'vue';
-import { fetchSongById, type Song } from '../lib/song';
+import type { Song } from '../lib/song';
 import { useSongStore } from '../stores/song';
 
 export function useSongDetail(songId: Ref<string | null>) {
@@ -22,8 +22,8 @@ export function useSongDetail(songId: Ref<string | null>) {
       songError.value = null;
       const cache = await songStore.getSong(currentSongId);
 
-      if (!cache) {
-        song.value = await fetchSongById(currentSongId);
+      if (!cache || !cache.text?.trim()) {
+        song.value = await songStore.refreshSong(currentSongId);
       } else {
         song.value = cache;
       }

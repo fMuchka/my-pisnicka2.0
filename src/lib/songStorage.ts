@@ -1,10 +1,12 @@
 import { Timestamp } from 'firebase/firestore';
 import {
   type Song,
+  type SongCatalogEntry,
   type CreateSongInput,
   type UpdateSongInput,
   fetchSongById,
   fetchAllSongs,
+  fetchAllSongTitlesAndArtists,
   createSong as firestoreCreateSong,
   updateSong as firestoreUpdateSong,
 } from './song';
@@ -20,6 +22,16 @@ import { STORES, CACHE_TIMESTAMP_KEY, VALID_CACHE_DURATION } from './indexedDB/c
 // Firestore Timestamp instances cannot be round-tripped through IndexedDB's structured clone,
 // so we store createdAt as milliseconds and convert on read.
 type StoredSong = Omit<Song, 'createdAt'> & { createdAt?: number };
+
+function mergeSongCatalogEntry(catalogEntry: SongCatalogEntry, cachedSong: Song | undefined): Song {
+  return {
+    ...cachedSong,
+    id: catalogEntry.sourceSongId,
+    title: catalogEntry.title,
+    artist: catalogEntry.artist,
+    ownerId: catalogEntry.ownerId ?? cachedSong?.ownerId ?? '',
+  };
+}
 
 function toStoredSong(song: Song): StoredSong {
   const { createdAt, ...rest } = song;
@@ -78,7 +90,28 @@ export async function getAllSongsFromCache(): Promise<Song[]> {
 }
 
 export async function forceFetchAllSongs(): Promise<Song[]> {
-  const songs = await fetchAllSongs();
+  const cachedSongs = await getAllSongsFromCache();
+  const cachedById = new Map(cachedSongs.map((song) => [song.id, song]));
+
+  let songs: Song[];
+
+  try {
+    const catalog = await fetchAllSongTitlesAndArtists();
+    const validCatalog = catalog.filter(
+      (entry) => typeof entry.sourceSongId === 'string' && entry.sourceSongId.length > 0
+    );
+
+    if (validCatalog.length === 0) {
+      songs = await fetchAllSongs();
+    } else {
+      songs = validCatalog.map((entry) =>
+        mergeSongCatalogEntry(entry, cachedById.get(entry.sourceSongId))
+      );
+    }
+  } catch {
+    songs = await fetchAllSongs();
+  }
+
   await clearStore(STORES.SONGS);
   await Promise.all(songs.map((song) => putRecord(STORES.SONGS, toStoredSong(song))));
   localStorage.setItem(CACHE_TIMESTAMP_KEY, String(Date.now()));
