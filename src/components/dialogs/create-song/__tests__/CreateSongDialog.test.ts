@@ -8,6 +8,9 @@ import type { Song } from '../../../../lib/song';
 const mocks = vi.hoisted(() => ({
   createSong: vi.fn(),
   updateSong: vi.fn(),
+  createSongCatalogEntry: vi.fn(),
+  updateSongCatalogEntry: vi.fn(),
+  fetchSongCatalogEntryBySourceSongId: vi.fn(),
 }));
 
 type MockRef<T> = { __v_isRef: true; value: T };
@@ -29,7 +32,11 @@ vi.mock('../../../../composables/useAuth', () => ({
   }),
 }));
 
-vi.mock('../../../../lib/song', () => ({}));
+vi.mock('../../../../lib/song', () => ({
+  createSongCatalogEntry: mocks.createSongCatalogEntry,
+  updateSongCatalogEntry: mocks.updateSongCatalogEntry,
+  fetchSongCatalogEntryBySourceSongId: mocks.fetchSongCatalogEntryBySourceSongId,
+}));
 
 vi.mock('../../../../stores/song', () => ({
   useSongStore: () => ({
@@ -50,6 +57,9 @@ vi.mock('../../../song/SongTextEditor.vue', () => ({
 describe('CreateSongDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.fetchSongCatalogEntryBySourceSongId.mockResolvedValue(null);
+    mocks.createSongCatalogEntry.mockResolvedValue({ id: 'catalog-1' });
+    mocks.updateSongCatalogEntry.mockResolvedValue({ id: 'catalog-1' });
   });
 
   it('disables submit for empty required fields', async () => {
@@ -96,12 +106,20 @@ describe('CreateSongDialog', () => {
         ownerId: 'host-123',
       });
 
+      expect(mocks.createSongCatalogEntry).toHaveBeenCalledWith({
+        title: "Knockin on Heaven's Door",
+        artist: 'Bob Dylan',
+        chords: ['Am', 'C'],
+        sourceSongId: 'song-1',
+        ownerId: 'host-123',
+      });
+
       expect(emitted().saved?.[0]).toEqual([createdSong]);
       expect(emitted()['update:open']).toContainEqual([false]);
     });
   });
 
-  it('uses updateSong in edit mode', async () => {
+  it('uses updateSong in edit mode and updates existing catalog entry', async () => {
     const user = userEvent.setup();
     const songToEdit: Song = {
       id: 'song-9',
@@ -118,6 +136,13 @@ describe('CreateSongDialog', () => {
       artist: 'New artist',
       text: '[Am] new',
       chords: ['Am', 'C'],
+      ownerId: 'host-123',
+    });
+    mocks.fetchSongCatalogEntryBySourceSongId.mockResolvedValue({
+      id: 'catalog-9',
+      sourceSongId: 'song-9',
+      title: 'Old title',
+      artist: 'Old artist',
       ownerId: 'host-123',
     });
 
@@ -153,6 +178,72 @@ describe('CreateSongDialog', () => {
         chords: ['Am', 'C'],
         ownerId: 'host-123',
       });
+
+      expect(mocks.fetchSongCatalogEntryBySourceSongId).toHaveBeenCalledWith('song-9');
+      expect(mocks.updateSongCatalogEntry).toHaveBeenCalledWith('catalog-9', {
+        title: 'New title',
+        artist: 'New artist',
+        chords: ['Am', 'C'],
+        sourceSongId: 'song-9',
+        ownerId: 'host-123',
+      });
+      expect(mocks.createSongCatalogEntry).not.toHaveBeenCalled();
+    });
+  });
+
+  it('creates catalog entry in edit mode when missing', async () => {
+    const user = userEvent.setup();
+    const songToEdit: Song = {
+      id: 'song-11',
+      title: 'Old title',
+      artist: 'Old artist',
+      text: '[C] old',
+      chords: ['C'],
+      ownerId: 'host-123',
+    };
+
+    mocks.updateSong.mockResolvedValue({
+      ...songToEdit,
+      title: 'New title',
+      artist: 'New artist',
+      text: 'new',
+      chords: ['Am', 'C'],
+    });
+    mocks.fetchSongCatalogEntryBySourceSongId.mockResolvedValue(null);
+
+    const { rerender } = render(CreateSongDialog, {
+      props: {
+        open: false,
+        songToEdit,
+      },
+    });
+
+    await rerender({
+      open: true,
+      songToEdit,
+    });
+
+    const titleInput = screen.getByPlaceholderText("Např. Knockin' on Heaven's Door");
+    const artistInput = screen.getByPlaceholderText('Např. Bob Dylan');
+
+    await user.clear(titleInput);
+    await user.type(titleInput, 'New title');
+    await user.clear(artistInput);
+    await user.type(artistInput, 'New artist');
+    await user.clear(screen.getByTestId('song-text-editor'));
+    await user.type(screen.getByTestId('song-text-editor'), 'new');
+    await user.click(screen.getByTestId('create-song-submit'));
+
+    await waitFor(() => {
+      expect(mocks.fetchSongCatalogEntryBySourceSongId).toHaveBeenCalledWith('song-11');
+      expect(mocks.createSongCatalogEntry).toHaveBeenCalledWith({
+        title: 'New title',
+        artist: 'New artist',
+        chords: ['Am', 'C'],
+        sourceSongId: 'song-11',
+        ownerId: 'host-123',
+      });
+      expect(mocks.updateSongCatalogEntry).not.toHaveBeenCalled();
     });
   });
 

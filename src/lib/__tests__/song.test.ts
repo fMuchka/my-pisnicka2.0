@@ -224,7 +224,6 @@ describe('Song Service - Unit Tests', () => {
           title: 'Song title',
           artist: 'Artist name',
           text: '[G] line',
-          chords: ['G', 'D'],
           createdAt: 'ts',
         }),
       });
@@ -236,8 +235,8 @@ describe('Song Service - Unit Tests', () => {
         title: 'Song title',
         artist: 'Artist name',
         text: '[G] line',
-        chords: ['G', 'D'],
         createdAt: 'ts',
+        ownerId: '',
       });
     });
   });
@@ -258,10 +257,7 @@ describe('Song Service - Unit Tests', () => {
       expect(mockAddDoc).toHaveBeenCalledWith(
         'songs-collection-ref',
         expect.objectContaining({
-          title: 'New song',
-          artist: 'New artist',
           text: '[Am] new line',
-          chords: ['Am', 'C'],
           ownerId: 'dude',
         })
       );
@@ -293,10 +289,7 @@ describe('Song Service - Unit Tests', () => {
 
       expect(mockDoc).toHaveBeenCalledWith(expect.anything(), 'songs', 'song-9');
       expect(mockUpdateDoc).toHaveBeenCalledWith('song-doc-ref', {
-        title: 'Updated title',
-        artist: 'Updated artist',
         text: '[D] updated',
-        chords: ['D', 'A'],
         ownerId: 'dude',
       });
       expect(result).toEqual({

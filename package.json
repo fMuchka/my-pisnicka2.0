@@ -9,13 +9,14 @@
     "firebase:login": "firebase login",
     "firebase:init": "firebase init",
     "deploy": "npm run build && firebase deploy --only hosting",
-    "build": "vue-tsc -b && vite build",
+    "build": "npm run test && test:rules && vue-tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint --ext .ts,.vue src",
     "format": "prettier --write .",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "test:rules": "vitest run --config vitest.rules.config.ts",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -37,6 +38,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/user-event": "^14.6.1",

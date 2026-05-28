@@ -6,8 +6,10 @@
   import SongTextEditor from '../../song/SongTextEditor.vue';
   import {
     createSongCatalogEntry,
+    fetchSongCatalogEntryBySourceSongId,
     updateSongCatalogEntry,
     type CreateSongInput,
+    type SongCatalogEntryInput,
     type Song,
   } from '../../../lib/song';
   import { useAuth } from '../../../composables/useAuth';
@@ -116,20 +118,24 @@
           ? await songStore.updateSong(props.songToEdit.id, songInput)
           : await songStore.createSong(songInput);
 
+      const catalogEntryInput: SongCatalogEntryInput = {
+        artist: savedSong.artist,
+        chords: savedSong.chords,
+        ownerId: savedSong.ownerId,
+        sourceSongId: savedSong.id,
+        title: savedSong.title,
+      };
+
       if (isEditMode.value) {
-        await updateSongCatalogEntry('TEMP_TO_BE_ADDED', {
-          artist: savedSong.artist,
-          ownerId: savedSong.ownerId,
-          sourceSongId: savedSong.id,
-          title: savedSong.title,
-        });
+        const existingCatalogEntry = await fetchSongCatalogEntryBySourceSongId(savedSong.id);
+
+        if (existingCatalogEntry != null) {
+          await updateSongCatalogEntry(existingCatalogEntry.id, catalogEntryInput);
+        } else {
+          await createSongCatalogEntry(catalogEntryInput);
+        }
       } else {
-        await createSongCatalogEntry({
-          artist: savedSong.artist,
-          ownerId: savedSong.ownerId,
-          sourceSongId: savedSong.id,
-          title: savedSong.title,
-        });
+        await createSongCatalogEntry(catalogEntryInput);
       }
 
       emit('saved', savedSong);

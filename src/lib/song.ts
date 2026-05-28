@@ -9,21 +9,11 @@ import {
   updateDoc,
   type DocumentData,
   where,
+  limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
 
-/**
- * Song interface with WYSIWYG text containing chords above lyrics.
- *
- * Example text format:
- * ```
- * G                D                Am
- *   Mama take this badge off of me
- * G         D               C
- *   I can't use it anymore
- * ```
- */
 export interface Song {
   id: string;
   title: string;
@@ -34,10 +24,22 @@ export interface Song {
   ownerId: string;
 }
 
+// Firestore representation of a song document. The app model keeps title/artist required,
+// while Firestore can contain heavy fields only and optional legacy metadata.
+export interface SongDocument {
+  title?: Song['title'];
+  artist?: Song['artist'];
+  text?: Song['text'];
+  createdAt?: Song['createdAt'];
+  ownerId?: Song['ownerId'];
+}
+
 export interface SongCatalogEntry {
   sourceSongId: Song['id'];
   title: Song['title'];
   artist: Song['artist'];
+  chords?: Song['chords'];
+  createdAt?: Song['createdAt'];
   id: string;
   ownerId: string;
 }
@@ -46,6 +48,8 @@ export interface SongCatalogEntryInput {
   sourceSongId: Song['id'];
   title: Song['title'];
   artist: Song['artist'];
+  chords?: Song['chords'];
+  createdAt?: Song['createdAt'];
   ownerId: string;
 }
 
@@ -108,14 +112,15 @@ const mapSongDoc = (
   doc: QueryDocumentSnapshot<DocumentData, DocumentData>,
   data: DocumentData
 ): Song => {
+  const songDoc = data as SongDocument;
+
   return {
     id: doc.id,
-    title: data.title,
-    artist: data.artist,
-    text: data.text,
-    chords: data.chords,
-    createdAt: data.createdAt,
-    ownerId: data.ownerId,
+    title: songDoc.title ?? '',
+    artist: songDoc.artist ?? '',
+    text: songDoc.text,
+    createdAt: songDoc.createdAt,
+    ownerId: songDoc.ownerId ?? '',
   };
 };
 
@@ -128,6 +133,8 @@ const mapSongListDoc = (
     sourceSongId: data.sourceSongId,
     title: data.title,
     artist: data.artist,
+    chords: data.chords,
+    createdAt: data.createdAt,
     ownerId: data.ownerId,
   };
 };
@@ -158,6 +165,22 @@ export async function fetchAllSongTitlesAndArtists() {
   return allSongs;
 }
 
+export async function fetchSongCatalogEntryBySourceSongId(
+  sourceSongId: Song['id']
+): Promise<SongCatalogEntry | null> {
+  const songsRef = collection(db, 'songCatalog');
+  const q = query(songsRef, where('sourceSongId', '==', sourceSongId), limit(1));
+
+  const snapshot = await getDocs(q);
+  const first = snapshot.docs[0];
+
+  if (first === undefined) {
+    return null;
+  }
+
+  return mapSongListDoc(first, first.data());
+}
+
 export async function fetchAllUserSongs(ownerId: string): Promise<Song[]> {
   const songsRef = collection(db, 'songs');
   const q = query(songsRef, where('ownerId', '==', ownerId));
@@ -185,32 +208,36 @@ export async function fetchSongById(songId: string): Promise<Song | null> {
 }
 
 export const createSong = async (input: CreateSongInput): Promise<Song> => {
-  const songData: Omit<Song, 'id'> = {
-    title: input.title,
-    artist: input.artist,
-    chords: input.chords,
+  const heavySongData: SongDocument = {
     text: input.text,
     createdAt: Timestamp.now(),
     ownerId: input.ownerId,
   };
 
-  const songRef = await addDoc(collection(db, 'songs'), songData);
+  const songRef = await addDoc(collection(db, 'songs'), heavySongData);
 
   return {
     id: songRef.id,
-    ...songData,
+    title: input.title,
+    artist: input.artist,
+    text: heavySongData.text,
+    chords: input.chords,
+    createdAt: heavySongData.createdAt,
+    ownerId: heavySongData.ownerId ?? input.ownerId,
   };
 };
 
 export const createSongCatalogEntry = async (
   input: SongCatalogEntryInput
 ): Promise<SongCatalogEntry> => {
-  const songData: Omit<SongCatalogEntry, 'id'> = {
+  const songData = {
     sourceSongId: input.sourceSongId,
     title: input.title,
     artist: input.artist,
     ownerId: input.ownerId,
-  };
+    ...(input.chords !== undefined ? { chords: input.chords } : {}),
+  } satisfies Pick<SongCatalogEntry, 'sourceSongId' | 'title' | 'artist' | 'ownerId'> &
+    Partial<Pick<SongCatalogEntry, 'chords'>>;
 
   const songRef = await addDoc(collection(db, 'songCatalog'), songData);
 
@@ -225,12 +252,14 @@ export const updateSongCatalogEntry = async (
   input: SongCatalogEntryInput
 ): Promise<SongCatalogEntry> => {
   const songRef = doc(db, 'songCatalog', catalogEntryId);
-  const songData: SongCatalogEntryInput = {
+  const songData = {
     title: input.title,
     artist: input.artist,
     sourceSongId: input.sourceSongId,
     ownerId: input.ownerId,
-  };
+    ...(input.chords !== undefined ? { chords: input.chords } : {}),
+  } satisfies Pick<SongCatalogEntryInput, 'title' | 'artist' | 'sourceSongId' | 'ownerId'> &
+    Partial<Pick<SongCatalogEntryInput, 'chords'>>;
 
   await updateDoc(songRef, songData as DocumentData);
 
@@ -242,18 +271,19 @@ export const updateSongCatalogEntry = async (
 
 export const updateSong = async (songId: string, input: UpdateSongInput): Promise<Song> => {
   const songRef = doc(db, 'songs', songId);
-  const songData: UpdateSongInput = {
-    title: input.title,
-    artist: input.artist,
+  const heavySongPatch: SongDocument = {
     text: input.text,
-    chords: input.chords,
     ownerId: input.ownerId,
   };
 
-  await updateDoc(songRef, songData as DocumentData);
+  await updateDoc(songRef, heavySongPatch as DocumentData);
 
   return {
     id: songId,
-    ...songData,
+    title: input.title,
+    artist: input.artist,
+    text: heavySongPatch.text,
+    chords: input.chords,
+    ownerId: heavySongPatch.ownerId ?? input.ownerId,
   };
 };

@@ -17,32 +17,28 @@ service cloud.firestore {
       return !data.keys().hasAny([field]) || data[field] == null || data[field] is list;
     }
 
-    function isValidSong(data) {
-      return data.keys().hasAll(['title', 'artist', 'ownerId'])
-        && data.keys().hasOnly(['title', 'artist', 'text', 'chords', 'createdAt', 'ownerId'])
-        && data.title is string
-        && data.title.size() > 0
-        && data.title.size() <= 200
-        && data.artist is string
-        && data.artist.size() > 0
-        && data.artist.size() <= 200
+    function isValidSongStorage(data) {
+      return data.keys().hasAll(['ownerId'])
+        && data.keys().hasOnly(['text', 'createdAt', 'ownerId', 'title', 'artist', 'chords'])
         && data.ownerId is string
         && data.ownerId.size() > 0
         && (!data.keys().hasAny(['createdAt']) || data.createdAt is timestamp)
         && hasOptionalString(data, 'text')
+        && hasOptionalString(data, 'title')
+        && hasOptionalString(data, 'artist')
         && hasOptionalList(data, 'chords');
     }
 
     function isValidNewSong() {
       return isSignedIn()
-        && isValidSong(request.resource.data)
+        && isValidSongStorage(request.resource.data)
         && request.resource.data.createdAt is timestamp
         && request.resource.data.ownerId == request.auth.uid;
     }
 
     function isValidSongUpdate() {
       return isOwner(resource.data.ownerId)
-        && isValidSong(request.resource.data)
+        && isValidSongStorage(request.resource.data)
         && request.resource.data.ownerId == resource.data.ownerId
         && request.resource.data.createdAt == resource.data.createdAt;
     }
@@ -110,22 +106,38 @@ service cloud.firestore {
     }
     
 
-    function isValidSongTitleAndArtist(data) {
-      return data.keys().hasOnly(['title', 'artist', 'ownerId', 'sourceSongId'])
+    function isValidSongCatalogEntry(data) {
+      return data.keys().hasOnly(['title', 'artist', 'ownerId', 'sourceSongId', 'chords'])
         && data.title is string
         && data.title.size() > 0
         && data.title.size() <= 200
         && data.artist is string
         && data.artist.size() > 0
         && data.artist.size() <= 200
+        && data.sourceSongId is string
+        && data.sourceSongId.size() > 0
         && data.ownerId is string
         && data.ownerId.size() > 0
+        && hasOptionalList(data, 'chords');
+    }
+
+    function isValidSongCatalogCreate() {
+      return isSignedIn()
+        && isValidSongCatalogEntry(request.resource.data)
+        && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    function isValidSongCatalogUpdate() {
+      return isOwner(resource.data.ownerId)
+        && isValidSongCatalogEntry(request.resource.data)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.sourceSongId == resource.data.sourceSongId;
     }
 
     match /songCatalog/{songId} {
       allow read: if true;
-      allow create: if isValidSongTitleAndArtist(request.resource.data);
-      allow update: if isValidSongTitleAndArtist(request.resource.data);
+      allow create: if isValidSongCatalogCreate();
+      allow update: if isValidSongCatalogUpdate();
       allow delete: if isOwner(resource.data.ownerId);
     }
 
