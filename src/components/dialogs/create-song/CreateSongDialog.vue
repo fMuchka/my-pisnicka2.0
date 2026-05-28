@@ -4,7 +4,12 @@
   import { computed, ref, watch } from 'vue';
   import Button from '../../core/Button.vue';
   import SongTextEditor from '../../song/SongTextEditor.vue';
-  import { type CreateSongInput, type Song } from '../../../lib/song';
+  import {
+    createSongCatalogEntry,
+    updateSongCatalogEntry,
+    type CreateSongInput,
+    type Song,
+  } from '../../../lib/song';
   import { useAuth } from '../../../composables/useAuth';
   import { placeholderSong } from './placeholderSong';
   import { useSongStore } from '../../../stores/song';
@@ -110,6 +115,22 @@
         isEditMode.value && props.songToEdit != null
           ? await songStore.updateSong(props.songToEdit.id, songInput)
           : await songStore.createSong(songInput);
+
+      if (isEditMode.value) {
+        await updateSongCatalogEntry('TEMP_TO_BE_ADDED', {
+          artist: savedSong.artist,
+          ownerId: savedSong.ownerId,
+          sourceSongId: savedSong.id,
+          title: savedSong.title,
+        });
+      } else {
+        await createSongCatalogEntry({
+          artist: savedSong.artist,
+          ownerId: savedSong.ownerId,
+          sourceSongId: savedSong.id,
+          title: savedSong.title,
+        });
+      }
 
       emit('saved', savedSong);
 

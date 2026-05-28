@@ -1,8 +1,6 @@
 import {
   collection,
   query,
-  orderBy,
-  limit,
   getDocs,
   Timestamp,
   addDoc,
@@ -33,6 +31,21 @@ export interface Song {
   text?: string; // WYSIWYG song text with chord notation (chords above lyrics or inline)
   chords?: string[]; // Array of unique chords (auto-extracted from text, can be manually edited)
   createdAt?: Timestamp; // Firestore Timestamp
+  ownerId: string;
+}
+
+export interface SongCatalogEntry {
+  sourceSongId: Song['id'];
+  title: Song['title'];
+  artist: Song['artist'];
+  id: string;
+  ownerId: string;
+}
+
+export interface SongCatalogEntryInput {
+  sourceSongId: Song['id'];
+  title: Song['title'];
+  artist: Song['artist'];
   ownerId: string;
 }
 
@@ -106,6 +119,19 @@ const mapSongDoc = (
   };
 };
 
+const mapSongListDoc = (
+  doc: QueryDocumentSnapshot<DocumentData, DocumentData>,
+  data: DocumentData
+): SongCatalogEntry => {
+  return {
+    id: doc.id,
+    sourceSongId: data.sourceSongId,
+    title: data.title,
+    artist: data.artist,
+    ownerId: data.ownerId,
+  };
+};
+
 export async function fetchAllSongs(): Promise<Song[]> {
   const songsRef = collection(db, 'songs');
   const q = query(songsRef);
@@ -114,6 +140,19 @@ export async function fetchAllSongs(): Promise<Song[]> {
   const allSongs = snapshot.docs.map((doc) => {
     const data = doc.data();
     return mapSongDoc(doc, data);
+  });
+
+  return allSongs;
+}
+
+export async function fetchAllSongTitlesAndArtists() {
+  const songsRef = collection(db, 'songCatalog');
+  const q = query(songsRef);
+
+  const snapshot = await getDocs(q);
+  const allSongs = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return mapSongListDoc(doc, data);
   });
 
   return allSongs;
@@ -159,6 +198,44 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
 
   return {
     id: songRef.id,
+    ...songData,
+  };
+};
+
+export const createSongCatalogEntry = async (
+  input: SongCatalogEntryInput
+): Promise<SongCatalogEntry> => {
+  const songData: Omit<SongCatalogEntry, 'id'> = {
+    sourceSongId: input.sourceSongId,
+    title: input.title,
+    artist: input.artist,
+    ownerId: input.ownerId,
+  };
+
+  const songRef = await addDoc(collection(db, 'songCatalog'), songData);
+
+  return {
+    id: songRef.id,
+    ...songData,
+  };
+};
+
+export const updateSongCatalogEntry = async (
+  catalogEntryId: string,
+  input: SongCatalogEntryInput
+): Promise<SongCatalogEntry> => {
+  const songRef = doc(db, 'songCatalog', catalogEntryId);
+  const songData: SongCatalogEntryInput = {
+    title: input.title,
+    artist: input.artist,
+    sourceSongId: input.sourceSongId,
+    ownerId: input.ownerId,
+  };
+
+  await updateDoc(songRef, songData as DocumentData);
+
+  return {
+    id: catalogEntryId,
     ...songData,
   };
 };
