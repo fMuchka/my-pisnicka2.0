@@ -9,7 +9,7 @@
     "firebase:login": "firebase login",
     "firebase:init": "firebase init",
     "deploy": "npm run build && firebase deploy --only hosting",
-    "build": "npm run test && test:rules && vue-tsc -b && vite build",
+    "build": "npm run test:run && npm run test:rules && vue-tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint --ext .ts,.vue src",
     "format": "prettier --write .",
