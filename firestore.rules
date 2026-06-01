@@ -17,16 +17,31 @@ service cloud.firestore {
       return !data.keys().hasAny([field]) || data[field] == null || data[field] is list;
     }
 
+    function hasOptionalNumber(data, field) {
+      return !data.keys().hasAny([field]) || data[field] == null || data[field] is number;
+    }
+
     function isValidSongStorage(data) {
       return data.keys().hasAll(['ownerId'])
-        && data.keys().hasOnly(['text', 'createdAt', 'ownerId', 'title', 'artist', 'chords'])
+        && data.keys().hasOnly([
+          'text',
+          'createdAt',
+          'ownerId',
+          'title',
+          'artist',
+          'chords',
+          'originalKey',
+          'capo'
+        ])
         && data.ownerId is string
         && data.ownerId.size() > 0
         && (!data.keys().hasAny(['createdAt']) || data.createdAt is timestamp)
         && hasOptionalString(data, 'text')
         && hasOptionalString(data, 'title')
         && hasOptionalString(data, 'artist')
-        && hasOptionalList(data, 'chords');
+        && hasOptionalList(data, 'chords')
+        && hasOptionalString(data, 'originalKey')
+        && hasOptionalNumber(data, 'capo');
     }
 
     function isValidNewSong() {

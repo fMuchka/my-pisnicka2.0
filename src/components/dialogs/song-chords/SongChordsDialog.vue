@@ -1,10 +1,14 @@
 <script setup lang="ts">
   import { Dialog } from '@ark-ui/vue/dialog';
+  import { Accordion } from '@ark-ui/vue/accordion';
   import { computed } from 'vue';
   import Button from '../../core/Button.vue';
+  import SongChordOverview from '../../song/SongChordOverview.vue';
+  import { transposeChord } from '../../../lib/chords/chords';
 
   interface Props {
     open: boolean;
+    chords: string[];
     transpose: number;
   }
 
@@ -29,6 +33,18 @@
     return `${props.transpose}`;
   });
 
+  const transposedChords = computed(() =>
+    props.chords.map((chord) => transposeChord(chord, props.transpose))
+  );
+
+  const transposedChordLabel = computed(() => {
+    if (transposedChords.value.length === 0) {
+      return '—';
+    }
+
+    return transposedChords.value.join(', ');
+  });
+
   const decrease = () => {
     emit('update:transpose', props.transpose - 1);
   };
@@ -45,7 +61,10 @@
 <template>
   <Dialog.Root v-model:open="isOpen">
     <Teleport to="body">
-      <Dialog.Backdrop class="dialog-backdrop" />
+      <Dialog.Backdrop
+        class="dialog-backdrop"
+        @click="isOpen = false"
+      />
       <Dialog.Positioner class="dialog-positioner">
         <Dialog.Content class="dialog-content">
           <Dialog.Title class="dialog-title">Nastavení akordů</Dialog.Title>
@@ -53,29 +72,60 @@
             Upravte transpozici akordů pro aktuální zobrazení písně.
           </Dialog.Description>
 
-          <section class="transpose-card">
-            <p class="transpose-label">Transpozice</p>
-            <div class="transpose-controls">
-              <button
-                class="stepper"
-                type="button"
-                aria-label="Snížit transpozici"
-                @click="decrease"
-              >
-                -
-              </button>
-              <output class="transpose-value">{{ transpositionLabel }}</output>
-              <button
-                class="stepper"
-                type="button"
-                aria-label="Zvýšit transpozici"
-                @click="increase"
-              >
-                +
-              </button>
+          <div class="dialog-body">
+            <section class="transpose-card">
+              <p class="transpose-label">Transpozice</p>
+              <div class="transpose-controls">
+                <button
+                  class="stepper"
+                  type="button"
+                  aria-label="Snížit transpozici"
+                  @click="decrease"
+                >
+                  -
+                </button>
+                <output class="transpose-value">{{ transpositionLabel }}</output>
+                <button
+                  class="stepper"
+                  type="button"
+                  aria-label="Zvýšit transpozici"
+                  @click="increase"
+                >
+                  +
+                </button>
+              </div>
+              <p class="transpose-note">1 krok = 1 půltón</p>
+            </section>
+
+            <div class="chord-row">
+              <span class="chord-row-label">Aktuální akordy</span>
+              <span class="chord-row-value">{{ transposedChordLabel }}</span>
             </div>
-            <p class="transpose-note">1 krok = 1 půltón</p>
-          </section>
+
+            <Accordion.Root
+              v-if="chords.length > 0"
+              class="chord-accordion"
+              collapsible
+              :default-value="[]"
+            >
+              <Accordion.Item value="diagrams">
+                <Accordion.ItemTrigger class="chord-accordion-trigger">
+                  <span class="chord-accordion-label">Diagramy akordů</span>
+                  <Accordion.ItemIndicator class="chord-accordion-indicator">
+                    +
+                  </Accordion.ItemIndicator>
+                </Accordion.ItemTrigger>
+                <Accordion.ItemContent class="chord-accordion-content">
+                  <SongChordOverview
+                    class="chord-overview"
+                    :chords="chords"
+                    :transpose="transpose"
+                    :show-label="false"
+                  />
+                </Accordion.ItemContent>
+              </Accordion.Item>
+            </Accordion.Root>
+          </div>
 
           <div class="dialog-actions">
             <Button
@@ -89,6 +139,7 @@
               <Button
                 label="Zavřít"
                 type="button"
+                @click="isOpen = false"
               />
             </Dialog.CloseTrigger>
           </div>
@@ -103,7 +154,7 @@
     position: fixed;
     inset: 0;
     background-color: var(--overlay-backdrop);
-    z-index: 40;
+    z-index: 999;
   }
 
   .dialog-positioner {
@@ -113,7 +164,8 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-md);
-    z-index: 41;
+    z-index: 1000;
+    pointer-events: none;
   }
 
   .dialog-content {
@@ -123,6 +175,11 @@
     border: 1px solid var(--border-primary);
     box-shadow: var(--shadow-dialog);
     padding: var(--space-md);
+    max-height: min(90vh, 720px);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    pointer-events: auto;
   }
 
   .dialog-title {
@@ -134,6 +191,17 @@
     margin-top: var(--space-xs);
     color: var(--text-secondary);
     font-size: 0.92rem;
+  }
+
+  .dialog-body {
+    margin-top: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    overflow-y: auto;
+    padding-right: 2px;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .transpose-card {
@@ -190,6 +258,105 @@
     text-align: center;
     color: var(--text-secondary);
     font-size: 0.82rem;
+  }
+
+  .chord-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs, 0.25rem);
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-primary);
+    background: var(--bg-secondary);
+  }
+
+  .chord-row-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+  }
+
+  .chord-row-value {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+
+  .chord-accordion {
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .chord-accordion-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .chord-accordion-trigger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .chord-accordion-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .chord-accordion-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border-primary);
+    color: var(--text-secondary);
+    font-weight: 700;
+    transition: transform 200ms ease;
+  }
+
+  .chord-accordion-indicator[data-state='open'] {
+    transform: rotate(45deg);
+  }
+
+  .chord-accordion-content {
+    overflow: hidden;
+  }
+
+  .chord-overview {
+    padding: var(--space-sm) var(--space-md) var(--space-md);
+  }
+
+  .dialog-content :deep(.chord-chart) {
+    padding: 0.5rem;
+  }
+
+  .dialog-content :deep(.chord-canvas) {
+    width: 140px;
+    height: 180px;
+  }
+
+  @media (max-width: 480px) {
+    .dialog-content {
+      max-height: 92vh;
+    }
+
+    .dialog-content :deep(.chord-canvas) {
+      width: 120px;
+      height: 160px;
+    }
   }
 
   .dialog-actions {

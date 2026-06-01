@@ -20,6 +20,8 @@ export interface Song {
   artist: string;
   text?: string; // WYSIWYG song text with chord notation (chords above lyrics or inline)
   chords?: string[]; // Array of unique chords (auto-extracted from text, can be manually edited)
+  originalKey?: string;
+  capo?: number;
   createdAt?: Timestamp; // Firestore Timestamp
   ownerId: string;
 }
@@ -30,6 +32,9 @@ export interface SongDocument {
   title?: Song['title'];
   artist?: Song['artist'];
   text?: Song['text'];
+  chords?: Song['chords'];
+  originalKey?: Song['originalKey'];
+  capo?: Song['capo'];
   createdAt?: Song['createdAt'];
   ownerId?: Song['ownerId'];
 }
@@ -58,6 +63,8 @@ export interface CreateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
+  originalKey?: string;
+  capo?: number;
   ownerId: string;
 }
 
@@ -66,6 +73,8 @@ export interface UpdateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
+  originalKey?: string;
+  capo?: number;
   ownerId: string;
 }
 
@@ -119,6 +128,9 @@ const mapSongDoc = (
     title: songDoc.title ?? '',
     artist: songDoc.artist ?? '',
     text: songDoc.text,
+    chords: songDoc.chords,
+    originalKey: songDoc.originalKey ?? undefined,
+    capo: songDoc.capo ?? undefined,
     createdAt: songDoc.createdAt,
     ownerId: songDoc.ownerId ?? '',
   };
@@ -212,6 +224,8 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     text: input.text,
     createdAt: Timestamp.now(),
     ownerId: input.ownerId,
+    ...(input.originalKey !== undefined ? { originalKey: input.originalKey } : {}),
+    ...(input.capo !== undefined ? { capo: input.capo } : {}),
   };
 
   const songRef = await addDoc(collection(db, 'songs'), heavySongData);
@@ -222,6 +236,8 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     artist: input.artist,
     text: heavySongData.text,
     chords: input.chords,
+    originalKey: input.originalKey,
+    capo: input.capo,
     createdAt: heavySongData.createdAt,
     ownerId: heavySongData.ownerId ?? input.ownerId,
   };
@@ -274,6 +290,8 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
   const heavySongPatch: SongDocument = {
     text: input.text,
     ownerId: input.ownerId,
+    ...(input.originalKey !== undefined ? { originalKey: input.originalKey } : {}),
+    ...(input.capo !== undefined ? { capo: input.capo } : {}),
   };
 
   await updateDoc(songRef, heavySongPatch as DocumentData);
@@ -284,6 +302,8 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     artist: input.artist,
     text: heavySongPatch.text,
     chords: input.chords,
+    originalKey: input.originalKey,
+    capo: input.capo,
     ownerId: heavySongPatch.ownerId ?? input.ownerId,
   };
 };
