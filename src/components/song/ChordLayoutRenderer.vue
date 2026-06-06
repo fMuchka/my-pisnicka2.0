@@ -15,25 +15,14 @@
     (event: 'update:text', value: string): void;
   }
 
-  type LineKind = 'lyrics' | 'mixed';
-
-  interface TokenMatch {
-    value: string;
-    start: number;
-    type: 'chord' | 'lyrics';
-  }
-
   interface RenderPart {
     text: string;
     chord?: string;
   }
 
-  interface LineDetails {
-    kind: LineKind;
-    tokens: TokenMatch[];
+  interface RenderLine {
+    parts: RenderPart[];
   }
-
-  type RenderLine = { line: string; details: LineDetails; parts: RenderPart[] };
 
   const props = withDefaults(defineProps<Props>(), {
     transpose: 0,
@@ -43,27 +32,6 @@
   });
 
   const emit = defineEmits<Emits>();
-
-  function getTokenMatches(line: string): TokenMatch[] {
-    const matches = Array.from(line.matchAll(/(\[[^\]]+\]|[^\s[\]]+)(\s*)/g));
-
-    return matches.flatMap((match) => {
-      if (match.index === undefined) {
-        return [];
-      }
-
-      const hasTrailingSpace = (match[2] ?? '').length > 0;
-      const token = `${match[1] ?? ''}${hasTrailingSpace ? ' ' : ''}`;
-
-      return [
-        {
-          value: token,
-          start: match.index,
-          type: isChordToken(token) ? 'chord' : 'lyrics',
-        },
-      ];
-    });
-  }
 
   function isChordToken(token: string): boolean {
     return isSupportedChord(token);
@@ -77,18 +45,9 @@
     return ' '.repeat(Math.max(chord.length, 1));
   }
 
-  function classifyLine(line: string): LineDetails {
-    const tokens = getTokenMatches(line);
-    const chordCount = tokens.filter((token) => isChordToken(token.value)).length;
-
-    if (chordCount === 0) {
-      return { kind: 'lyrics', tokens };
-    }
-    if (tokens.length === 0) {
-      return { kind: 'lyrics', tokens };
-    }
-
-    return { kind: 'mixed', tokens };
+  function normalizeLineForRender(line: string): string {
+    // Tabs depend on tab stops, so convert to spaces to keep visual width deterministic.
+    return line.replace(/\t/g, '    ');
   }
 
   function getRenderParts(line: string): RenderPart[] {
@@ -121,15 +80,25 @@
           continue;
         }
 
-        const anchoredMatch = line.slice(index).match(/^[^\s[]+/);
+        const anchoredMatch = line.slice(index).match(/^[^\s[]/);
 
         if (anchoredMatch) {
+          const anchoredTokenMatch = line.slice(index).match(/^[^\s[]+/);
+
+          if (!anchoredTokenMatch) {
+            parts.push({ text: line[index] ?? '' });
+            pendingChord = undefined;
+            index += 1;
+            continue;
+          }
+
+          // Keep chord and following lyric token together to prevent wrap drift.
           parts.push({
             chord: pendingChord,
-            text: anchoredMatch[0],
+            text: anchoredTokenMatch[0],
           });
           pendingChord = undefined;
-          index += anchoredMatch[0].length;
+          index += anchoredTokenMatch[0].length;
           continue;
         }
 
@@ -163,36 +132,13 @@
   }
 
   const renderLines = computed<RenderLine[]>(() => {
-    const lines = props.text.split('\n');
-    const rendered: RenderLine[] = [];
-    let index = 0;
+    return props.text.split('\n').map((line) => {
+      const normalizedLine = normalizeLineForRender(line);
 
-    while (index < lines.length) {
-      const line = lines[index] ?? '';
-      const lineDetails = classifyLine(line);
-
-      if (lineDetails.kind === 'mixed') {
-        rendered.push({
-          details: lineDetails,
-          line: line,
-          parts: getRenderParts(line),
-        });
-        index += 1;
-        continue;
-      }
-
-      if (lineDetails.kind === 'lyrics') {
-        rendered.push({
-          details: lineDetails,
-          line,
-          parts: getRenderParts(line),
-        });
-      }
-
-      index += 1;
-    }
-
-    return rendered;
+      return {
+        parts: getRenderParts(normalizedLine),
+      };
+    });
   });
 
   const renderedParts = computed(() => {
@@ -251,6 +197,9 @@
         <span
           v-if="part.chord"
           class="clr-anchored"
+          :class="{
+            'clr-standalone-placeholder': /^\s+$/.test(part.text),
+          }"
           :data-before-content="part.chord"
         >
           {{ part.text }}

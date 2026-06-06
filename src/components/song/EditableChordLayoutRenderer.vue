@@ -416,7 +416,9 @@
     line-height: var(--song-anchored-line-height, 2.2);
     white-space: pre-wrap;
     word-break: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    overflow-x: hidden;
+    overflow-y: visible;
     outline: none;
   }
 
