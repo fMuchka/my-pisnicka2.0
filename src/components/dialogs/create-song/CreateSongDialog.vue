@@ -37,7 +37,6 @@
   const songArtist = ref('');
   const songText = ref(placeholderSong.text);
   const songChords = ref<string[]>([]);
-  const songOriginalKey = ref('');
   const songCapo = ref('');
   const createError = ref<string | null>(null);
   const isCreating = ref(false);
@@ -53,7 +52,6 @@
 
   const trimmedTitle = computed(() => songTitle.value.trim());
   const trimmedArtist = computed(() => songArtist.value.trim());
-  const trimmedOriginalKey = computed(() => songOriginalKey.value.trim());
   const isTitleValid = computed(() => trimmedTitle.value.length >= 1);
   const isArtistValid = computed(() => trimmedArtist.value.length >= 1);
   const isFormValid = computed(() => isTitleValid.value && isArtistValid.value);
@@ -82,7 +80,6 @@
     songArtist.value = '';
     songText.value = '';
     songChords.value = [];
-    songOriginalKey.value = '';
     songCapo.value = '';
     createError.value = null;
     isCreating.value = false;
@@ -99,7 +96,6 @@
         songArtist.value = props.songToEdit.artist;
         songText.value = props.songToEdit.text ?? '';
         songChords.value = props.songToEdit.chords ?? [];
-        songOriginalKey.value = props.songToEdit.originalKey ?? '';
         songCapo.value = props.songToEdit.capo != null ? String(props.songToEdit.capo) : '';
       }
     }
@@ -131,7 +127,6 @@
         artist: trimmedArtist.value,
         text: songText.value.trim() || undefined,
         chords: [...songChords.value],
-        ...(trimmedOriginalKey.value.length > 0 ? { originalKey: trimmedOriginalKey.value } : {}),
         ...(capoValue !== undefined ? { capo: capoValue } : {}),
         ownerId: user.value.uid,
       };
@@ -233,15 +228,6 @@
                 >
                   Umělec je povinný
                 </Field.ErrorText>
-              </Field.Root>
-
-              <Field.Root class="field">
-                <Field.Label class="field-label">Tónina</Field.Label>
-                <Field.Input
-                  v-model="songOriginalKey"
-                  class="field-input"
-                  placeholder="Např. G"
-                />
               </Field.Root>
 
               <Field.Root class="field">

@@ -63,7 +63,6 @@ export interface CreateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
-  originalKey?: string;
   capo?: number;
   ownerId: string;
 }
@@ -73,7 +72,6 @@ export interface UpdateSongInput {
   artist: string;
   text?: string;
   chords?: string[];
-  originalKey?: string;
   capo?: number;
   ownerId: string;
 }
@@ -224,7 +222,6 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     text: input.text,
     createdAt: Timestamp.now(),
     ownerId: input.ownerId,
-    ...(input.originalKey !== undefined ? { originalKey: input.originalKey } : {}),
     ...(input.capo !== undefined ? { capo: input.capo } : {}),
   };
 
@@ -236,7 +233,6 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     artist: input.artist,
     text: heavySongData.text,
     chords: input.chords,
-    originalKey: input.originalKey,
     capo: input.capo,
     createdAt: heavySongData.createdAt,
     ownerId: heavySongData.ownerId ?? input.ownerId,
@@ -290,7 +286,6 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
   const heavySongPatch: SongDocument = {
     text: input.text,
     ownerId: input.ownerId,
-    ...(input.originalKey !== undefined ? { originalKey: input.originalKey } : {}),
     ...(input.capo !== undefined ? { capo: input.capo } : {}),
   };
 
@@ -302,7 +297,6 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     artist: input.artist,
     text: heavySongPatch.text,
     chords: input.chords,
-    originalKey: input.originalKey,
     capo: input.capo,
     ownerId: heavySongPatch.ownerId ?? input.ownerId,
   };
