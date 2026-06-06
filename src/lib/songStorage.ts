@@ -29,6 +29,7 @@ function mergeSongCatalogEntry(catalogEntry: SongCatalogEntry, cachedSong: Song 
     id: catalogEntry.sourceSongId,
     title: catalogEntry.title,
     artist: catalogEntry.artist,
+    categories: catalogEntry.categories,
     ownerId: catalogEntry.ownerId ?? cachedSong?.ownerId ?? '',
   };
 }

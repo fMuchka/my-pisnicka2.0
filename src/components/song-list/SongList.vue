@@ -28,9 +28,10 @@
 
   const router = useRouter();
 
-  const { userSongs, isRefreshing, refresh } = useSongListData();
+  const { userSongs, songCategories, isRefreshing, refresh } = useSongListData();
   const store = songListStore();
-  const { viewMode, searchQuery, selectedChordFilters } = storeToRefs(store);
+  const { viewMode, searchQuery, selectedChordFilters, selectedCategoryFilters } =
+    storeToRefs(store);
   const CHORD_VIRTUAL_ITEM_HEIGHT = 36;
   const CHORD_VIRTUAL_VIEWPORT_HEIGHT = 180;
   const CHORD_VIRTUAL_OVERSCAN = 6;
@@ -98,6 +99,14 @@
     collection: chordCollection,
     filter: filterChordCollection,
     set: setChordCollection,
+  } = useListCollection<ChordComboboxItem>({
+    initialItems: [],
+    filter: filters.value.contains,
+  });
+  const {
+    collection: categoryCollection,
+    filter: filterCategoryCollection,
+    set: setCategoryCollection,
   } = useListCollection<ChordComboboxItem>({
     initialItems: [],
     filter: filters.value.contains,
@@ -220,15 +229,58 @@
   );
 
   const hasActiveFilters = computed(
-    () => normalizedSearch.value.length > 0 || selectedChordFilters.value.length > 0
+    () =>
+      normalizedSearch.value.length > 0 ||
+      selectedChordFilters.value.length > 0 ||
+      selectedCategoryFilters.value.length > 0
+  );
+
+  const categoryNameById = computed(
+    () => new Map(songCategories.value.map((category) => [category.id, category.value]))
+  );
+
+  const selectedCategoryLabels = computed(() =>
+    selectedCategoryFilters.value
+      .map((categoryId) => categoryNameById.value.get(categoryId))
+      .filter((categoryLabel): categoryLabel is string => categoryLabel !== undefined)
+  );
+
+  watch(
+    songCategories,
+    (categories) => {
+      const items = categories.map((category) => ({ label: category.value, value: category.id }));
+      setCategoryCollection(items);
+
+      const categoryIdLookup = new Set(categories.map((category) => category.id));
+      const nextSelected = selectedCategoryFilters.value.filter((categoryId) =>
+        categoryIdLookup.has(categoryId)
+      );
+
+      if (nextSelected.length !== selectedCategoryFilters.value.length) {
+        store.setCategoryFilters(nextSelected);
+      }
+    },
+    { immediate: true }
   );
 
   const filteredSongs = computed(() => {
     const query = normalizedSearch.value;
     const selectedChords = selectedChordLookup.value;
+    const selectedCategoryIds = new Set(selectedCategoryFilters.value);
 
     return [...userSongs.value]
       .filter((song) => {
+        if (selectedCategoryIds.size > 0) {
+          const songCategoryIds = new Set(song.categories ?? []);
+          const hasAllSelectedCategories = [...selectedCategoryIds].every((categoryId) =>
+            songCategoryIds.has(categoryId)
+          );
+
+          if (!hasAllSelectedCategories) {
+            return false;
+          }
+        }
+
         if (selectedChords.size > 0) {
           const songChords = new Set(song.chords?.map((chord) => normalizeChord(chord)) ?? []);
           const hasAllSelectedChords = [...selectedChords].every((chord) => songChords.has(chord));
@@ -260,6 +312,18 @@
 
   const clearChordFilters = () => {
     store.clearChordFilters();
+  };
+
+  const clearCategoryFilters = () => {
+    store.clearCategoryFilters();
+  };
+
+  const handleCategoryInputChange = (details: Combobox.InputValueChangeDetails) => {
+    filterCategoryCollection(details.inputValue);
+  };
+
+  const handleCategoryValueChange = (details: Combobox.ValueChangeDetails<ChordComboboxItem>) => {
+    store.setCategoryFilters(details.items.map((item) => item.value));
   };
 
   const handleChordInputChange = (details: Combobox.InputValueChangeDetails) => {
@@ -299,6 +363,7 @@
   watch(isOptionsMenuOpen, (isOpen) => {
     if (!isOpen) {
       filterChordCollection('');
+      filterCategoryCollection('');
       chordScrollTop.value = 0;
     }
   });
@@ -359,6 +424,83 @@
                 Plochý seznam
               </button>
             </div>
+
+            <div class="song-list-options__divider" />
+
+            <div class="song-list-options__section-title">Filtr podle kategorií</div>
+
+            <div
+              v-if="selectedCategoryLabels.length > 0"
+              class="song-list-options__selected-categories"
+              aria-label="Vybrané kategorie"
+            >
+              <span
+                v-for="categoryLabel in selectedCategoryLabels"
+                :key="`selected-category-${categoryLabel}`"
+                class="song-list-options__selected-chip"
+              >
+                {{ categoryLabel }}
+              </span>
+            </div>
+
+            <Combobox.Root
+              multiple
+              :close-on-select="false"
+              :lazy-mount="true"
+              :collection="categoryCollection"
+              :model-value="selectedCategoryFilters"
+              @input-value-change="handleCategoryInputChange"
+              @value-change="handleCategoryValueChange"
+            >
+              <Combobox.Control class="song-list-options__combobox-control">
+                <Combobox.Input
+                  class="song-list-options__combobox-input"
+                  aria-label="Vybrat kategorie"
+                  placeholder="Vybrat kategorie"
+                />
+                <Combobox.Trigger
+                  class="song-list-options__combobox-trigger"
+                  aria-label="Otevřít výběr kategorií"
+                >
+                  <ChevronDown
+                    :size="14"
+                    class="song-list-options__chord-chevron"
+                  />
+                </Combobox.Trigger>
+              </Combobox.Control>
+
+              <Combobox.Positioner>
+                <Combobox.Content class="song-list-options__combobox-content">
+                  <Combobox.Empty class="song-list-options__empty">
+                    Žádné kategorie k dispozici.
+                  </Combobox.Empty>
+
+                  <Combobox.Item
+                    v-for="category in categoryCollection.items"
+                    :key="category.value"
+                    :item="category"
+                    class="song-list-options__chord-item"
+                  >
+                    <Combobox.ItemText>{{ category.label }}</Combobox.ItemText>
+                    <Combobox.ItemIndicator>
+                      <Check
+                        :size="14"
+                        class="song-list-options__chord-check"
+                      />
+                    </Combobox.ItemIndicator>
+                  </Combobox.Item>
+                </Combobox.Content>
+              </Combobox.Positioner>
+            </Combobox.Root>
+
+            <button
+              v-if="selectedCategoryFilters.length > 0"
+              type="button"
+              class="song-list-options__clear-categories"
+              @click="clearCategoryFilters"
+            >
+              Vymazat výběr kategorií
+            </button>
 
             <div class="song-list-options__divider" />
 
@@ -693,7 +835,8 @@
   .song-list-options__view-card:focus-visible,
   .song-list-options__chord-trigger:focus-visible,
   .song-list-options__chord-item:focus-visible,
-  .song-list-options__clear-chords:focus-visible {
+  .song-list-options__clear-chords:focus-visible,
+  .song-list-options__clear-categories:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
@@ -835,11 +978,30 @@
     border-radius: var(--radius-sm);
   }
 
-  .song-list-options__clear-chords:hover {
+  .song-list-options__clear-categories {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.8rem;
+    text-align: left;
+    padding: 4px var(--space-xs);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+  }
+
+  .song-list-options__clear-chords:hover,
+  .song-list-options__clear-categories:hover {
     background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
 
   .song-list-options__selected-chords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .song-list-options__selected-categories {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;

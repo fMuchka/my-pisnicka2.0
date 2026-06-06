@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
 import SongList from '../SongList.vue';
-import type { Song } from '../../../lib/song';
+import type { Song, SongCategory } from '../../../lib/song';
 import type { Timestamp } from 'firebase/firestore';
 import { songListStore } from '../../../stores/songList';
 
@@ -22,6 +22,7 @@ const mockRouterPush = vi.fn();
 const mockRefresh = vi.fn();
 
 const mockUserSongs = mockRef<Song[]>([]);
+const mockSongCategories = mockRef<SongCategory[]>([]);
 const mockIsRefreshing = mockRef(false);
 const mockUser = mockRef<{ uid: string; displayName: string } | null>({
   uid: 'user-123',
@@ -31,6 +32,7 @@ const mockUser = mockRef<{ uid: string; displayName: string } | null>({
 vi.mock('../../../composables/useSongListData', () => ({
   useSongListData: () => ({
     userSongs: mockUserSongs,
+    songCategories: mockSongCategories,
     isRefreshing: mockIsRefreshing,
     refresh: mockRefresh,
   }),
@@ -146,6 +148,7 @@ describe('SongList', () => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
     mockUserSongs.value = [];
+    mockSongCategories.value = [];
     mockIsRefreshing.value = false;
     mockUser.value = { uid: 'user-123', displayName: 'Test User' };
   });
@@ -642,5 +645,40 @@ describe('SongList', () => {
     await user.click(screen.getByRole('button', { name: 'Načíst písně' }));
 
     expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('filters songs by selected categories with match-all logic', async () => {
+    const store = songListStore();
+    store.viewMode = 'flat';
+    mockSongCategories.value = [
+      { id: 'cat-cz', value: 'České' },
+      { id: 'cat-camp', value: 'Táborová' },
+    ];
+    mockUserSongs.value = [
+      {
+        id: 'song-category-1',
+        title: 'Song One',
+        artist: 'Artist A',
+        categories: ['cat-cz', 'cat-camp'],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+      {
+        id: 'song-category-2',
+        title: 'Song Two',
+        artist: 'Artist B',
+        categories: ['cat-cz'],
+        createdAt: new Date().toISOString() as unknown as Timestamp,
+        ownerId: '',
+      },
+    ];
+
+    render(SongList);
+
+    store.setCategoryFilters(['cat-cz', 'cat-camp']);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    });
   });
 });

@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   createSongCatalogEntry: vi.fn(),
   updateSongCatalogEntry: vi.fn(),
   fetchSongCatalogEntryBySourceSongId: vi.fn(),
+  fetchAllSongCategories: vi.fn(),
+  resolveSongCategoryIds: vi.fn(),
 }));
 
 type MockRef<T> = { __v_isRef: true; value: T };
@@ -36,6 +38,8 @@ vi.mock('../../../../lib/song', () => ({
   createSongCatalogEntry: mocks.createSongCatalogEntry,
   updateSongCatalogEntry: mocks.updateSongCatalogEntry,
   fetchSongCatalogEntryBySourceSongId: mocks.fetchSongCatalogEntryBySourceSongId,
+  fetchAllSongCategories: mocks.fetchAllSongCategories,
+  resolveSongCategoryIds: mocks.resolveSongCategoryIds,
 }));
 
 vi.mock('../../../../stores/song', () => ({
@@ -58,6 +62,8 @@ describe('CreateSongDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.fetchSongCatalogEntryBySourceSongId.mockResolvedValue(null);
+    mocks.fetchAllSongCategories.mockResolvedValue([]);
+    mocks.resolveSongCategoryIds.mockResolvedValue([]);
     mocks.createSongCatalogEntry.mockResolvedValue({ id: 'catalog-1' });
     mocks.updateSongCatalogEntry.mockResolvedValue({ id: 'catalog-1' });
   });
@@ -110,6 +116,7 @@ describe('CreateSongDialog', () => {
         title: "Knockin on Heaven's Door",
         artist: 'Bob Dylan',
         chords: ['Am', 'C'],
+        categories: [],
         sourceSongId: 'song-1',
         ownerId: 'host-123',
       });
@@ -184,6 +191,7 @@ describe('CreateSongDialog', () => {
         title: 'New title',
         artist: 'New artist',
         chords: ['Am', 'C'],
+        categories: [],
         sourceSongId: 'song-9',
         ownerId: 'host-123',
       });
@@ -240,6 +248,7 @@ describe('CreateSongDialog', () => {
         title: 'New title',
         artist: 'New artist',
         chords: ['Am', 'C'],
+        categories: [],
         sourceSongId: 'song-11',
         ownerId: 'host-123',
       });

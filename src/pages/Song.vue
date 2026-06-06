@@ -426,7 +426,7 @@
       >
         <SongQuickInfo
           :capo="song.capo"
-          :original-key="song.originalKey"
+          :original-key="''"
           :transpose="transpose"
         />
 
