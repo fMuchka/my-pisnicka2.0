@@ -1,5 +1,15 @@
 [
   {
+    "time": "6. červen 2026",
+    "text": [
+      "Nyní lze přidat k písni kategorie, což může pomoci při hledání.",
+      "Zároveň lze přidat informace o CAPO.",
+      "Nová sekce, informací o písni pak zobrazí CAPO, tóninu a transpozici.",
+      "Přehled akordových diagramů byl přesunut do dialogu nastavení akordů, kde lze aplikovat konkrétní transpozici.",
+      "Zobrazení akordů bylo upraveno, aby více vyhovovalo menším zařízením."
+    ]
+  },
+  {
     "time": "14. květen 2026",
     "text": [
       "Přidání grafického režimu tvorby a úpravy písní.",
