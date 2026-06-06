@@ -57,7 +57,6 @@
 .chord-layout-editor :deep(.clr-badge) {
   position: absolute;
   left: 0;
-  color: var(--song-chord-inline-color, var(--text-chord));
   font-family: var(--song-chord-inline-font-family, inherit);
   font-size: var(--song-chord-font-size, var(--song-chord-inline-font-size, 0.95em));
   font-weight: var(--song-chord-font-weight, var(--song-chord-inline-font-weight, 700));
@@ -72,10 +71,8 @@
   justify-content: flex-start;
   gap: 0.2rem;
   padding: 0.25rem;
-  background-color: var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
-  box-shadow:
-    2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white)),
-    -2px 0 0 2px var(--song-chord-inline-bg, color-mix(in srgb, var(--accent) 18%, white));
+  color: var(--song-chord-inline-bg, color-mix(in srgb, var(--surface-strong, #1f232a) 85%, black));
+  background-color: var(--bg-primary);
   cursor: default;
 }
 
