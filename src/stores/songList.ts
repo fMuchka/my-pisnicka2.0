@@ -8,6 +8,7 @@ export const songListStore = defineStore('songList', () => {
   const isTreeViewExpanded = ref<boolean>(false);
   const searchQuery = ref<string>('');
   const selectedChordFilters = ref<string[]>([]);
+  const selectedCategoryFilters = ref<string[]>([]);
 
   const expandedTreeViewValues = ref<string[]>([]);
 
@@ -37,6 +38,27 @@ export const songListStore = defineStore('songList', () => {
     selectedChordFilters.value = [];
   }
 
+  function toggleCategoryFilter(categoryId: string) {
+    const selectedIndex = selectedCategoryFilters.value.findIndex(
+      (selectedCategoryId) => selectedCategoryId === categoryId
+    );
+
+    if (selectedIndex >= 0) {
+      selectedCategoryFilters.value.splice(selectedIndex, 1);
+      return;
+    }
+
+    selectedCategoryFilters.value.push(categoryId);
+  }
+
+  function clearCategoryFilters() {
+    selectedCategoryFilters.value = [];
+  }
+
+  function setCategoryFilters(categoryIds: string[]) {
+    selectedCategoryFilters.value = [...categoryIds];
+  }
+
   function setChordFilters(chords: string[]) {
     selectedChordFilters.value = [...chords];
   }
@@ -46,11 +68,15 @@ export const songListStore = defineStore('songList', () => {
     isTreeViewExpanded,
     searchQuery,
     selectedChordFilters,
+    selectedCategoryFilters,
     expandedTreeViewValues,
     expandTreeView,
     collapseTreeView,
     toggleChordFilter,
     clearChordFilters,
+    toggleCategoryFilter,
+    clearCategoryFilters,
+    setCategoryFilters,
     setChordFilters,
   };
 });

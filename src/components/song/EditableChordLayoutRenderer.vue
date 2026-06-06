@@ -416,7 +416,9 @@
     line-height: var(--song-anchored-line-height, 2.2);
     white-space: pre-wrap;
     word-break: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    overflow-x: hidden;
+    overflow-y: visible;
     outline: none;
   }
 
@@ -460,7 +462,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
+    width: 50px;
     height: 40px;
     border: none;
     border-radius: 999px;

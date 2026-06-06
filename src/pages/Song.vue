@@ -7,7 +7,7 @@
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import SongChordsDialog from '../components/dialogs/song-chords/SongChordsDialog.vue';
-  import SongChordOverview from '../components/song/SongChordOverview.vue';
+  import SongQuickInfo from '../components/song/SongQuickInfo.vue';
   import ChordLayoutRenderer from '../components/song/ChordLayoutRenderer.vue';
   import SongControls from '../components/song/SongControls.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
@@ -424,9 +424,9 @@
         v-else-if="song"
         class="song-content"
       >
-        <SongChordOverview
-          v-if="songChords.length > 0"
-          :chords="songChords"
+        <SongQuickInfo
+          :capo="song.capo"
+          :original-key="song.chords?.at(0)"
           :transpose="transpose"
         />
 
@@ -473,6 +473,7 @@
 
     <SongChordsDialog
       :open="isChordsDialogOpen"
+      :chords="songChords"
       :transpose="transpose"
       @update:open="isChordsDialogOpen = $event"
       @update:transpose="transpose = $event"

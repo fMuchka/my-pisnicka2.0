@@ -1,9 +1,11 @@
 import { computed, ref } from 'vue';
 import { useSongStore } from '../stores/song';
+import { fetchAllSongCategories, type SongCategory } from '../lib/song';
 
 export function useSongListData() {
   const songStore = useSongStore();
   const isRefreshing = ref(false);
+  const songCategories = ref<SongCategory[]>([]);
 
   const userSongs = computed(() => Array.from(songStore.songs.values()));
 
@@ -14,6 +16,8 @@ export function useSongListData() {
       if (!hadCache) {
         await songStore.fetchAllSongsIntoStore();
       }
+
+      songCategories.value = await fetchAllSongCategories();
     } catch (err: unknown) {
       console.error(err);
     } finally {
@@ -25,6 +29,7 @@ export function useSongListData() {
     isRefreshing.value = true;
     try {
       await songStore.refreshAllSongs();
+      songCategories.value = await fetchAllSongCategories();
     } catch (err: unknown) {
       console.error(err);
     } finally {
@@ -36,6 +41,7 @@ export function useSongListData() {
 
   return {
     userSongs,
+    songCategories,
     isRefreshing,
     refresh,
   };

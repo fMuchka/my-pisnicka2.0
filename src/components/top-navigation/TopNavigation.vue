@@ -70,6 +70,14 @@
         class="nav-title"
         @click="goHome"
       >
+        <img
+          src="/mypisnicka-icon.svg"
+          alt="MyPísnička"
+          class="logo"
+          width="30"
+          height="30"
+          color="blue"
+        />
         MyPísnička
       </div>
       <div class="nav-actions">
@@ -128,6 +136,9 @@
     font-size: 20px;
     font-weight: 600;
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .nav-actions {
@@ -210,6 +221,11 @@
 
     .context-header {
       max-width: calc(100% - 120px);
+    }
+
+    .logo {
+      width: 25px;
+      height: 25px;
     }
   }
 </style>

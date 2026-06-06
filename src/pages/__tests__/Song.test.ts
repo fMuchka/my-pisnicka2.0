@@ -84,8 +84,17 @@ vi.mock('../../components/core/ErrorMessage.vue', () => ({
 
 vi.mock('../../components/song/SongChordOverview.vue', () => ({
   default: {
-    props: ['chords'],
-    template: '<div data-testid="song-chord-overview">{{ chords.join(\',\') }}</div>',
+    props: ['chords', 'transpose'],
+    template:
+      '<div data-testid="song-chord-overview">{{ chords.join(\',\') }}|{{ transpose }}</div>',
+  },
+}));
+
+vi.mock('../../components/song/SongQuickInfo.vue', () => ({
+  default: {
+    props: ['capo', 'originalKey', 'transpose'],
+    template:
+      '<div data-testid="song-quick-info">{{ capo }}|{{ originalKey }}|{{ transpose }}</div>',
   },
 }));
 
@@ -136,12 +145,14 @@ describe('Song Page', () => {
     expect(screen.getByText('Píseň nebyla nalezena')).toBeInTheDocument();
   });
 
-  it('renders sections from markers and chord overview', () => {
+  it('renders sections from markers and quick info', () => {
     songState.song.value = {
       id: 'song-1',
       title: 'Song title',
       artist: 'Artist name',
       chords: ['G', 'D', 'Am', ''],
+      originalKey: 'G',
+      capo: 2,
       text: '[intro]\n[G] Intro line\n[verse]\n[D] Verse line',
       ownerId: '',
     };
@@ -152,7 +163,7 @@ describe('Song Page', () => {
     expect(screen.getByText('Artist name')).toBeInTheDocument();
     expect(screen.getByText('Úvod')).toBeInTheDocument();
     expect(screen.getByText('Sloka')).toBeInTheDocument();
-    expect(screen.getByTestId('song-chord-overview')).toHaveTextContent('G,D,Am');
+    expect(screen.getByTestId('song-quick-info')).toHaveTextContent('2|G|0');
   });
 
   it('opens edit dialog when edit button is clicked', async () => {
