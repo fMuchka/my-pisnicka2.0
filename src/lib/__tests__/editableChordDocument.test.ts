@@ -18,10 +18,13 @@ describe('editableChordDocument', () => {
     const doc = toEditorDoc(text);
     const roundTripped = fromEditorDoc(doc);
 
-    expect(roundTripped).toContain('[G]');
-    expect(roundTripped).toContain('[D/F#]');
-    expect(roundTripped).toContain('[Hm7]');
-    expect(roundTripped).toContain('Mama take this');
+    expect(roundTripped).toBe(text);
+  });
+
+  it('does not add whitespace for standalone chords', () => {
+    const text = '[G]\n[Hm7] line';
+
+    expect(fromEditorDoc(toEditorDoc(text))).toBe(text);
   });
 
   it('keeps unsupported bracket tokens as plain text', () => {

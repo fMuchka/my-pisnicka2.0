@@ -18,6 +18,22 @@ function standaloneChordPlaceholder(chord: string): string {
   return ' '.repeat(Math.max(chord.length, 1));
 }
 
+function unwrapChordText(text: string): string {
+  let value = text;
+
+  // Chord-marked nodes are stored as ` ${part.text} ` to keep spacing editable.
+  if (value.length >= 2 && value.startsWith(' ') && value.endsWith(' ')) {
+    value = value.slice(1, -1);
+  }
+
+  // Pure placeholder spaces represent standalone chords and should not serialize.
+  if (value.trim().length === 0) {
+    return '';
+  }
+
+  return value;
+}
+
 export function getRenderParts(line: string): RenderPart[] {
   const parts: RenderPart[] = [];
   let index = 0;
@@ -123,13 +139,18 @@ export function fromEditorDoc(content: JSONContent): string {
     }
 
     let value = '';
+    let deferredWhitespace = '';
     for (const node of block.content ?? []) {
       if (node.type === 'hardBreak') {
+        value += deferredWhitespace;
+        deferredWhitespace = '';
         value += '\n';
         continue;
       }
 
       if (node.type !== 'text') {
+        value += deferredWhitespace;
+        deferredWhitespace = '';
         continue;
       }
 
@@ -138,10 +159,24 @@ export function fromEditorDoc(content: JSONContent): string {
 
       if (typeof chord === 'string' && chord.length > 0) {
         value += `[${chord}]`;
+        value += deferredWhitespace;
+        deferredWhitespace = '';
+        value += unwrapChordText(node.text ?? '');
+        continue;
       }
 
-      value += node.text ?? '';
+      const text = node.text ?? '';
+      if (text.length > 0 && text.trim().length === 0) {
+        deferredWhitespace += text;
+        continue;
+      }
+
+      value += deferredWhitespace;
+      deferredWhitespace = '';
+      value += text;
     }
+
+    value += deferredWhitespace;
 
     return value;
   });
