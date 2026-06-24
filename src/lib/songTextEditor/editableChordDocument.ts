@@ -108,7 +108,7 @@ export function toEditorDoc(text: string): JSONContent {
 
           return {
             type: 'text',
-            text: part.text,
+            text: ` ${part.text} `,
             marks: [{ type: 'chord', attrs: { chord: part.chord } }],
           };
         }),

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
   import { computed } from 'vue';
   import { isSupportedChord, transposeChord } from '../../lib/chords/chords';
   import EditableChordLayoutRenderer from './EditableChordLayoutRenderer.vue';
@@ -161,7 +161,8 @@
           };
         }
 
-        const width = Math.max(part.text.length, transposedChord.length);
+        // put the n characters of chord plus 2 for 1 character padding from both sides
+        const width = Math.max(part.text.length, transposedChord.length) + 2;
 
         return {
           ...part,
@@ -204,7 +205,9 @@
         >
           {{ part.text }}
         </span>
-        <span v-else>{{ part.text }}</span>
+        <template v-else>
+          <span v-if="part.text.length > 0">{{ part.text }}</span>
+        </template>
       </template>
       <br />
     </template>
