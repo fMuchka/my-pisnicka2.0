@@ -36,7 +36,7 @@ describe('database-backed chord validation', () => {
     expect(isSupportedChord('Hm7')).toBe(true);
     expect(isSupportedChord('D/F#')).toBe(true);
 
-    expect(isSupportedChord('Csus4')).toBe(false);
+    expect(isSupportedChord('Csus4')).toBe(true);
     expect(isSupportedChord('Hm9')).toBe(false);
     expect(isSupportedChord('BmMaj7')).toBe(false);
   });
@@ -44,6 +44,6 @@ describe('database-backed chord validation', () => {
   it('normalizes bracketed tokens to canonical chord values', () => {
     expect(normalizeChord('[g]')).toBe('G');
     expect(normalizeChord('[dbm7]')).toBe('Dbm7');
-    expect(normalizeChord('[Gsus4]')).toBeNull();
+    expect(normalizeChord('[Gsus4]')).toBe('Gsus4');
   });
 });

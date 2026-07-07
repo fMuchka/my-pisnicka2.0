@@ -21,7 +21,7 @@ describe('songTextEditor/chords', () => {
   });
 
   it('ignores chord-like tokens that are not in chords.database', () => {
-    const input = '[Csus4] line with Hm9 and [Gaug] plus BmMaj7';
+    const input = '[Random] line with Hm9 and [Gaug] plus BmMaj7';
 
     expect(extractUniqueChords(input)).toEqual([]);
   });

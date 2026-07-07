@@ -54,7 +54,7 @@ describe('ChordLayoutRenderer', () => {
   it('does not anchor unsupported chords outside chords.database', () => {
     const { container } = render(ChordLayoutRenderer, {
       props: {
-        text: '[Gsus4] line [Hm9] end',
+        text: '[Random] line [Hm9] end',
       },
     });
 

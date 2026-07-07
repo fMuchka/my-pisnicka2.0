@@ -7,7 +7,7 @@ import {
 
 describe('editableChordDocument', () => {
   it('marks only supported bracket chords', () => {
-    const parts = getRenderParts('[G] line [Gsus4] no [Hm7] end');
+    const parts = getRenderParts('[G] line [Random] no [Hm7] end');
 
     const marked = parts.filter((part) => part.chord).map((part) => part.chord);
     expect(marked).toEqual(['G', 'Hm7']);
