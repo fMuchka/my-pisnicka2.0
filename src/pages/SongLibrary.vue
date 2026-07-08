@@ -1,18 +1,17 @@
 <script setup lang="ts">
-  import { ref } from 'vue';
   import { Plus } from 'lucide-vue-next';
+  import { useRouter } from 'vue-router';
   import Button from '../components/core/Button.vue';
-  import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import SongList from '../components/song-list/SongList.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
+  import Routes from '../router/Routes';
 
   const TITLE = 'Knihovna';
   const TAG_LINE = 'Ne všechny písně, co čekají, jsou zapomenuté';
+  const router = useRouter();
 
-  const isCreateSongDialogOpen = ref(false);
-
-  const openCreateSongDialog = () => {
-    isCreateSongDialogOpen.value = true;
+  const openCreateSongPage = () => {
+    router.push({ path: Routes.SongCreate });
   };
 </script>
 
@@ -32,16 +31,11 @@
         :icon="{ position: 'prepend', component: Plus }"
         label="Vytvořit novou píseň"
         type="button"
-        @click="openCreateSongDialog"
+        @click="openCreateSongPage"
       />
     </div>
 
     <SongList />
-
-    <CreateSongDialog
-      :open="isCreateSongDialogOpen"
-      @update:open="isCreateSongDialogOpen = $event"
-    />
   </div>
 </template>
 

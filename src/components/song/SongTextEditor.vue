@@ -23,6 +23,8 @@
   interface Props {
     modelValue: string;
     placeholder?: string;
+    mode?: 'source' | 'visual';
+    showToolbar?: boolean;
   }
 
   interface Emits {
@@ -32,6 +34,8 @@
 
   const props = withDefaults(defineProps<Props>(), {
     placeholder: 'Začněte psát text písně...',
+    mode: undefined,
+    showToolbar: true,
   });
 
   const emit = defineEmits<Emits>();
@@ -55,10 +59,18 @@
     onUniqueChordsChange: (value) => emit('unique-chords', value),
   });
 
+  const resolvedIsVisualMode = computed(() => {
+    if (props.mode !== undefined) {
+      return props.mode === 'visual';
+    }
+
+    return isVisualMode.value;
+  });
+
   // Button icons
   const modeToggleIcon = computed<ButtonIcon>(() => ({
     position: 'prepend',
-    component: isVisualMode.value ? FileType : Eye,
+    component: resolvedIsVisualMode.value ? FileType : Eye,
   }));
 
   const previewSections = computed(() => parseMarkdownSections(rawMarkdown.value));
@@ -98,20 +110,23 @@
 
 <template>
   <div class="song-text-editor">
-    <div class="editor-toolbar">
+    <div
+      v-if="showToolbar"
+      class="editor-toolbar"
+    >
       <Button
         class="mode-toggle-button"
         color-variation="Primary"
         style-variation="Text"
-        :aria-label="isVisualMode ? 'Přepnout na text' : 'Přepnout na vizuální režim'"
-        :label="isVisualMode ? 'Zdroj' : 'Náhled'"
+        :aria-label="resolvedIsVisualMode ? 'Přepnout na text' : 'Přepnout na vizuální režim'"
+        :label="resolvedIsVisualMode ? 'Zdroj' : 'Náhled'"
         :icon="modeToggleIcon"
         @click="toggleMode"
       />
     </div>
 
     <div
-      v-if="isVisualMode"
+      v-if="resolvedIsVisualMode"
       class="visual-editor"
     >
       <div
@@ -226,7 +241,6 @@
     --song-chord-inline-font-family: var(--font-chord);
     --song-chord-inline-font-weight: inherit;
     --song-chord-inline-radius: 3px;
-    padding: var(--space-lg) var(--space-md);
     border-radius: var(--radius-lg);
     background: linear-gradient(
       180deg,
@@ -285,12 +299,6 @@
   .markdown-textarea:focus {
     outline: 2px solid var(--color-primary);
     outline-offset: 1px;
-  }
-
-  @media (min-width: 768px) {
-    .song-body {
-      padding: var(--space-xl);
-    }
   }
 
   @media (max-width: 640px) {

@@ -16,6 +16,7 @@ export const router = createRouter({
     { path: Routes.Info, component: () => import('../pages/Info.vue') },
     { path: Routes.Join, component: () => import('../pages/Join.vue') },
     { path: Routes.SongLibrary, component: () => import('../pages/SongLibrary.vue') },
+    { path: Routes.SongCreate, component: () => import('../pages/Song.vue') },
     { path: Routes.Song, component: () => import('../pages/Song.vue') },
     { path: Routes.Session, component: () => import('../pages/Session.vue') },
     { path: Routes.SessionList, component: () => import('../pages/SessionList.vue') },
@@ -39,9 +40,10 @@ export const router = createRouter({
 router.beforeEach((to, _from, next) => {
   // Fresh auth check on each navigation (useAuth() hooks into Firebase listener)
   const { isAuthenticated } = useAuth();
+  const isPublicSongDetailRoute = to.path.startsWith('/song/') && to.path !== Routes.SongCreate;
 
   // Public routes (Join, Session and Song detail don't require auth)
-  if (to.path === Routes.Join || to.path === Routes.Session || to.path.startsWith('/song/')) {
+  if (to.path === Routes.Join || to.path === Routes.Session || isPublicSongDetailRoute) {
     next();
   } else {
     // Protected routes: redirect to Login if not authenticated
