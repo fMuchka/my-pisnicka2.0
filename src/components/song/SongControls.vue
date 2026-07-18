@@ -155,25 +155,6 @@
             <button
               type="button"
               class="control-button segment-button"
-              :class="{ 'segment-button--active': editorMode === 'source' }"
-              aria-label="Zdroj"
-              @click="emit('select-source')"
-            >
-              <FileType :size="22" />
-            </button>
-          </Tooltip.Trigger>
-          <Teleport to="body">
-            <Tooltip.Positioner>
-              <Tooltip.Content class="tooltip-content">Zdroj</Tooltip.Content>
-            </Tooltip.Positioner>
-          </Teleport>
-        </Tooltip.Root>
-
-        <Tooltip.Root :open-delay="300">
-          <Tooltip.Trigger as-child>
-            <button
-              type="button"
-              class="control-button segment-button"
               :class="{ 'segment-button--active': editorMode === 'preview' }"
               aria-label="Náhled"
               @click="emit('select-preview')"
@@ -184,6 +165,25 @@
           <Teleport to="body">
             <Tooltip.Positioner>
               <Tooltip.Content class="tooltip-content">Náhled</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
+
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              type="button"
+              class="control-button segment-button"
+              :class="{ 'segment-button--active': editorMode === 'source' }"
+              aria-label="Zdroj"
+              @click="emit('select-source')"
+            >
+              <FileType :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Zdroj</Tooltip.Content>
             </Tooltip.Positioner>
           </Teleport>
         </Tooltip.Root>

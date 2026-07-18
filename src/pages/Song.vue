@@ -388,7 +388,7 @@
 
   const initializeCreateMode = async () => {
     resetEditorState();
-    editorViewMode.value = 'source';
+    editorViewMode.value = 'preview';
     await loadSongCategories();
   };
 
