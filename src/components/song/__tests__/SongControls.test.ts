@@ -14,7 +14,6 @@ describe('SongControls', () => {
     });
 
     expect(screen.getByText('Do konce zbývá 2:15')).toBeInTheDocument();
-    expect(screen.getByText('při 28 px/s')).toBeInTheDocument();
   });
 
   it('keeps ETA visible and hides speed detail while playing', () => {

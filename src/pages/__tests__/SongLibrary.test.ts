@@ -3,6 +3,15 @@ import { fireEvent, render, screen } from '@testing-library/vue';
 import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
 import SongLibrary from '../SongLibrary.vue';
+import Routes from '../../router/Routes';
+
+const router = vi.hoisted(() => ({
+  push: vi.fn(),
+}));
+
+vi.mock('vue-router', () => ({
+  useRouter: () => router,
+}));
 
 vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
   default: defineComponent({
@@ -25,19 +34,6 @@ vi.mock('../../components/song-list/SongList.vue', () => ({
   }),
 }));
 
-vi.mock('../../components/dialogs/create-song/CreateSongDialog.vue', () => ({
-  default: defineComponent({
-    name: 'CreateSongDialog',
-    props: {
-      open: { type: Boolean, default: false },
-    },
-    setup(props) {
-      return () =>
-        props.open ? h('div', { 'data-testid': 'create-song-dialog' }, 'Create song dialog') : null;
-    },
-  }),
-}));
-
 describe('SongLibrary', () => {
   it('renders the songs library layout with navigation and song list', () => {
     render(SongLibrary);
@@ -47,11 +43,11 @@ describe('SongLibrary', () => {
     expect(screen.getByTestId('song-list')).toBeInTheDocument();
   });
 
-  it('opens the create song dialog from the page action', async () => {
+  it('navigates to the create song page from the page action', async () => {
     render(SongLibrary);
 
     await fireEvent.click(screen.getByRole('button', { name: 'Vytvořit novou píseň' }));
 
-    expect(screen.getByTestId('create-song-dialog')).toBeInTheDocument();
+    expect(router.push).toHaveBeenCalledWith({ path: Routes.SongCreate });
   });
 });

@@ -1,11 +1,17 @@
 <script setup lang="ts">
   import { Tabs } from '@ark-ui/vue/tabs';
   import { CHORD_QUALITIES, CHORD_ROOTS } from '../../../lib/chords/chords.database';
+  import {
+    sectionLabel,
+    sectionOptionStyle,
+    sectionTypeOptions,
+  } from '../../../lib/songTextEditor/sections';
   import ChordChart from '../../chord/ChordChart.vue';
+  import type { SectionType } from '../../../lib/songTextEditor/sections';
 
   interface Props {
     usedChords: string[];
-    chordPickerTab: 'used' | 'all';
+    chordPickerTab: 'used' | 'all' | 'sections';
     selectedRoot: (typeof CHORD_ROOTS)[number];
     selectedQuality: (typeof CHORD_QUALITIES)[number];
     quickRoots: (typeof CHORD_ROOTS)[number][];
@@ -13,10 +19,11 @@
   }
 
   interface Emits {
-    (event: 'update:chordPickerTab', value: 'used' | 'all'): void;
+    (event: 'update:chordPickerTab', value: 'used' | 'all' | 'sections'): void;
     (event: 'update:selectedRoot', value: (typeof CHORD_ROOTS)[number]): void;
     (event: 'update:selectedQuality', value: (typeof CHORD_QUALITIES)[number]): void;
     (event: 'pick', value: string): void;
+    (event: 'pick-section', value: SectionType): void;
     (event: 'close'): void;
   }
 
@@ -27,7 +34,7 @@
 <template>
   <div class="chord-picker-popover">
     <div class="chord-picker-header">
-      <h3 class="chord-picker-title">Akordy</h3>
+      <h3 class="chord-picker-title">Akordy a Sekce</h3>
       <button
         type="button"
         class="chord-picker-close"
@@ -40,7 +47,9 @@
     <Tabs.Root
       :model-value="chordPickerTab"
       class="chord-picker-tabs"
-      @update:model-value="(value) => $emit('update:chordPickerTab', value as 'used' | 'all')"
+      @update:model-value="
+        (value) => $emit('update:chordPickerTab', value as 'used' | 'all' | 'sections')
+      "
     >
       <Tabs.List class="chord-picker-tab-list">
         <Tabs.Trigger
@@ -48,13 +57,19 @@
           class="chord-picker-tab-trigger"
           :disabled="usedChords.length === 0"
         >
-          Použité
+          Použité Akordy
         </Tabs.Trigger>
         <Tabs.Trigger
           value="all"
           class="chord-picker-tab-trigger"
         >
-          Všechny
+          Všechny Akordy
+        </Tabs.Trigger>
+        <Tabs.Trigger
+          value="sections"
+          class="chord-picker-tab-trigger"
+        >
+          Sekce
         </Tabs.Trigger>
       </Tabs.List>
 
@@ -167,6 +182,24 @@
           </div>
         </div>
       </Tabs.Content>
+
+      <Tabs.Content
+        value="sections"
+        class="chord-picker-tab-content"
+      >
+        <div class="chord-section-grid">
+          <button
+            v-for="type in sectionTypeOptions"
+            :key="`section-${type}`"
+            type="button"
+            class="chord-section-item"
+            :style="sectionOptionStyle(type)"
+            @click="$emit('pick-section', type)"
+          >
+            {{ sectionLabel(type) }}
+          </button>
+        </div>
+      </Tabs.Content>
     </Tabs.Root>
   </div>
 </template>
@@ -251,6 +284,15 @@
   .chord-picker-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 0.35rem;
+    max-height: min(220px, 42vh);
+    overflow-y: auto;
+    padding-right: 0.125rem;
+  }
+
+  .chord-section-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
     gap: 0.35rem;
     max-height: min(220px, 42vh);
     overflow-y: auto;
@@ -374,5 +416,29 @@
 
   .chord-picker-item:hover {
     background: color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+
+  .chord-section-item {
+    border: 1px solid
+      color-mix(in srgb, var(--section-option-accent, var(--accent)) 42%, transparent);
+    border-radius: 6px;
+    background: color-mix(
+      in srgb,
+      var(--section-option-accent, var(--accent)) 14%,
+      var(--bg-primary)
+    );
+    color: var(--text-primary);
+    padding: 0.35rem 0.5rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .chord-section-item:hover {
+    background: color-mix(
+      in srgb,
+      var(--section-option-accent, var(--accent)) 24%,
+      var(--bg-primary)
+    );
   }
 </style>

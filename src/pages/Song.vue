@@ -1,32 +1,63 @@
 <script setup lang="ts">
-  import { Pencil } from 'lucide-vue-next';
+  import { Field } from '@ark-ui/vue';
+  import { Combobox, useListCollection } from '@ark-ui/vue/combobox';
+  import { useFilter } from '@ark-ui/vue/locale';
+  import { Check, ChevronDown, Pencil, Plus } from 'lucide-vue-next';
   import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   import Button from '../components/core/Button.vue';
-  import CreateSongDialog from '../components/dialogs/create-song/CreateSongDialog.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import SongChordsDialog from '../components/dialogs/song-chords/SongChordsDialog.vue';
   import SongQuickInfo from '../components/song/SongQuickInfo.vue';
+  import SongTextEditor from '../components/song/SongTextEditor.vue';
   import ChordLayoutRenderer from '../components/song/ChordLayoutRenderer.vue';
   import SongControls from '../components/song/SongControls.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
   import { SECTIONS_DICTIONARY, type SectionTypes } from '../lib/sections/sectionsDictionary';
-  import type { Song } from '../lib/song';
+  import {
+    createSongCatalogEntry,
+    fetchAllSongCategories,
+    fetchSongCatalogEntryBySourceSongId,
+    resolveSongCategoryIds,
+    updateSongCatalogEntry,
+    type CreateSongInput,
+    type Song,
+    type SongCatalogEntryInput,
+    type SongCategory,
+  } from '../lib/song';
   import { updateActiveSongId } from '../lib/session';
+  import Routes from '../router/Routes';
   import { useSessionStore } from '../stores/session';
+  import { useSongStore } from '../stores/song';
 
   type SectionType = SectionTypes;
   type Section = { type: SectionType; text: string };
 
+  type CategoryComboboxItem = { label: string; value: string };
+
   const route = useRoute();
+  const router = useRouter();
   const sessionStore = useSessionStore();
-  const { isAuthenticated } = useAuth();
-  const isEditDialogOpen = ref(false);
+  const songStore = useSongStore();
+  const { isAuthenticated, user } = useAuth();
+  const isInlineEditMode = ref(false);
   const isChordsDialogOpen = ref(false);
   const transpose = ref(0);
+  const editorViewMode = ref<'source' | 'preview'>('preview');
+  const songTitle = ref('');
+  const songArtist = ref('');
+  const songTextDraft = ref('');
+  const songChordsDraft = ref<string[]>([]);
+  const songCategoryIds = ref<string[]>([]);
+  const pendingCategoryLabels = ref<string[]>([]);
+  const categoryInputValue = ref('');
+  const availableSongCategories = ref<SongCategory[]>([]);
+  const songCapo = ref('');
+  const saveError = ref<string | null>(null);
+  const isSaving = ref(false);
 
   const isAutoScrollPlaying = ref(false);
   const autoScrollSpeed = ref(28);
@@ -43,6 +74,16 @@
   let animationFrameId: number | null = null;
   let previousFrameTime: number | null = null;
   let autoScrollPosition: number | null = null;
+
+  const filters = useFilter({ sensitivity: 'base' });
+  const {
+    collection: categoryCollection,
+    filter: filterCategoryCollection,
+    set: setCategoryCollection,
+  } = useListCollection<CategoryComboboxItem>({
+    initialItems: [],
+    filter: filters.value.contains,
+  });
 
   const isElementScrollable = (element: HTMLElement) => {
     const overflowY = window.getComputedStyle(element).overflowY;
@@ -158,7 +199,14 @@
     }
   };
 
+  const isCreateMode = computed(() => route.path === Routes.SongCreate);
+  const isEditorMode = computed(() => isCreateMode.value || isInlineEditMode.value);
+
   const songId = computed(() => {
+    if (isCreateMode.value) {
+      return null;
+    }
+
     const routeSongId = route.params.songId;
 
     if (typeof routeSongId === 'string') {
@@ -170,8 +218,62 @@
 
   const { song, songError, songLoading } = useSongDetail(songId);
 
-  const songText = computed(() => song.value?.text?.trim() || 'Text písně zatím není k dispozici.');
-  const songChords = computed(() => song.value?.chords?.filter((chord) => chord.length > 0) ?? []);
+  const getSongPath = (currentSongId: string) => Routes.Song.replace(':songId', currentSongId);
+  const displaySongText = computed(
+    () => song.value?.text?.trim() || 'Text písně zatím není k dispozici.'
+  );
+  const songChords = computed(() => {
+    if (isEditorMode.value) {
+      return songChordsDraft.value.filter((chord) => chord.length > 0);
+    }
+
+    return song.value?.chords?.filter((chord) => chord.length > 0) ?? [];
+  });
+  const pageTitle = computed(() => {
+    if (isEditorMode.value) {
+      const draftTitle = songTitle.value.trim();
+      return draftTitle.length > 0
+        ? draftTitle
+        : isCreateMode.value
+          ? 'Nová píseň'
+          : 'Upravit píseň';
+    }
+
+    return song.value?.title ?? 'Píseň';
+  });
+  const pageSubtitle = computed(() => {
+    if (isEditorMode.value) {
+      const draftArtist = songArtist.value.trim();
+      return draftArtist.length > 0
+        ? draftArtist
+        : isCreateMode.value
+          ? 'Vytvořit píseň'
+          : 'Upravit metadata a text';
+    }
+
+    return song.value?.artist;
+  });
+  const trimmedTitle = computed(() => songTitle.value.trim());
+  const trimmedArtist = computed(() => songArtist.value.trim());
+  const isTitleValid = computed(() => trimmedTitle.value.length >= 1);
+  const isArtistValid = computed(() => trimmedArtist.value.length >= 1);
+  const isFormValid = computed(() => isTitleValid.value && isArtistValid.value);
+  const isSubmitDisabled = computed(
+    () => !isFormValid.value || isSaving.value || user.value == null
+  );
+  const categoryMapById = computed(
+    () => new Map(availableSongCategories.value.map((category) => [category.id, category]))
+  );
+  const selectedCategoryLabels = computed(() =>
+    songCategoryIds.value
+      .map((categoryId) => categoryMapById.value.get(categoryId)?.value)
+      .filter((categoryLabel): categoryLabel is string => categoryLabel !== undefined)
+  );
+  const categoryLabelsToPersist = computed(() => [
+    ...selectedCategoryLabels.value,
+    ...pendingCategoryLabels.value,
+  ]);
+  const canAddCategoryFromInput = computed(() => categoryInputValue.value.trim().length > 0);
   const remainingScrollDistance = computed(() =>
     Math.max(0, maxScrollTop.value - currentScrollTop.value)
   );
@@ -206,7 +308,7 @@
   const isSectionType = (value: string): value is SectionType => value in SECTIONS_DICTIONARY;
 
   watch(
-    songText,
+    displaySongText,
     (newValue) => {
       const normalizedText = newValue.trim();
 
@@ -252,12 +354,208 @@
     { immediate: true }
   );
 
-  const openEditSongDialog = () => {
-    isEditDialogOpen.value = true;
+  const normalizeCategoryLabel = (value: string) => value.trim().toLocaleLowerCase('cs');
+
+  const resetEditorState = () => {
+    songTitle.value = '';
+    songArtist.value = '';
+    songTextDraft.value = '';
+    songChordsDraft.value = [];
+    songCategoryIds.value = [];
+    pendingCategoryLabels.value = [];
+    categoryInputValue.value = '';
+    songCapo.value = '';
+    saveError.value = null;
+    isSaving.value = false;
   };
 
-  const handleSongSaved = (updatedSong: Song) => {
-    song.value = updatedSong;
+  const loadSongCategories = async () => {
+    const categories = await fetchAllSongCategories();
+    availableSongCategories.value = categories;
+
+    setCategoryCollection(
+      categories.map((category) => ({ label: category.value, value: category.id }))
+    );
+  };
+
+  const populateDraftFromSong = (songToEdit: Song) => {
+    songTitle.value = songToEdit.title;
+    songArtist.value = songToEdit.artist;
+    songTextDraft.value = songToEdit.text ?? '';
+    songChordsDraft.value = songToEdit.chords ?? [];
+    songCapo.value = songToEdit.capo != null ? String(songToEdit.capo) : '';
+  };
+
+  const initializeCreateMode = async () => {
+    resetEditorState();
+    editorViewMode.value = 'preview';
+    await loadSongCategories();
+  };
+
+  const initializeInlineEditMode = async () => {
+    if (song.value == null) {
+      return;
+    }
+
+    resetEditorState();
+    populateDraftFromSong(song.value);
+    await loadSongCategories();
+
+    const existingCatalogEntry = await fetchSongCatalogEntryBySourceSongId(song.value.id);
+    songCategoryIds.value = existingCatalogEntry?.categories ?? [];
+    editorViewMode.value = 'preview';
+    isInlineEditMode.value = true;
+  };
+
+  const handleUniqueChordsChange = (uniqueChords: string[]) => {
+    songChordsDraft.value = uniqueChords;
+  };
+
+  const commitCategoryInput = () => {
+    const nextLabel = categoryInputValue.value.trim();
+
+    if (nextLabel.length === 0) {
+      return;
+    }
+
+    const normalizedLabel = normalizeCategoryLabel(nextLabel);
+
+    const existingCategory = availableSongCategories.value.find(
+      (category) => normalizeCategoryLabel(category.value) === normalizedLabel
+    );
+
+    if (existingCategory !== undefined) {
+      if (!songCategoryIds.value.includes(existingCategory.id)) {
+        songCategoryIds.value = [...songCategoryIds.value, existingCategory.id];
+      }
+
+      categoryInputValue.value = '';
+      filterCategoryCollection('');
+      return;
+    }
+
+    const hasPendingAlready = pendingCategoryLabels.value.some(
+      (categoryLabel) => normalizeCategoryLabel(categoryLabel) === normalizedLabel
+    );
+
+    if (!hasPendingAlready) {
+      pendingCategoryLabels.value = [...pendingCategoryLabels.value, nextLabel];
+    }
+
+    categoryInputValue.value = '';
+    filterCategoryCollection('');
+  };
+
+  const addCategoryFromInput = () => {
+    commitCategoryInput();
+  };
+
+  const removePendingCategory = (categoryLabelToRemove: string) => {
+    pendingCategoryLabels.value = pendingCategoryLabels.value.filter(
+      (categoryLabel) => categoryLabel !== categoryLabelToRemove
+    );
+  };
+
+  const handleCategoryInputChange = (details: Combobox.InputValueChangeDetails) => {
+    categoryInputValue.value = details.inputValue;
+    filterCategoryCollection(details.inputValue);
+  };
+
+  const handleCategoryValueChange = (
+    details: Combobox.ValueChangeDetails<CategoryComboboxItem>
+  ) => {
+    songCategoryIds.value = details.items.map((item) => item.value);
+  };
+
+  const openInlineEditMode = () => {
+    void initializeInlineEditMode();
+  };
+
+  const cancelEditing = () => {
+    if (isCreateMode.value) {
+      void router.push({ path: Routes.SongLibrary });
+      return;
+    }
+
+    isInlineEditMode.value = false;
+    saveError.value = null;
+    editorViewMode.value = 'preview';
+  };
+
+  const handleCreateOrUpdateSong = async () => {
+    if (isSubmitDisabled.value || user.value == null) {
+      return;
+    }
+
+    isSaving.value = true;
+    saveError.value = null;
+
+    const capoRaw = songCapo.value.trim();
+    let capoValue: number | undefined;
+
+    if (capoRaw.length > 0) {
+      const parsedCapo = Number(capoRaw);
+
+      if (!Number.isFinite(parsedCapo) || !Number.isInteger(parsedCapo) || parsedCapo < 0) {
+        saveError.value = 'Capo musí být nezáporné celé číslo.';
+        isSaving.value = false;
+        return;
+      }
+
+      capoValue = parsedCapo;
+    }
+
+    try {
+      const resolvedCategoryIds = await resolveSongCategoryIds(categoryLabelsToPersist.value);
+      const songInput: CreateSongInput = {
+        title: trimmedTitle.value,
+        artist: trimmedArtist.value,
+        text: songTextDraft.value.trim() || undefined,
+        chords: [...songChordsDraft.value],
+        ...(capoValue !== undefined ? { capo: capoValue } : {}),
+        ownerId: user.value.uid,
+      };
+
+      const savedSong =
+        isCreateMode.value || song.value == null
+          ? await songStore.createSong(songInput)
+          : await songStore.updateSong(song.value.id, songInput);
+
+      const catalogEntryInput: SongCatalogEntryInput = {
+        artist: savedSong.artist,
+        chords: savedSong.chords,
+        categories: resolvedCategoryIds,
+        ownerId: savedSong.ownerId,
+        sourceSongId: savedSong.id,
+        title: savedSong.title,
+      };
+
+      if (isCreateMode.value) {
+        await createSongCatalogEntry(catalogEntryInput);
+      } else {
+        const existingCatalogEntry = await fetchSongCatalogEntryBySourceSongId(savedSong.id);
+
+        if (existingCatalogEntry != null) {
+          await updateSongCatalogEntry(existingCatalogEntry.id, catalogEntryInput);
+        } else {
+          await createSongCatalogEntry(catalogEntryInput);
+        }
+      }
+
+      song.value = savedSong;
+      isInlineEditMode.value = false;
+      editorViewMode.value = 'preview';
+
+      if (isCreateMode.value) {
+        await router.replace({ path: getSongPath(savedSong.id) });
+      }
+    } catch {
+      saveError.value = isCreateMode.value
+        ? 'Nepodařilo se vytvořit píseň. Zkus to prosím znovu.'
+        : 'Nepodařilo se upravit píseň. Zkus to prosím znovu.';
+    } finally {
+      isSaving.value = false;
+    }
   };
 
   const stopAutoScroll = () => {
@@ -377,6 +675,18 @@
     { deep: true }
   );
 
+  watch(
+    isCreateMode,
+    (createMode) => {
+      if (createMode) {
+        void initializeCreateMode();
+      } else {
+        resetEditorState();
+      }
+    },
+    { immediate: true }
+  );
+
   onBeforeUnmount(() => {
     stopAutoScroll();
     window.removeEventListener('scroll', handleViewportChange, true);
@@ -387,9 +697,10 @@
 
 <template>
   <TopNavigation
-    :page-title="song?.title ?? 'Píseň'"
-    :page-subtitle="song?.artist"
-    :fade-away="isAutoScrollPlaying"
+    :page-title="pageTitle"
+    :page-subtitle="pageSubtitle"
+    :fade-away="!isEditorMode && isAutoScrollPlaying"
+    :back-to-path="isCreateMode ? Routes.SongLibrary : undefined"
   />
 
   <main
@@ -399,26 +710,195 @@
     <div class="song-shell">
       <div class="song-quick-nav">
         <Button
-          v-if="isAuthenticated && song"
+          v-if="isAuthenticated && song && !isEditorMode"
           class="edit-button"
           label="Upravit píseň"
           color-variation="Primary"
           style-variation="Outlined"
           :icon="{ position: 'prepend', component: Pencil }"
           type="button"
-          @click="openEditSongDialog"
+          @click="openInlineEditMode"
         />
       </div>
 
       <LoadingSpinner
-        v-if="songLoading"
+        v-if="songLoading && !isCreateMode"
         label="Načítání písně..."
       />
 
       <ErrorMessage
-        v-else-if="songError"
+        v-else-if="songError && !isCreateMode"
         :message="songError"
       />
+
+      <section
+        v-else-if="isEditorMode"
+        class="song-content"
+      >
+        <section class="metadata-panel">
+          <Field.Root class="field metadata-panel__field metadata-panel__field--wide">
+            <Field.Label class="field-label">
+              Název písně
+              <Field.RequiredIndicator>
+                <span class="field-required">*</span>
+              </Field.RequiredIndicator>
+            </Field.Label>
+            <Field.Input
+              v-model="songTitle"
+              class="field-input"
+              placeholder="Např. Knockin' on Heaven's Door"
+              :aria-invalid="!isTitleValid && songTitle.length > 0"
+            />
+            <Field.ErrorText
+              v-if="!isTitleValid && songTitle.length > 0"
+              class="field-error"
+            >
+              Název písně je povinný
+            </Field.ErrorText>
+          </Field.Root>
+
+          <Field.Root class="field metadata-panel__field metadata-panel__field--wide">
+            <Field.Label class="field-label">
+              Umělec
+              <Field.RequiredIndicator>
+                <span class="field-required">*</span>
+              </Field.RequiredIndicator>
+            </Field.Label>
+            <Field.Input
+              v-model="songArtist"
+              class="field-input"
+              placeholder="Např. Bob Dylan"
+              :aria-invalid="!isArtistValid && songArtist.length > 0"
+            />
+            <Field.ErrorText
+              v-if="!isArtistValid && songArtist.length > 0"
+              class="field-error"
+            >
+              Umělec je povinný
+            </Field.ErrorText>
+          </Field.Root>
+
+          <Field.Root class="field metadata-panel__field metadata-panel__field--wide">
+            <Field.Label class="field-label">Kategorie</Field.Label>
+
+            <div
+              v-if="selectedCategoryLabels.length > 0 || pendingCategoryLabels.length > 0"
+              class="category-chips"
+            >
+              <span
+                v-for="categoryLabel in selectedCategoryLabels"
+                :key="`selected-category-${categoryLabel}`"
+                class="category-chip"
+              >
+                {{ categoryLabel }}
+              </span>
+
+              <button
+                v-for="categoryLabel in pendingCategoryLabels"
+                :key="`pending-category-${categoryLabel}`"
+                type="button"
+                class="category-chip category-chip--pending"
+                @click="removePendingCategory(categoryLabel)"
+              >
+                {{ categoryLabel }}
+                <span class="category-chip__pending-label">nová</span>
+              </button>
+            </div>
+
+            <Combobox.Root
+              multiple
+              :close-on-select="false"
+              :lazy-mount="true"
+              :collection="categoryCollection"
+              :model-value="songCategoryIds"
+              @input-value-change="handleCategoryInputChange"
+              @value-change="handleCategoryValueChange"
+            >
+              <Combobox.Control class="category-combobox-control">
+                <Combobox.Input
+                  class="field-input category-combobox-input"
+                  placeholder="Vyberte nebo napište kategorii"
+                  aria-label="Vybrat kategorii"
+                  data-testid="song-category-combobox-input"
+                  @keydown.enter.prevent="addCategoryFromInput"
+                  @blur="commitCategoryInput"
+                />
+
+                <Combobox.Trigger
+                  class="category-combobox-trigger"
+                  aria-label="Otevřít výběr kategorií"
+                >
+                  <ChevronDown :size="14" />
+                </Combobox.Trigger>
+              </Combobox.Control>
+
+              <Combobox.Positioner>
+                <Combobox.Content class="category-combobox-content">
+                  <Combobox.Empty class="field-helper">
+                    Žádné kategorie k dispozici.
+                  </Combobox.Empty>
+
+                  <Combobox.Item
+                    v-for="categoryItem in categoryCollection.items"
+                    :key="categoryItem.value"
+                    :item="categoryItem"
+                    class="category-combobox-item"
+                  >
+                    <Combobox.ItemText>{{ categoryItem.label }}</Combobox.ItemText>
+                    <Combobox.ItemIndicator>
+                      <Check :size="14" />
+                    </Combobox.ItemIndicator>
+                  </Combobox.Item>
+                </Combobox.Content>
+              </Combobox.Positioner>
+            </Combobox.Root>
+
+            <button
+              v-if="canAddCategoryFromInput"
+              type="button"
+              class="category-add-button"
+              @click="addCategoryFromInput"
+            >
+              <Plus :size="14" />
+              Přidat kategorii „{{ categoryInputValue.trim() }}“
+            </button>
+
+            <Field.HelperText class="field-helper">
+              Vyberte existující kategorii nebo napište novou a potvrďte Enterem.
+            </Field.HelperText>
+          </Field.Root>
+
+          <Field.Root class="field metadata-panel__field metadata-panel__field--capo">
+            <Field.Label class="field-label">Capo</Field.Label>
+            <Field.Input
+              v-model="songCapo"
+              class="field-input"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              placeholder="Např. 2"
+            />
+          </Field.Root>
+        </section>
+
+        <article class="song-body song-body--editor">
+          <SongTextEditor
+            v-model="songTextDraft"
+            :mode="editorViewMode === 'source' ? 'source' : 'visual'"
+            :show-toolbar="false"
+            placeholder="[Verse]&#10;[G] Mama take this [D] badge off of [Am] me"
+            @unique-chords="handleUniqueChordsChange"
+          />
+        </article>
+
+        <p
+          v-if="saveError"
+          class="field-error"
+          role="alert"
+        >
+          {{ saveError }}
+        </p>
+      </section>
 
       <section
         v-else-if="song"
@@ -449,7 +929,7 @@
           <ChordLayoutRenderer
             v-else
             class="song-text"
-            :text="songText"
+            :text="displaySongText"
             :transpose="transpose"
           />
         </article>
@@ -464,14 +944,8 @@
       </section>
     </div>
 
-    <CreateSongDialog
-      :open="isEditDialogOpen"
-      :song-to-edit="song"
-      @update:open="isEditDialogOpen = $event"
-      @saved="handleSongSaved"
-    />
-
     <SongChordsDialog
+      v-if="song && !isEditorMode"
       :open="isChordsDialogOpen"
       :chords="songChords"
       :transpose="transpose"
@@ -480,13 +954,21 @@
     />
 
     <SongControls
+      v-if="song || isEditorMode"
+      :mode="isEditorMode ? 'edit' : 'view'"
       :is-playing="isAutoScrollPlaying"
       :auto-scroll-speed="autoScrollSpeed"
       :auto-scroll-eta-label="autoScrollEtaLabel"
+      :editor-mode="editorViewMode"
+      :confirm-disabled="isSubmitDisabled"
       @toggle-play="toggleAutoScroll"
       @step-back="scrollBackAndSlowDown"
       @step-forward="scrollForwardAndSpeedUp"
       @open-chords="openChordsDialog"
+      @select-source="editorViewMode = 'source'"
+      @select-preview="editorViewMode = 'preview'"
+      @cancel="cancelEditing"
+      @confirm="handleCreateOrUpdateSong"
     />
   </main>
 </template>
@@ -521,6 +1003,183 @@
     gap: var(--space-lg);
   }
 
+  .metadata-panel {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border-primary));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .metadata-panel__field {
+    grid-column: span 12;
+  }
+
+  .metadata-panel__field--capo {
+    grid-column: span 3;
+  }
+
+  .metadata-panel__field--wide {
+    grid-column: span 9;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .field-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .field-required {
+    color: var(--color-error);
+  }
+
+  .field-input {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+
+  .field-input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  .field-input[aria-invalid='true'] {
+    border-color: var(--color-error);
+  }
+
+  .field-helper {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .field-error {
+    font-size: 0.75rem;
+    color: var(--color-error);
+  }
+
+  .category-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .category-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .category-chip--pending {
+    cursor: pointer;
+    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  .category-chip__pending-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+  }
+
+  .category-combobox-control {
+    position: relative;
+  }
+
+  .category-combobox-input {
+    width: 100%;
+    padding-right: 34px;
+  }
+
+  .category-combobox-trigger {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .category-combobox-trigger:hover {
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  }
+
+  .category-combobox-content {
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    min-width: var(--reference-width);
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 4px;
+    z-index: 30;
+  }
+
+  .category-combobox-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+
+  .category-combobox-item:hover,
+  .category-combobox-item[data-state='checked'] {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--text-primary);
+  }
+
+  .category-add-button {
+    border: 1px dashed color-mix(in srgb, var(--color-primary) 40%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 6px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  .category-add-button:hover {
+    background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  }
+
   .song-body {
     --song-anchored-line-height: 4;
     --song-chord-font-size: var(--font-size-chords);
@@ -532,6 +1191,13 @@
     --song-chord-inline-font-weight: inherit;
     --song-chord-inline-radius: 3px;
     overflow-x: auto;
+  }
+
+  .song-body--editor {
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--bg-secondary) 78%, var(--bg-primary));
+    box-shadow: var(--shadow-panel);
   }
 
   .song-quick-nav {
@@ -567,6 +1233,14 @@
     line-height: var(--song-text-line-height);
   }
 
+  .song-preview-empty {
+    padding: var(--space-xl);
+    text-align: center;
+    color: var(--text-secondary);
+    border: 2px dashed var(--border-primary);
+    border-radius: var(--radius-sm);
+  }
+
   .song-empty-state {
     display: flex;
     flex-direction: column;
@@ -585,5 +1259,17 @@
     color: var(--text-secondary);
     font-size: 16px;
     line-height: 1.6;
+  }
+
+  @media (max-width: 767px) {
+    .metadata-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .metadata-panel__field,
+    .metadata-panel__field--capo,
+    .metadata-panel__field--wide {
+      grid-column: auto;
+    }
   }
 </style>

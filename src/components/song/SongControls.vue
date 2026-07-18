@@ -3,15 +3,22 @@
   import {
     ArrowBigLeftDash,
     ArrowBigRightDash,
+    Check,
     CirclePlay,
     CirclePause,
+    Eye,
+    FileType,
     Music2,
+    X,
   } from 'lucide-vue-next';
 
   interface Props {
-    isPlaying: boolean;
-    autoScrollSpeed: number;
-    autoScrollEtaLabel: string;
+    mode?: 'view' | 'edit';
+    isPlaying?: boolean;
+    autoScrollSpeed?: number;
+    autoScrollEtaLabel?: string;
+    editorMode?: 'source' | 'preview';
+    confirmDisabled?: boolean;
   }
 
   interface Emits {
@@ -19,112 +26,207 @@
     (event: 'step-back'): void;
     (event: 'step-forward'): void;
     (event: 'open-chords'): void;
+    (event: 'select-source'): void;
+    (event: 'select-preview'): void;
+    (event: 'cancel'): void;
+    (event: 'confirm'): void;
   }
 
-  defineProps<Props>();
+  withDefaults(defineProps<Props>(), {
+    mode: 'view',
+    isPlaying: false,
+    autoScrollSpeed: 0,
+    autoScrollEtaLabel: '0:00',
+    editorMode: 'preview',
+    confirmDisabled: false,
+  });
   const emit = defineEmits<Emits>();
 </script>
 
 <template>
   <div class="song-controls-wrap">
-    <p
-      class="speed-indicator"
-      :class="{ 'speed-indicator--compact': isPlaying }"
-      aria-live="polite"
+    <template v-if="mode === 'view'">
+      <p
+        class="speed-indicator"
+        :class="{ 'speed-indicator--compact': isPlaying }"
+        aria-live="polite"
+      >
+        <span class="speed-indicator__eta">Do konce zbývá {{ autoScrollEtaLabel }}</span>
+      </p>
+
+      <div class="song-controls">
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              class="control-button"
+              type="button"
+              aria-label="Posunout zpět a zpomalit"
+              @click="emit('step-back')"
+            >
+              <ArrowBigLeftDash :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Posunout zpět a zpomalit</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
+
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              class="control-button control-button--play"
+              type="button"
+              :aria-label="isPlaying ? 'Pozastavit auto-scroll' : 'Spustit auto-scroll'"
+              @click="emit('toggle-play')"
+            >
+              <CirclePause
+                v-if="isPlaying"
+                :size="24"
+              />
+              <CirclePlay
+                v-else
+                :size="24"
+              />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">
+                {{ isPlaying ? 'Pozastavit auto-scroll' : 'Spustit auto-scroll' }}
+              </Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
+
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              class="control-button"
+              type="button"
+              aria-label="Posunout vpřed a zrychlit"
+              @click="emit('step-forward')"
+            >
+              <ArrowBigRightDash :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Posunout vpřed a zrychlit</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
+
+        <Tooltip.Root
+          v-if="isPlaying === false"
+          :open-delay="300"
+        >
+          <Tooltip.Trigger as-child>
+            <button
+              class="control-button"
+              type="button"
+              aria-label="Nastavení akordů"
+              @click="emit('open-chords')"
+            >
+              <Music2 :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Nastavení akordů</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
+      </div>
+    </template>
+
+    <div
+      v-else
+      class="song-controls song-controls--edit"
     >
-      <span class="speed-indicator__eta">Do konce zbývá {{ autoScrollEtaLabel }}</span>
-      <span
-        v-if="!isPlaying"
-        class="speed-indicator__meta"
+      <div
+        class="editor-mode-segment"
+        role="group"
+        aria-label="Režim editoru"
       >
-        při {{ autoScrollSpeed }} px/s
-      </span>
-    </p>
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              type="button"
+              class="control-button segment-button"
+              :class="{ 'segment-button--active': editorMode === 'preview' }"
+              aria-label="Náhled"
+              @click="emit('select-preview')"
+            >
+              <Eye :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Náhled</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
 
-    <div class="song-controls">
-      <Tooltip.Root :open-delay="300">
-        <Tooltip.Trigger as-child>
-          <button
-            class="control-button"
-            type="button"
-            aria-label="Posunout zpět a zpomalit"
-            @click="emit('step-back')"
-          >
-            <ArrowBigLeftDash :size="22" />
-          </button>
-        </Tooltip.Trigger>
-        <Teleport to="body">
-          <Tooltip.Positioner>
-            <Tooltip.Content class="tooltip-content">Posunout zpět a zpomalit</Tooltip.Content>
-          </Tooltip.Positioner>
-        </Teleport>
-      </Tooltip.Root>
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              type="button"
+              class="control-button segment-button"
+              :class="{ 'segment-button--active': editorMode === 'source' }"
+              aria-label="Zdroj"
+              @click="emit('select-source')"
+            >
+              <FileType :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Zdroj</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
+      </div>
 
-      <Tooltip.Root :open-delay="300">
-        <Tooltip.Trigger as-child>
-          <button
-            class="control-button control-button--play"
-            type="button"
-            :aria-label="isPlaying ? 'Pozastavit auto-scroll' : 'Spustit auto-scroll'"
-            @click="emit('toggle-play')"
-          >
-            <CirclePause
-              v-if="isPlaying"
-              :size="24"
-            />
-            <CirclePlay
-              v-else
-              :size="24"
-            />
-          </button>
-        </Tooltip.Trigger>
-        <Teleport to="body">
-          <Tooltip.Positioner>
-            <Tooltip.Content class="tooltip-content">
-              {{ isPlaying ? 'Pozastavit auto-scroll' : 'Spustit auto-scroll' }}
-            </Tooltip.Content>
-          </Tooltip.Positioner>
-        </Teleport>
-      </Tooltip.Root>
+      <div class="editor-actions">
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              type="button"
+              class="action-button control-button"
+              aria-label="Zrušit"
+              @click="emit('cancel')"
+            >
+              <X :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Zrušit</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
 
-      <Tooltip.Root :open-delay="300">
-        <Tooltip.Trigger as-child>
-          <button
-            class="control-button"
-            type="button"
-            aria-label="Posunout vpřed a zrychlit"
-            @click="emit('step-forward')"
-          >
-            <ArrowBigRightDash :size="22" />
-          </button>
-        </Tooltip.Trigger>
-        <Teleport to="body">
-          <Tooltip.Positioner>
-            <Tooltip.Content class="tooltip-content">Posunout vpřed a zrychlit</Tooltip.Content>
-          </Tooltip.Positioner>
-        </Teleport>
-      </Tooltip.Root>
-
-      <Tooltip.Root
-        v-if="isPlaying === false"
-        :open-delay="300"
-      >
-        <Tooltip.Trigger as-child>
-          <button
-            class="control-button"
-            type="button"
-            aria-label="Nastavení akordů"
-            @click="emit('open-chords')"
-          >
-            <Music2 :size="22" />
-          </button>
-        </Tooltip.Trigger>
-        <Teleport to="body">
-          <Tooltip.Positioner>
-            <Tooltip.Content class="tooltip-content">Nastavení akordů</Tooltip.Content>
-          </Tooltip.Positioner>
-        </Teleport>
-      </Tooltip.Root>
+        <Tooltip.Root :open-delay="300">
+          <Tooltip.Trigger as-child>
+            <button
+              type="button"
+              class="action-button action-button--confirm control-button"
+              aria-label="Potvrdit"
+              :disabled="confirmDisabled"
+              @click="emit('confirm')"
+            >
+              <Check :size="22" />
+            </button>
+          </Tooltip.Trigger>
+          <Teleport to="body">
+            <Tooltip.Positioner>
+              <Tooltip.Content class="tooltip-content">Potvrdit</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Teleport>
+        </Tooltip.Root>
+      </div>
     </div>
   </div>
 </template>
@@ -194,6 +296,11 @@
     box-shadow: var(--shadow-panel);
   }
 
+  .song-controls--edit {
+    gap: 2px;
+    align-items: center;
+  }
+
   .control-button {
     width: 5em;
     height: 5em;
@@ -245,6 +352,43 @@
     z-index: 1000;
   }
 
+  .editor-mode-segment,
+  .editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .segment-button,
+  .action-button {
+    flex-shrink: 0;
+  }
+
+  .segment-button--active {
+    border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-secondary));
+    color: white;
+  }
+
+  .action-button--confirm {
+    background: var(--accent);
+    color: white;
+  }
+
+  .action-button--confirm:hover {
+    background: var(--accent-light);
+  }
+
+  .action-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .action-button:disabled:hover {
+    transform: none;
+    background: var(--accent);
+  }
+
   @media (max-width: 560px) {
     .song-controls-wrap {
       max-width: calc(100vw - var(--space-md));
@@ -257,6 +401,10 @@
 
     .speed-indicator--compact {
       font-size: 11px;
+    }
+
+    .song-controls--edit {
+      width: auto;
     }
   }
 </style>

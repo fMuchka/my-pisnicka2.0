@@ -1,12 +1,14 @@
 <script setup lang="tsx">
   import { onBeforeUnmount, ref, toRef, watch } from 'vue';
+  import type { VirtualElement } from '@floating-ui/dom';
   import { EditorContent, useEditor } from '@tiptap/vue-3';
-  import { Mark, mergeAttributes } from '@tiptap/core';
+  import { Mark, mergeAttributes, type Editor } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
   import { fromEditorDoc, toEditorDoc } from '../../lib/songTextEditor/editableChordDocument';
   import { useEditableChordPicker } from '../../composables/useEditableChordPicker';
   import { Popover } from '@ark-ui/vue/popover';
   import EditableChordPickerContent from './editable-chord/EditableChordPickerContent.vue';
+  import { sectionHeading, type SectionType } from '../../lib/songTextEditor/sections';
 
   interface Props {
     text: string;
@@ -31,6 +33,7 @@
   const emit = defineEmits<Emits>();
 
   const contextSelection = ref<SelectionRange | null>(null);
+  const pickerAnchorElement = ref<VirtualElement | null>(null);
   const isPointerSelecting = ref(false);
   const {
     allTabSelectedChord,
@@ -120,6 +123,7 @@
         from: selection.from,
         to: selection.to,
       };
+      updatePickerAnchorElement(instance);
 
       // During drag-select, wait for pointer release so the picker does not steal focus mid-drag.
       if (isPointerSelecting.value) {
@@ -200,6 +204,7 @@
       from: selection.from,
       to: selection.to,
     };
+    updatePickerAnchorElement(instance);
     isChordPickerOpen.value = true;
   }
 
@@ -207,7 +212,7 @@
     isChordPickerOpen.value = false;
   }
 
-  function handlePickerTabChange(value: 'used' | 'all'): void {
+  function handlePickerTabChange(value: 'used' | 'all' | 'sections'): void {
     chordPickerTab.value = value;
   }
 
@@ -223,6 +228,7 @@
     const instance = editor.value;
     if (!instance) {
       contextSelection.value = null;
+      pickerAnchorElement.value = null;
       return;
     }
 
@@ -231,10 +237,30 @@
 
     instance.chain().focus().setTextSelection({ from: collapsedAt, to: collapsedAt }).run();
     contextSelection.value = null;
+    pickerAnchorElement.value = null;
   }
 
   function handleChordPick(chord: string): void {
     applyChordToSelection(chord);
+    closeChordPicker();
+  }
+
+  function handleSectionPick(type: SectionType): void {
+    const instance = editor.value;
+    if (!instance) {
+      return;
+    }
+
+    const selection = contextSelection.value ?? instance.state.selection;
+    const heading = `${sectionHeading(type)} \n`;
+
+    instance
+      .chain()
+      .focus()
+      .setTextSelection({ from: selection.from, to: selection.from })
+      .insertContent(heading)
+      .run();
+
     closeChordPicker();
   }
 
@@ -249,6 +275,7 @@
       from: selection.from,
       to: selection.to,
     };
+    updatePickerAnchorElement(instance);
 
     if (!selection.empty) {
       isChordPickerOpen.value = true;
@@ -296,8 +323,41 @@
       .unsetMark('chord')
       .run();
     contextSelection.value = null;
+    pickerAnchorElement.value = null;
     closeChordPicker();
   }
+
+  function updatePickerAnchorElement(instance: Editor): void {
+    const selection = instance.state.selection;
+
+    if (selection.empty) {
+      pickerAnchorElement.value = null;
+      return;
+    }
+
+    const start = instance.view.coordsAtPos(selection.from);
+    const end = instance.view.coordsAtPos(selection.to);
+    const left = Math.min(start.left, end.left);
+    const top = Math.min(start.top, end.top);
+    const right = Math.max(start.right, end.right);
+    const bottom = Math.max(start.bottom, end.bottom);
+    const width = Math.max(1, right - left);
+    const height = Math.max(1, bottom - top);
+
+    pickerAnchorElement.value = {
+      contextElement: instance.view.dom as HTMLElement,
+      getBoundingClientRect: () => new DOMRect(left, top, width, height),
+    };
+  }
+
+  const pickerPositioning = {
+    placement: 'bottom-start' as const,
+    strategy: 'fixed' as const,
+    gutter: 8,
+    shift: 8,
+    flip: true,
+    getAnchorElement: () => pickerAnchorElement.value,
+  };
 
   function handleEditorPointerDown(event: PointerEvent): void {
     const target = event.target;
@@ -337,7 +397,10 @@
 </script>
 
 <template>
-  <Popover.Root v-model:open="isChordPickerOpen">
+  <Popover.Root
+    v-model:open="isChordPickerOpen"
+    :positioning="pickerPositioning"
+  >
     <Popover.Anchor
       class="chord-layout-editor-context-trigger"
       @contextmenu="openChordPicker"
@@ -370,6 +433,7 @@
             @update:selected-root="handlePickerRootChange"
             @update:selected-quality="handlePickerQualityChange"
             @pick="handleChordPick"
+            @pick-section="handleSectionPick"
             @close="closeChordPicker"
           />
         </Popover.Content>

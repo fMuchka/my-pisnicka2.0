@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/vue';
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import SongPage from '../Song.vue';
 import type { Song } from '../../lib/song';
+import Routes from '../../router/Routes';
 
 type MutableRef<T> = { value: T };
 type MockRef<T> = { __v_isRef: true; value: T };
@@ -17,20 +18,40 @@ function mockRef<T>(value: T): MockRef<T> {
 
 const router = vi.hoisted(() => ({
   push: vi.fn(),
+  replace: vi.fn(),
+  back: vi.fn(),
 }));
 
 const routeState = vi.hoisted(() => ({
+  path: '/song/song-1',
   params: { songId: 'song-1' as string | string[] | undefined },
 }));
 
 const authState = vi.hoisted(() => ({
   isAuthenticated: mockRef(true) as MutableRef<boolean>,
+  user: mockRef({ uid: 'host-123', displayName: 'Test Host' }) as MutableRef<{
+    uid: string;
+    displayName: string;
+  } | null>,
 }));
 
 const songState = vi.hoisted(() => ({
   song: mockRef(null) as MutableRef<Song | null>,
   songError: mockRef(null) as MutableRef<string | null>,
   songLoading: mockRef(false) as MutableRef<boolean>,
+}));
+
+const storeMocks = vi.hoisted(() => ({
+  createSong: vi.fn(),
+  updateSong: vi.fn(),
+}));
+
+const songLibMocks = vi.hoisted(() => ({
+  createSongCatalogEntry: vi.fn(),
+  updateSongCatalogEntry: vi.fn(),
+  fetchSongCatalogEntryBySourceSongId: vi.fn(),
+  fetchAllSongCategories: vi.fn(),
+  resolveSongCategoryIds: vi.fn(),
 }));
 
 vi.mock('vue-router', () => ({
@@ -41,11 +62,27 @@ vi.mock('vue-router', () => ({
 vi.mock('../../composables/useAuth', () => ({
   useAuth: () => ({
     isAuthenticated: authState.isAuthenticated,
+    user: authState.user,
   }),
 }));
 
 vi.mock('../../composables/useSongDetail', () => ({
   useSongDetail: () => songState,
+}));
+
+vi.mock('../../stores/song', () => ({
+  useSongStore: () => ({
+    createSong: storeMocks.createSong,
+    updateSong: storeMocks.updateSong,
+  }),
+}));
+
+vi.mock('../../lib/song', () => ({
+  createSongCatalogEntry: songLibMocks.createSongCatalogEntry,
+  updateSongCatalogEntry: songLibMocks.updateSongCatalogEntry,
+  fetchSongCatalogEntryBySourceSongId: songLibMocks.fetchSongCatalogEntryBySourceSongId,
+  fetchAllSongCategories: songLibMocks.fetchAllSongCategories,
+  resolveSongCategoryIds: songLibMocks.resolveSongCategoryIds,
 }));
 
 vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
@@ -105,22 +142,56 @@ vi.mock('../../components/song/ChordLayoutRenderer.vue', () => ({
   },
 }));
 
-vi.mock('../../components/dialogs/create-song/CreateSongDialog.vue', () => ({
+vi.mock('../../components/song/SongTextEditor.vue', () => ({
   default: {
-    props: ['open', 'songToEdit'],
-    emits: ['update:open', 'saved'],
-    template: '<div data-testid="create-song-dialog" :data-open="open ? \'yes\' : \'no\'" />',
+    props: ['modelValue', 'placeholder', 'mode', 'showToolbar'],
+    emits: ['update:modelValue', 'unique-chords'],
+    template:
+      "<textarea data-testid=\"song-text-editor\" :value=\"modelValue\" @input=\"$emit('update:modelValue', $event.target.value); $emit('unique-chords', ['Am', 'C'])\" />",
+  },
+}));
+
+vi.mock('../../components/dialogs/song-chords/SongChordsDialog.vue', () => ({
+  default: {
+    props: ['open', 'chords', 'transpose'],
+    emits: ['update:open', 'update:transpose'],
+    template: '<div data-testid="song-chords-dialog" />',
+  },
+}));
+
+vi.mock('../../components/song/SongControls.vue', () => ({
+  default: {
+    props: ['mode', 'editorMode', 'confirmDisabled'],
+    emits: [
+      'toggle-play',
+      'step-back',
+      'step-forward',
+      'open-chords',
+      'select-source',
+      'select-preview',
+      'cancel',
+      'confirm',
+    ],
+    template:
+      '<div data-testid="song-controls" :data-mode="mode" :data-editor-mode="editorMode"><button @click="$emit(\'select-source\')">Zdroj</button><button @click="$emit(\'select-preview\')">Náhled</button><button @click="$emit(\'cancel\')">Zrušit</button><button :disabled="confirmDisabled" @click="$emit(\'confirm\')">Potvrdit</button></div>',
   },
 }));
 
 describe('Song Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    routeState.path = '/song/song-1';
     routeState.params.songId = 'song-1';
     authState.isAuthenticated.value = true;
+    authState.user.value = { uid: 'host-123', displayName: 'Test Host' };
     songState.song.value = null;
     songState.songError.value = null;
     songState.songLoading.value = false;
+    songLibMocks.fetchSongCatalogEntryBySourceSongId.mockResolvedValue(null);
+    songLibMocks.fetchAllSongCategories.mockResolvedValue([]);
+    songLibMocks.resolveSongCategoryIds.mockResolvedValue([]);
+    songLibMocks.createSongCatalogEntry.mockResolvedValue({ id: 'catalog-1' });
+    songLibMocks.updateSongCatalogEntry.mockResolvedValue({ id: 'catalog-1' });
   });
 
   it('shows loading state when song is loading', () => {
@@ -166,7 +237,7 @@ describe('Song Page', () => {
     expect(screen.getByTestId('song-quick-info')).toHaveTextContent('2|G|0');
   });
 
-  it('opens edit dialog when edit button is clicked', async () => {
+  it('opens inline edit mode when edit button is clicked', async () => {
     const user = userEvent.setup();
 
     songState.song.value = {
@@ -182,7 +253,15 @@ describe('Song Page', () => {
 
     await user.click(screen.getByRole('button', { name: 'Upravit píseň' }));
 
-    expect(screen.getByTestId('create-song-dialog')).toHaveAttribute('data-open', 'yes');
+    await waitFor(() => {
+      expect(songLibMocks.fetchSongCatalogEntryBySourceSongId).toHaveBeenCalledWith('song-1');
+    });
+
+    expect(screen.getByPlaceholderText("Např. Knockin' on Heaven's Door")).toHaveValue(
+      'Song title'
+    );
+    expect(screen.queryByTestId('song-quick-info')).not.toBeInTheDocument();
+    expect(screen.getByTestId('song-controls')).toHaveAttribute('data-mode', 'edit');
   });
 
   it('shows edit button only for authenticated users', () => {
@@ -204,5 +283,127 @@ describe('Song Page', () => {
     render(SongPage);
 
     expect(screen.getByRole('button', { name: 'Upravit píseň' })).toBeInTheDocument();
+  });
+
+  it('renders create mode as inline editor and disables confirm for empty required fields', () => {
+    routeState.path = Routes.SongCreate;
+    routeState.params.songId = undefined;
+
+    render(SongPage);
+
+    expect(screen.getByPlaceholderText("Např. Knockin' on Heaven's Door")).toBeInTheDocument();
+    expect(screen.getByTestId('song-controls')).toHaveAttribute('data-mode', 'edit');
+    expect(screen.getByRole('button', { name: 'Potvrdit' })).toBeDisabled();
+  });
+
+  it('creates a song from create mode and navigates to the saved detail page', async () => {
+    const user = userEvent.setup();
+    routeState.path = Routes.SongCreate;
+    routeState.params.songId = undefined;
+
+    const createdSong: Song = {
+      id: 'song-2',
+      title: "Knockin on Heaven's Door",
+      artist: 'Bob Dylan',
+      text: 'line',
+      chords: ['Am', 'C'],
+      ownerId: 'host-123',
+    };
+
+    storeMocks.createSong.mockResolvedValue(createdSong);
+
+    render(SongPage);
+
+    await user.type(
+      screen.getByPlaceholderText("Např. Knockin' on Heaven's Door"),
+      "Knockin on Heaven's Door"
+    );
+    await user.type(screen.getByPlaceholderText('Např. Bob Dylan'), 'Bob Dylan');
+    await user.type(screen.getByTestId('song-text-editor'), 'line');
+    await user.click(screen.getByRole('button', { name: 'Potvrdit' }));
+
+    await waitFor(() => {
+      expect(storeMocks.createSong).toHaveBeenCalledWith({
+        title: "Knockin on Heaven's Door",
+        artist: 'Bob Dylan',
+        text: 'line',
+        chords: ['Am', 'C'],
+        ownerId: 'host-123',
+      });
+
+      expect(songLibMocks.createSongCatalogEntry).toHaveBeenCalledWith({
+        title: "Knockin on Heaven's Door",
+        artist: 'Bob Dylan',
+        chords: ['Am', 'C'],
+        categories: [],
+        sourceSongId: 'song-2',
+        ownerId: 'host-123',
+      });
+
+      expect(router.replace).toHaveBeenCalledWith({ path: '/song/song-2' });
+    });
+  });
+
+  it('updates an existing song from inline edit mode', async () => {
+    const user = userEvent.setup();
+
+    songState.song.value = {
+      id: 'song-9',
+      title: 'Old title',
+      artist: 'Old artist',
+      text: 'old',
+      chords: ['C'],
+      ownerId: 'host-123',
+    };
+
+    storeMocks.updateSong.mockResolvedValue({
+      id: 'song-9',
+      title: 'New title',
+      artist: 'New artist',
+      text: 'new',
+      chords: ['Am', 'C'],
+      ownerId: 'host-123',
+    });
+    songLibMocks.fetchSongCatalogEntryBySourceSongId.mockResolvedValue({
+      id: 'catalog-9',
+      sourceSongId: 'song-9',
+      title: 'Old title',
+      artist: 'Old artist',
+      ownerId: 'host-123',
+    });
+
+    render(SongPage);
+    await user.click(screen.getByRole('button', { name: 'Upravit píseň' }));
+
+    await waitFor(() => {
+      expect(songLibMocks.fetchSongCatalogEntryBySourceSongId).toHaveBeenCalledWith('song-9');
+    });
+
+    const titleInput = screen.getByPlaceholderText("Např. Knockin' on Heaven's Door");
+    const artistInput = screen.getByPlaceholderText('Např. Bob Dylan');
+    await fireEvent.update(titleInput, 'New title');
+    await fireEvent.update(artistInput, 'New artist');
+    await user.click(screen.getByRole('button', { name: 'Zdroj' }));
+    await fireEvent.update(screen.getByTestId('song-text-editor'), 'new');
+    await user.click(screen.getByRole('button', { name: 'Potvrdit' }));
+
+    await waitFor(() => {
+      expect(storeMocks.updateSong).toHaveBeenCalledWith('song-9', {
+        title: 'New title',
+        artist: 'New artist',
+        text: 'new',
+        chords: ['Am', 'C'],
+        ownerId: 'host-123',
+      });
+
+      expect(songLibMocks.updateSongCatalogEntry).toHaveBeenCalledWith('catalog-9', {
+        title: 'New title',
+        artist: 'New artist',
+        chords: ['Am', 'C'],
+        categories: [],
+        sourceSongId: 'song-9',
+        ownerId: 'host-123',
+      });
+    });
   });
 });

@@ -3,6 +3,7 @@ enum Routes {
   Login = '/login',
   Join = '/join',
   SongLibrary = '/songs',
+  SongCreate = '/song/new',
   Song = '/song/:songId',
   Session = '/session',
   SessionList = '/sessionList',
