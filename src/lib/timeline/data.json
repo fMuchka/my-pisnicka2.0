@@ -1,5 +1,12 @@
 [
   {
+    "time": "18. červenec 2026",
+    "text": [
+      "Dialogy pro tvorbu a editaci písní odstraněny. Nyní lze písně editovat přímo, lze tedy lépe vidět výsledný vzhled a informace jsou přehledněji zobrazeny.",
+      "Dialog pro přidání akordu nad označeným textem nyní nabízí i přidání do sekce."
+    ]
+  },
+  {
     "time": "7. červenec 2026",
     "text": [
       "Přidány diagramy pro sus2 a sus4 variace akordů. Aplikace nyní tyto variace podporuje."
