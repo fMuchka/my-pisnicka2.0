@@ -52,12 +52,6 @@
         aria-live="polite"
       >
         <span class="speed-indicator__eta">Do konce zbývá {{ autoScrollEtaLabel }}</span>
-        <span
-          v-if="!isPlaying"
-          class="speed-indicator__meta"
-        >
-          při {{ autoScrollSpeed }} px/s
-        </span>
       </p>
 
       <div class="song-controls">
