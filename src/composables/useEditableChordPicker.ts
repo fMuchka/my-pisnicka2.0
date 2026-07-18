@@ -11,7 +11,9 @@ export function useEditableChordPicker(contextChords: Ref<string[]>) {
   });
 
   const isChordPickerOpen = ref(false);
-  const chordPickerTab = ref<'used' | 'all'>(usedChordItems.value.length > 0 ? 'used' : 'all');
+  const chordPickerTab = ref<'used' | 'all' | 'sections'>(
+    usedChordItems.value.length > 0 ? 'used' : 'all'
+  );
 
   const selectedAllRoot = ref<ChordRoot>('C');
   const selectedAllQuality = ref<ChordQuality>('');

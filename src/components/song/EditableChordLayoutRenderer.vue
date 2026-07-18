@@ -8,6 +8,7 @@
   import { useEditableChordPicker } from '../../composables/useEditableChordPicker';
   import { Popover } from '@ark-ui/vue/popover';
   import EditableChordPickerContent from './editable-chord/EditableChordPickerContent.vue';
+  import { sectionHeading, type SectionType } from '../../lib/songTextEditor/sections';
 
   interface Props {
     text: string;
@@ -211,7 +212,7 @@
     isChordPickerOpen.value = false;
   }
 
-  function handlePickerTabChange(value: 'used' | 'all'): void {
+  function handlePickerTabChange(value: 'used' | 'all' | 'sections'): void {
     chordPickerTab.value = value;
   }
 
@@ -241,6 +242,25 @@
 
   function handleChordPick(chord: string): void {
     applyChordToSelection(chord);
+    closeChordPicker();
+  }
+
+  function handleSectionPick(type: SectionType): void {
+    const instance = editor.value;
+    if (!instance) {
+      return;
+    }
+
+    const selection = contextSelection.value ?? instance.state.selection;
+    const heading = `${sectionHeading(type)} \n`;
+
+    instance
+      .chain()
+      .focus()
+      .setTextSelection({ from: selection.from, to: selection.from })
+      .insertContent(heading)
+      .run();
+
     closeChordPicker();
   }
 
@@ -413,6 +433,7 @@
             @update:selected-root="handlePickerRootChange"
             @update:selected-quality="handlePickerQualityChange"
             @pick="handleChordPick"
+            @pick-section="handleSectionPick"
             @close="closeChordPicker"
           />
         </Popover.Content>
