@@ -68,7 +68,6 @@
   const AUTO_SCROLL_SPEED_STEP = 2;
   const AUTO_SCROLL_MIN_SPEED = 10;
   const AUTO_SCROLL_MAX_SPEED = 80;
-  const AUTO_SCROLL_SCROLL_STEP = 132;
   type ScrollMode = 'auto' | 'smooth';
 
   let animationFrameId: number | null = null;
@@ -187,14 +186,60 @@
     syncScrollMetrics();
   };
 
-  const scrollByDistance = (distance: number, behavior: ScrollMode = 'auto') => {
-    const nextTop = Math.max(0, Math.min(getCurrentScrollTop() + distance, getMaxScrollTop()));
-    const shouldUseInstantScroll = isAutoScrollPlaying.value;
+  const getSectionStartPositions = () => {
+    const sectionElements = songPageRef.value?.querySelectorAll<HTMLElement>('.song-section');
 
-    scrollToTop(nextTop, shouldUseInstantScroll ? 'auto' : behavior);
+    if (sectionElements == null || sectionElements.length === 0) {
+      return [];
+    }
 
-    if (shouldUseInstantScroll) {
-      autoScrollPosition = nextTop;
+    const container = getScrollableContainer();
+
+    return Array.from(sectionElements)
+      .map((sectionElement) => {
+        if (container) {
+          return (
+            sectionElement.getBoundingClientRect().top -
+            container.getBoundingClientRect().top +
+            container.scrollTop
+          );
+        }
+
+        return sectionElement.getBoundingClientRect().top + getCurrentScrollTop();
+      })
+      .sort((left, right) => left - right);
+  };
+
+  const scrollToSectionBoundary = (direction: 'backward' | 'forward') => {
+    const sectionStartPositions = getSectionStartPositions();
+
+    if (sectionStartPositions.length === 0) {
+      return;
+    }
+
+    const currentTop = getCurrentScrollTop();
+    const currentSectionThreshold = 4;
+    const currentSectionIndex = sectionStartPositions.findLastIndex(
+      (sectionTop) => sectionTop <= currentTop + currentSectionThreshold
+    );
+    const targetTop =
+      direction === 'backward'
+        ? currentSectionIndex > 0
+          ? sectionStartPositions[currentSectionIndex - 1]
+          : undefined
+        : sectionStartPositions.find(
+            (sectionTop) => sectionTop > currentTop + currentSectionThreshold
+          );
+
+    if (targetTop == null) {
+      return;
+    }
+
+    const scrollBehavior: ScrollMode = isAutoScrollPlaying.value ? 'auto' : 'smooth';
+    scrollToTop(targetTop, scrollBehavior);
+
+    if (isAutoScrollPlaying.value) {
+      autoScrollPosition = targetTop;
       previousFrameTime = null;
     }
   };
@@ -632,9 +677,7 @@
       autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
     );
 
-    if (isAutoScrollPlaying.value) {
-      scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
-    }
+    scrollToSectionBoundary('backward');
   };
 
   const scrollForwardAndSpeedUp = () => {
@@ -643,9 +686,7 @@
       autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
     );
 
-    if (isAutoScrollPlaying.value) {
-      scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
-    }
+    scrollToSectionBoundary('forward');
   };
 
   const openChordsDialog = () => {
