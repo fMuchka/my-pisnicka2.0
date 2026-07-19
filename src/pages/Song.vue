@@ -74,6 +74,7 @@
 
   let animationFrameId: number | null = null;
   let autoScrollResumeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  let expectedProgrammaticScrollTop: number | null = null;
   let previousFrameTime: number | null = null;
   let autoScrollPosition: number | null = null;
 
@@ -155,6 +156,7 @@
 
   const scrollToTop = (top: number, behavior: ScrollMode = 'auto') => {
     const container = getScrollableContainer();
+    expectedProgrammaticScrollTop = top;
 
     if (container) {
       try {
@@ -749,7 +751,26 @@
   };
 
   const handleViewportChange = () => {
-    syncScrollMetrics();
+    const latestScrollTop = getCurrentScrollTop();
+    currentScrollTop.value = latestScrollTop;
+    maxScrollTop.value = getMaxScrollTop();
+
+    if (!isAutoScrollNavigationActive.value) {
+      expectedProgrammaticScrollTop = null;
+      return;
+    }
+
+    if (
+      expectedProgrammaticScrollTop != null &&
+      Math.abs(latestScrollTop - expectedProgrammaticScrollTop) <= 1
+    ) {
+      expectedProgrammaticScrollTop = null;
+      return;
+    }
+
+    expectedProgrammaticScrollTop = null;
+    autoScrollPosition = latestScrollTop;
+    previousFrameTime = null;
   };
 
   onMounted(() => {
