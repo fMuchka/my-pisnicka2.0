@@ -1,5 +1,14 @@
 [
   {
+    "time": "19. červenec 2026",
+    "text": [
+      "Ikonky pro ovládání písně aktualizovány aby více odpovídali realitě.",
+      "Při hraní (během auto posunu) písně lze upravovat pomocí ovládání pozici (nahoru/dolu). Skáče mezi sekcemi. Pozici lze upravit i manuálním posunem.",
+      "Auto posun se na chvíli zastaví, pokud jeho pozice je upravena pomocí ovládání pozice.",
+      "Během přípravy lze upravit rychlost auto posunu."
+    ]
+  },
+  {
     "time": "18. červenec 2026",
     "text": [
       "Dialogy pro tvorbu a editaci písní odstraněny. Nyní lze písně editovat přímo, lze tedy lépe vidět výsledný vzhled a informace jsou přehledněji zobrazeny.",

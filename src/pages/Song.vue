@@ -60,6 +60,7 @@
   const isSaving = ref(false);
 
   const isAutoScrollPlaying = ref(false);
+  const isAutoScrollResumePending = ref(false);
   const autoScrollSpeed = ref(28);
   const songPageRef = ref<HTMLElement | null>(null);
   const currentScrollTop = ref(0);
@@ -68,10 +69,12 @@
   const AUTO_SCROLL_SPEED_STEP = 2;
   const AUTO_SCROLL_MIN_SPEED = 10;
   const AUTO_SCROLL_MAX_SPEED = 80;
-  const AUTO_SCROLL_SCROLL_STEP = 132;
+  const AUTO_SCROLL_RESUME_DELAY_MS = 1000;
   type ScrollMode = 'auto' | 'smooth';
 
   let animationFrameId: number | null = null;
+  let autoScrollResumeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  let expectedProgrammaticScrollTop: number | null = null;
   let previousFrameTime: number | null = null;
   let autoScrollPosition: number | null = null;
 
@@ -153,6 +156,7 @@
 
   const scrollToTop = (top: number, behavior: ScrollMode = 'auto') => {
     const container = getScrollableContainer();
+    expectedProgrammaticScrollTop = top;
 
     if (container) {
       try {
@@ -187,17 +191,87 @@
     syncScrollMetrics();
   };
 
-  const scrollByDistance = (distance: number, behavior: ScrollMode = 'auto') => {
-    const nextTop = Math.max(0, Math.min(getCurrentScrollTop() + distance, getMaxScrollTop()));
-    const shouldUseInstantScroll = isAutoScrollPlaying.value;
+  const getSectionStartPositions = () => {
+    const sectionElements = songPageRef.value?.querySelectorAll<HTMLElement>('.song-section');
 
-    scrollToTop(nextTop, shouldUseInstantScroll ? 'auto' : behavior);
+    if (sectionElements == null || sectionElements.length === 0) {
+      return [];
+    }
 
-    if (shouldUseInstantScroll) {
-      autoScrollPosition = nextTop;
-      previousFrameTime = null;
+    const container = getScrollableContainer();
+
+    return Array.from(sectionElements)
+      .map((sectionElement) => {
+        if (container) {
+          return (
+            sectionElement.getBoundingClientRect().top -
+            container.getBoundingClientRect().top +
+            container.scrollTop
+          );
+        }
+
+        return sectionElement.getBoundingClientRect().top + getCurrentScrollTop();
+      })
+      .sort((left, right) => left - right);
+  };
+
+  const clearAutoScrollResumeTimeout = () => {
+    if (autoScrollResumeTimeoutId != null) {
+      clearTimeout(autoScrollResumeTimeoutId);
+      autoScrollResumeTimeoutId = null;
+    }
+
+    isAutoScrollResumePending.value = false;
+  };
+
+  const scrollToSectionBoundary = (direction: 'backward' | 'forward') => {
+    const sectionStartPositions = getSectionStartPositions();
+
+    if (sectionStartPositions.length === 0) {
+      return;
+    }
+
+    const currentTop = getCurrentScrollTop();
+    const currentSectionThreshold = 4;
+    const currentSectionIndex = sectionStartPositions.findLastIndex(
+      (sectionTop) => sectionTop <= currentTop + currentSectionThreshold
+    );
+    const targetTop =
+      direction === 'backward'
+        ? currentSectionIndex > 0
+          ? sectionStartPositions[currentSectionIndex - 1]
+          : undefined
+        : sectionStartPositions.find(
+            (sectionTop) => sectionTop > currentTop + currentSectionThreshold
+          );
+
+    if (targetTop == null) {
+      return;
+    }
+
+    const shouldResumeAutoScroll = isAutoScrollPlaying.value;
+
+    if (shouldResumeAutoScroll) {
+      stopAutoScroll({ clearResumePending: false });
+    }
+
+    const scrollBehavior: ScrollMode = shouldResumeAutoScroll ? 'auto' : 'smooth';
+    scrollToTop(targetTop, scrollBehavior);
+
+    if (shouldResumeAutoScroll) {
+      clearAutoScrollResumeTimeout();
+      isAutoScrollResumePending.value = true;
+      autoScrollResumeTimeoutId = setTimeout(() => {
+        autoScrollResumeTimeoutId = null;
+        isAutoScrollResumePending.value = false;
+        startAutoScroll();
+      }, AUTO_SCROLL_RESUME_DELAY_MS);
     }
   };
+
+  const isAutoScrollNavigationActive = computed(
+    () => isAutoScrollPlaying.value || isAutoScrollResumePending.value
+  );
 
   const isCreateMode = computed(() => route.path === Routes.SongCreate);
   const isEditorMode = computed(() => isCreateMode.value || isInlineEditMode.value);
@@ -558,7 +632,11 @@
     }
   };
 
-  const stopAutoScroll = () => {
+  const stopAutoScroll = (options?: { clearResumePending?: boolean }) => {
+    if (options?.clearResumePending !== false) {
+      clearAutoScrollResumeTimeout();
+    }
+
     isAutoScrollPlaying.value = false;
 
     if (animationFrameId != null) {
@@ -605,6 +683,8 @@
       return;
     }
 
+    clearAutoScrollResumeTimeout();
+
     const sessionId = sessionStore.sessionDetails?.id;
 
     if (sessionId && song.value?.id) {
@@ -626,26 +706,44 @@
     startAutoScroll();
   };
 
-  const scrollBackAndSlowDown = () => {
+  const slowDownAutoScroll = () => {
     autoScrollSpeed.value = Math.max(
       AUTO_SCROLL_MIN_SPEED,
       autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
     );
-
-    if (isAutoScrollPlaying.value) {
-      scrollByDistance(-AUTO_SCROLL_SCROLL_STEP, 'smooth');
-    }
   };
 
-  const scrollForwardAndSpeedUp = () => {
+  const speedUpAutoScroll = () => {
     autoScrollSpeed.value = Math.min(
       AUTO_SCROLL_MAX_SPEED,
       autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
     );
+  };
 
-    if (isAutoScrollPlaying.value) {
-      scrollByDistance(AUTO_SCROLL_SCROLL_STEP, 'smooth');
+  const scrollBackToPreviousSection = () => {
+    scrollToSectionBoundary('backward');
+  };
+
+  const scrollForwardToNextSection = () => {
+    scrollToSectionBoundary('forward');
+  };
+
+  const scrollBackAndSlowDown = () => {
+    if (isAutoScrollNavigationActive.value) {
+      scrollBackToPreviousSection();
+      return;
     }
+
+    slowDownAutoScroll();
+  };
+
+  const scrollForwardAndSpeedUp = () => {
+    if (isAutoScrollNavigationActive.value) {
+      scrollForwardToNextSection();
+      return;
+    }
+
+    speedUpAutoScroll();
   };
 
   const openChordsDialog = () => {
@@ -653,7 +751,26 @@
   };
 
   const handleViewportChange = () => {
-    syncScrollMetrics();
+    const latestScrollTop = getCurrentScrollTop();
+    currentScrollTop.value = latestScrollTop;
+    maxScrollTop.value = getMaxScrollTop();
+
+    if (!isAutoScrollNavigationActive.value) {
+      expectedProgrammaticScrollTop = null;
+      return;
+    }
+
+    if (
+      expectedProgrammaticScrollTop != null &&
+      Math.abs(latestScrollTop - expectedProgrammaticScrollTop) <= 1
+    ) {
+      expectedProgrammaticScrollTop = null;
+      return;
+    }
+
+    expectedProgrammaticScrollTop = null;
+    autoScrollPosition = latestScrollTop;
+    previousFrameTime = null;
   };
 
   onMounted(() => {
@@ -699,7 +816,7 @@
   <TopNavigation
     :page-title="pageTitle"
     :page-subtitle="pageSubtitle"
-    :fade-away="!isEditorMode && isAutoScrollPlaying"
+    :fade-away="!isEditorMode && isAutoScrollNavigationActive"
     :back-to-path="isCreateMode ? Routes.SongLibrary : undefined"
   />
 
@@ -956,7 +1073,7 @@
     <SongControls
       v-if="song || isEditorMode"
       :mode="isEditorMode ? 'edit' : 'view'"
-      :is-playing="isAutoScrollPlaying"
+      :is-playing="isAutoScrollNavigationActive"
       :auto-scroll-speed="autoScrollSpeed"
       :auto-scroll-eta-label="autoScrollEtaLabel"
       :editor-mode="editorViewMode"
