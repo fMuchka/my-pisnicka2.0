@@ -60,6 +60,7 @@
   const isSaving = ref(false);
 
   const isAutoScrollPlaying = ref(false);
+  const isAutoScrollResumePending = ref(false);
   const autoScrollSpeed = ref(28);
   const songPageRef = ref<HTMLElement | null>(null);
   const currentScrollTop = ref(0);
@@ -68,9 +69,11 @@
   const AUTO_SCROLL_SPEED_STEP = 2;
   const AUTO_SCROLL_MIN_SPEED = 10;
   const AUTO_SCROLL_MAX_SPEED = 80;
+  const AUTO_SCROLL_RESUME_DELAY_MS = 1000;
   type ScrollMode = 'auto' | 'smooth';
 
   let animationFrameId: number | null = null;
+  let autoScrollResumeTimeoutId: ReturnType<typeof setTimeout> | null = null;
   let previousFrameTime: number | null = null;
   let autoScrollPosition: number | null = null;
 
@@ -210,6 +213,15 @@
       .sort((left, right) => left - right);
   };
 
+  const clearAutoScrollResumeTimeout = () => {
+    if (autoScrollResumeTimeoutId != null) {
+      clearTimeout(autoScrollResumeTimeoutId);
+      autoScrollResumeTimeoutId = null;
+    }
+
+    isAutoScrollResumePending.value = false;
+  };
+
   const scrollToSectionBoundary = (direction: 'backward' | 'forward') => {
     const sectionStartPositions = getSectionStartPositions();
 
@@ -235,14 +247,29 @@
       return;
     }
 
-    const scrollBehavior: ScrollMode = isAutoScrollPlaying.value ? 'auto' : 'smooth';
+    const shouldResumeAutoScroll = isAutoScrollPlaying.value;
+
+    if (shouldResumeAutoScroll) {
+      stopAutoScroll({ clearResumePending: false });
+    }
+
+    const scrollBehavior: ScrollMode = shouldResumeAutoScroll ? 'auto' : 'smooth';
     scrollToTop(targetTop, scrollBehavior);
 
-    if (isAutoScrollPlaying.value) {
-      autoScrollPosition = targetTop;
-      previousFrameTime = null;
+    if (shouldResumeAutoScroll) {
+      clearAutoScrollResumeTimeout();
+      isAutoScrollResumePending.value = true;
+      autoScrollResumeTimeoutId = setTimeout(() => {
+        autoScrollResumeTimeoutId = null;
+        isAutoScrollResumePending.value = false;
+        startAutoScroll();
+      }, AUTO_SCROLL_RESUME_DELAY_MS);
     }
   };
+
+  const isAutoScrollNavigationActive = computed(
+    () => isAutoScrollPlaying.value || isAutoScrollResumePending.value
+  );
 
   const isCreateMode = computed(() => route.path === Routes.SongCreate);
   const isEditorMode = computed(() => isCreateMode.value || isInlineEditMode.value);
@@ -603,7 +630,11 @@
     }
   };
 
-  const stopAutoScroll = () => {
+  const stopAutoScroll = (options?: { clearResumePending?: boolean }) => {
+    if (options?.clearResumePending !== false) {
+      clearAutoScrollResumeTimeout();
+    }
+
     isAutoScrollPlaying.value = false;
 
     if (animationFrameId != null) {
@@ -650,6 +681,8 @@
       return;
     }
 
+    clearAutoScrollResumeTimeout();
+
     const sessionId = sessionStore.sessionDetails?.id;
 
     if (sessionId && song.value?.id) {
@@ -671,22 +704,44 @@
     startAutoScroll();
   };
 
-  const scrollBackAndSlowDown = () => {
+  const slowDownAutoScroll = () => {
     autoScrollSpeed.value = Math.max(
       AUTO_SCROLL_MIN_SPEED,
       autoScrollSpeed.value - AUTO_SCROLL_SPEED_STEP
     );
-
-    scrollToSectionBoundary('backward');
   };
 
-  const scrollForwardAndSpeedUp = () => {
+  const speedUpAutoScroll = () => {
     autoScrollSpeed.value = Math.min(
       AUTO_SCROLL_MAX_SPEED,
       autoScrollSpeed.value + AUTO_SCROLL_SPEED_STEP
     );
+  };
 
+  const scrollBackToPreviousSection = () => {
+    scrollToSectionBoundary('backward');
+  };
+
+  const scrollForwardToNextSection = () => {
     scrollToSectionBoundary('forward');
+  };
+
+  const scrollBackAndSlowDown = () => {
+    if (isAutoScrollNavigationActive.value) {
+      scrollBackToPreviousSection();
+      return;
+    }
+
+    slowDownAutoScroll();
+  };
+
+  const scrollForwardAndSpeedUp = () => {
+    if (isAutoScrollNavigationActive.value) {
+      scrollForwardToNextSection();
+      return;
+    }
+
+    speedUpAutoScroll();
   };
 
   const openChordsDialog = () => {
@@ -740,7 +795,7 @@
   <TopNavigation
     :page-title="pageTitle"
     :page-subtitle="pageSubtitle"
-    :fade-away="!isEditorMode && isAutoScrollPlaying"
+    :fade-away="!isEditorMode && isAutoScrollNavigationActive"
     :back-to-path="isCreateMode ? Routes.SongLibrary : undefined"
   />
 
@@ -997,7 +1052,7 @@
     <SongControls
       v-if="song || isEditorMode"
       :mode="isEditorMode ? 'edit' : 'view'"
-      :is-playing="isAutoScrollPlaying"
+      :is-playing="isAutoScrollNavigationActive"
       :auto-scroll-speed="autoScrollSpeed"
       :auto-scroll-eta-label="autoScrollEtaLabel"
       :editor-mode="editorViewMode"
