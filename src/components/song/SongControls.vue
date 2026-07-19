@@ -1,15 +1,17 @@
 <script setup lang="ts">
   import { Tooltip } from '@ark-ui/vue/tooltip';
   import {
-    ArrowBigLeftDash,
-    ArrowBigRightDash,
     Check,
+    AlarmClockMinus,
+    AlarmClockPlus,
     CirclePlay,
     CirclePause,
     Eye,
     FileType,
     Music2,
     X,
+    ChevronsDown,
+    ChevronsUp,
   } from 'lucide-vue-next';
 
   interface Props {
@@ -63,7 +65,15 @@
               aria-label="Posunout zpět a zpomalit"
               @click="emit('step-back')"
             >
-              <ArrowBigLeftDash :size="22" />
+              <AlarmClockMinus
+                v-if="isPlaying === false"
+                :size="22"
+              />
+
+              <ChevronsUp
+                v-else
+                :size="22"
+              />
             </button>
           </Tooltip.Trigger>
           <Teleport to="body">
@@ -108,7 +118,15 @@
               aria-label="Posunout vpřed a zrychlit"
               @click="emit('step-forward')"
             >
-              <ArrowBigRightDash :size="22" />
+              <AlarmClockPlus
+                v-if="isPlaying === false"
+                :size="22"
+              />
+
+              <ChevronsDown
+                v-else
+                :size="22"
+              />
             </button>
           </Tooltip.Trigger>
           <Teleport to="body">
