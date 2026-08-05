@@ -36,7 +36,7 @@
   } = useTheme();
 
   const accentSwatches = ['#dc2626', '#2563eb', '#059669', '#d97706', '#7c3aed'];
-  const chordSwatches = ['#292524', '#0f766e', '#1d4ed8', '#92400e', '#7f1d1d'];
+  const chordSwatches = ['#DC2626', '#0f766e', '#1d4ed8', '#92400e', '#7f1d1d'];
 
   const accentPickerValue = ref(parseColor(accentColor.value));
   const chordPickerValue = ref(parseColor(chordColor.value));
