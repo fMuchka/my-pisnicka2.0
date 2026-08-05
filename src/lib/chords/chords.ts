@@ -1,4 +1,10 @@
-import { CHORD_QUALITIES, CHORD_ROOTS, CHROMATIC_SCALE, FINGER_POSITIONS } from './chords.database';
+import {
+  CHORD_QUALITIES,
+  CHORD_ROOTS,
+  CHROMATIC_SCALE,
+  FINGER_POSITIONS,
+  type Instrument,
+} from './chords.database';
 import { CHORD_NAMES, isChord } from './finger-positions/types';
 
 const CHORD_REGEX = /^([A-GH])([#b]?)([^/]*)(?:\/([A-GH])([#b]?))?$/i;
@@ -117,11 +123,11 @@ export function transposeChord(chord: string, semitoneShift: number): string {
     : `${transposedRoot}${quality}`;
 }
 
-export function getChordFingerPositions(chord: string, instrument: keyof typeof FINGER_POSITIONS) {
+export function getChordFingerPositions(chord: string, instrument: Instrument) {
   if (isChord(chord)) {
-    const guitarChord = FINGER_POSITIONS[instrument][chord];
-    if (guitarChord) {
-      return guitarChord;
+    const instrumentChord = FINGER_POSITIONS[instrument][chord];
+    if (instrumentChord) {
+      return instrumentChord;
     }
   }
 

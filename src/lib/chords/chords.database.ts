@@ -1,4 +1,7 @@
 import { GUITAR_FINGER_POSITIONS } from './finger-positions/guitar';
+import { UKULELE_FINGER_POSITIONS } from './finger-positions/ukulele';
+export type Instrument = 'guitar' | 'ukulele';
+
 export const CHORD_ROOTS = [
   'C',
   'C#',
@@ -62,4 +65,5 @@ export const CHROMATIC_SCALE = [
 
 export const FINGER_POSITIONS = {
   guitar: GUITAR_FINGER_POSITIONS,
+  ukulele: UKULELE_FINGER_POSITIONS,
 };

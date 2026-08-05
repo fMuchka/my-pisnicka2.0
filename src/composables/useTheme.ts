@@ -1,13 +1,16 @@
 import { computed, ref } from 'vue';
+import type { Instrument } from '../lib/chords/chords.database';
 
 export type Theme = 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'my-pisnicka:theme';
+const INSTRUMENT_STORAGE_KEY = 'my-pisnicka:instrument';
 const ACCENT_STORAGE_KEY = 'my-pisnicka:accent-color';
 const CHORD_STORAGE_KEY = 'my-pisnicka:chord-color';
 const LYRICS_FONT_SIZE_STORAGE_KEY = 'my-pisnicka:lyrics-font-size';
 const CHORD_FONT_SIZE_STORAGE_KEY = 'my-pisnicka:chord-font-size';
 const DEFAULT_THEME: Theme = 'light';
+const DEFAULT_INSTRUMENT: Instrument = 'guitar';
 const MIN_FONT_SIZE = 12;
 const MAX_FONT_SIZE = 28;
 const DEFAULT_LYRICS_FONT_SIZE = 18;
@@ -21,6 +24,7 @@ const DEFAULT_CHORD_BY_THEME: Record<Theme, string> = {
   dark: '#e7e5e4',
 };
 const theme = ref<Theme>('light');
+const preferredInstrument = ref<Instrument>(DEFAULT_INSTRUMENT);
 const accentColor = ref('#dc2626');
 const chordColor = ref('#292524');
 const lyricsFontSize = ref(DEFAULT_LYRICS_FONT_SIZE);
@@ -28,6 +32,8 @@ const chordFontSize = ref(DEFAULT_CHORD_FONT_SIZE);
 let isInitialized = false;
 
 const isTheme = (value: string | null): value is Theme => value === 'light' || value === 'dark';
+const isInstrument = (value: string | null): value is Instrument =>
+  value === 'guitar' || value === 'ukulele';
 const isHexColor = (value: string | null): value is string =>
   value != null && /^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/.test(value);
 const isValidFontSize = (value: unknown): value is number =>
@@ -141,6 +147,7 @@ const initializeTheme = () => {
 
   const storedAccent = localStorage.getItem(ACCENT_STORAGE_KEY);
   const storedChord = localStorage.getItem(CHORD_STORAGE_KEY);
+  const storedInstrument = localStorage.getItem(INSTRUMENT_STORAGE_KEY);
   const storedLyricsSize = Number.parseFloat(
     localStorage.getItem(LYRICS_FONT_SIZE_STORAGE_KEY) ?? ''
   );
@@ -150,6 +157,9 @@ const initializeTheme = () => {
 
   accentColor.value = isHexColor(storedAccent) ? storedAccent : readThemeToken('--accent');
   chordColor.value = isHexColor(storedChord) ? storedChord : readThemeToken('--text-chord');
+  preferredInstrument.value = isInstrument(storedInstrument)
+    ? storedInstrument
+    : DEFAULT_INSTRUMENT;
   lyricsFontSize.value = isValidFontSize(storedLyricsSize)
     ? storedLyricsSize
     : readFontSizeToken('--font-size-lyrics', DEFAULT_LYRICS_FONT_SIZE);
@@ -184,6 +194,14 @@ export const useTheme = () => {
 
     if (typeof window !== 'undefined') {
       localStorage.setItem(ACCENT_STORAGE_KEY, nextColor);
+    }
+  };
+
+  const setPreferredInstrument = (nextInstrument: Instrument) => {
+    preferredInstrument.value = nextInstrument;
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(INSTRUMENT_STORAGE_KEY, nextInstrument);
     }
   };
 
@@ -229,6 +247,7 @@ export const useTheme = () => {
   const resetToDefaults = () => {
     accentColor.value = DEFAULT_ACCENT_BY_THEME[DEFAULT_THEME];
     chordColor.value = DEFAULT_CHORD_BY_THEME[DEFAULT_THEME];
+    preferredInstrument.value = DEFAULT_INSTRUMENT;
     lyricsFontSize.value = DEFAULT_LYRICS_FONT_SIZE;
     chordFontSize.value = DEFAULT_CHORD_FONT_SIZE;
 
@@ -236,6 +255,7 @@ export const useTheme = () => {
 
     if (typeof window !== 'undefined') {
       localStorage.setItem(THEME_STORAGE_KEY, DEFAULT_THEME);
+      localStorage.setItem(INSTRUMENT_STORAGE_KEY, DEFAULT_INSTRUMENT);
       localStorage.removeItem(ACCENT_STORAGE_KEY);
       localStorage.removeItem(CHORD_STORAGE_KEY);
       localStorage.removeItem(LYRICS_FONT_SIZE_STORAGE_KEY);
@@ -245,11 +265,13 @@ export const useTheme = () => {
 
   return {
     theme,
+    preferredInstrument,
     accentColor,
     chordColor,
     lyricsFontSize,
     chordFontSize,
     setTheme,
+    setPreferredInstrument,
     setAccentColor,
     setChordColor,
     setLyricsFontSize,
