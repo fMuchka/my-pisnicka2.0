@@ -168,7 +168,7 @@
               <TreeView.BranchText class="song-list__branch-text">
                 <FolderOpen v-if="nodeState.expanded" />
                 <Folder v-else />
-                {{ artistNode.name }}
+                <span class="song-list__label-text">{{ artistNode.name }}</span>
               </TreeView.BranchText>
             </TreeView.BranchControl>
 
@@ -189,7 +189,7 @@
                 >
                   <TreeView.ItemText class="song-list__tree-item-text">
                     <Music2 />
-                    {{ songNode.name }}
+                    <span class="song-list__label-text">{{ songNode.name }}</span>
                   </TreeView.ItemText>
                 </TreeView.Item>
               </TreeView.NodeProvider>
@@ -278,7 +278,7 @@
   .song-list__branch-control,
   .song-list__tree-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--tree-item-gap);
     width: 100%;
     border: none;
@@ -338,12 +338,19 @@
 
   .song-list__branch-text,
   .song-list__tree-item-text {
-    display: inline-flex;
-    align-items: center;
+    display: flex;
+    align-items: flex-start;
     gap: var(--tree-item-gap);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .song-list__label-text {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.3;
   }
 
   .song-list__branch-text {
