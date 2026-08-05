@@ -1,7 +1,8 @@
 <script setup lang="ts">
   import { Tabs } from '@ark-ui/vue/tabs';
   import { History, Route, Info as InfoIcon } from 'lucide-vue-next';
-  import { getTimelineEvents } from '../lib/timeline/timeline';
+  import { onMounted } from 'vue';
+  import { getTimelineEvents, markLatestTimelineAsVisited } from '../lib/timeline/timeline';
   import { getUpcomingFeatures } from '../lib/upcoming-features/upcomingFeatures';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
 
@@ -9,6 +10,10 @@
   const TAG_LINE = 'Silmarillion MyPísničky';
   const timelineEvents = getTimelineEvents();
   const upcomingFeatures = getUpcomingFeatures();
+
+  onMounted(() => {
+    markLatestTimelineAsVisited();
+  });
 </script>
 
 <template>

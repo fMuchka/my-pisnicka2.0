@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import CookieNotice from './components/core/CookieNotice.vue';
   import { useTheme } from './composables/useTheme';
 
   // Ensure persisted theme is applied before page-specific components render.
@@ -8,6 +9,7 @@
 <template>
   <main>
     <RouterView />
+    <CookieNotice />
   </main>
 </template>
 
