@@ -151,7 +151,7 @@
                     v-else
                     class="diagram-empty"
                   >
-                    Pro tuto píseň nejsou dostupné žádné akordy.
+                    Akordy nelze načíst, zkuste píseň uložit znovu.
                   </p>
                 </section>
               </Tabs.Content>
