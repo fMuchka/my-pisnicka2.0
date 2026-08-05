@@ -1,21 +1,29 @@
 <script setup lang="ts">
   import { ColorPicker, parseColor, type Color } from '@ark-ui/vue/color-picker';
-  import { Menu } from '@ark-ui/vue/menu';
+  import { Popover } from '@ark-ui/vue/popover';
   import { Slider } from '@ark-ui/vue/slider';
   import { Moon, Palette, Settings, Sun } from 'lucide-vue-next';
-  import { computed, ref, watch } from 'vue';
-  import Button, { type ButtonIcon } from '../../core/Button.vue';
+  import { computed, ref, watch, type Component } from 'vue';
+  import Button from '../../core/Button.vue';
   import { getContrastTextColor, useTheme, type Theme } from '../../../composables/useTheme';
+  import type { Instrument } from '../../../lib/chords/chords.database';
 
   type ThemeOption = {
     value: Theme;
     label: string;
-    icon: ButtonIcon['component'];
+    icon: Component;
+  };
+
+  type InstrumentOption = {
+    value: Instrument;
+    label: string;
   };
 
   const {
     theme,
     setTheme,
+    preferredInstrument,
+    setPreferredInstrument,
     accentColor,
     chordColor,
     lyricsFontSize,
@@ -28,7 +36,7 @@
   } = useTheme();
 
   const accentSwatches = ['#dc2626', '#2563eb', '#059669', '#d97706', '#7c3aed'];
-  const chordSwatches = ['#292524', '#0f766e', '#1d4ed8', '#92400e', '#7f1d1d'];
+  const chordSwatches = ['#DC2626', '#0f766e', '#1d4ed8', '#92400e', '#7f1d1d'];
 
   const accentPickerValue = ref(parseColor(accentColor.value));
   const chordPickerValue = ref(parseColor(chordColor.value));
@@ -122,252 +130,310 @@
       icon: Moon,
     },
   ];
+
+  const instrumentOptions: InstrumentOption[] = [
+    {
+      value: 'guitar',
+      label: 'Kytara',
+    },
+    {
+      value: 'ukulele',
+      label: 'Ukulele',
+    },
+  ];
 </script>
 
 <template>
-  <Menu.Root
-    :open="isMenuOpen"
+  <Popover.Root
+    :modal="false"
     @update:open="isMenuOpen = $event"
   >
-    <Menu.Trigger as-child>
+    <Popover.Trigger as-child>
       <Button
         :icon="{ component: Settings, position: 'prepend' }"
         style-variation="Text"
         aria-label="Nastavení aplikace"
       />
-    </Menu.Trigger>
+    </Popover.Trigger>
 
-    <Menu.Positioner>
-      <Menu.Content class="app-options-menu">
-        <div class="menu-title">Motiv</div>
+    <Popover.Positioner>
+      <Popover.Content class="app-options-menu">
+        <div class="app-options-scroll">
+          <div class="menu-title">Motiv</div>
 
-        <div
-          class="theme-grid"
-          role="group"
-          aria-label="Výběr motivu"
-        >
-          <button
-            v-for="option in themeOptions"
-            :key="option.value"
-            type="button"
-            class="theme-card"
-            :class="{ 'theme-card--active': theme === option.value }"
-            @click="setTheme(option.value)"
+          <div
+            class="theme-grid"
+            role="group"
+            aria-label="Výběr motivu"
           >
-            <component
-              :is="option.icon"
-              :size="16"
-            />
-            <span>{{ option.label }}</span>
-          </button>
-        </div>
-
-        <div class="menu-divider" />
-
-        <div class="menu-title">Barva aplikace</div>
-        <div
-          class="swatch-row"
-          role="group"
-          aria-label="Výběr barvy aplikace"
-        >
-          <button
-            v-for="color in accentSwatches"
-            :key="`accent-${color}`"
-            type="button"
-            class="swatch-button"
-            :class="{ 'swatch-button--active': accentColor === color }"
-            @click="setAccentColor(color)"
-          >
-            <span
-              class="swatch-fill"
-              :style="{ backgroundColor: color }"
-            />
-          </button>
-
-          <button
-            type="button"
-            class="swatch-button swatch-button--custom"
-            aria-label="Vybrat vlastní barvu aplikace"
-            @click="handleAccentTriggerClick"
-          >
-            <span
-              class="swatch-fill"
-              :style="{ backgroundColor: accentColor }"
-            />
-            <Palette
-              :size="11"
-              :color="accentIconColor"
-            />
-          </button>
-        </div>
-
-        <ColorPicker.Root
-          v-if="isAccentPickerOpen"
-          inline
-          :model-value="accentPickerValue"
-          @update:model-value="handleAccentPickerChange"
-        >
-          <ColorPicker.Content class="picker-content picker-content--inline">
-            <ColorPicker.Area class="picker-area">
-              <ColorPicker.AreaBackground class="picker-area-bg" />
-              <ColorPicker.AreaThumb class="picker-thumb" />
-            </ColorPicker.Area>
-            <ColorPicker.ChannelSlider
-              class="picker-slider"
-              channel="hue"
+            <button
+              v-for="option in themeOptions"
+              :key="option.value"
+              type="button"
+              class="theme-card"
+              :class="{ 'theme-card--active': theme === option.value }"
+              @click="setTheme(option.value)"
             >
-              <ColorPicker.ChannelSliderTrack class="picker-slider-track" />
-              <ColorPicker.ChannelSliderThumb class="picker-thumb" />
-            </ColorPicker.ChannelSlider>
-            <ColorPicker.ChannelInput
-              class="picker-hex-input"
-              channel="hex"
-            />
-          </ColorPicker.Content>
-        </ColorPicker.Root>
-
-        <div class="menu-title">Barva akordů</div>
-        <div
-          class="swatch-row"
-          role="group"
-          aria-label="Výběr barvy akordů"
-        >
-          <button
-            v-for="color in chordSwatches"
-            :key="`chord-${color}`"
-            type="button"
-            class="swatch-button"
-            :class="{ 'swatch-button--active': chordColor === color }"
-            @click="setChordColor(color)"
-          >
-            <span
-              class="swatch-fill"
-              :style="{ backgroundColor: color }"
-            />
-          </button>
-
-          <button
-            type="button"
-            class="swatch-button swatch-button--custom"
-            aria-label="Vybrat vlastní barvu akordů"
-            @click="handleChordTriggerClick"
-          >
-            <span
-              class="swatch-fill"
-              :style="{ backgroundColor: chordColor }"
-            />
-            <Palette
-              :size="11"
-              :color="chordIconColor"
-            />
-          </button>
-        </div>
-
-        <ColorPicker.Root
-          v-if="isChordPickerOpen"
-          inline
-          :model-value="chordPickerValue"
-          @update:model-value="handleChordPickerChange"
-        >
-          <ColorPicker.Content class="picker-content picker-content--inline">
-            <ColorPicker.Area class="picker-area">
-              <ColorPicker.AreaBackground class="picker-area-bg" />
-              <ColorPicker.AreaThumb class="picker-thumb" />
-            </ColorPicker.Area>
-            <ColorPicker.ChannelSlider
-              class="picker-slider"
-              channel="hue"
-            >
-              <ColorPicker.ChannelSliderTrack class="picker-slider-track" />
-              <ColorPicker.ChannelSliderThumb class="picker-thumb" />
-            </ColorPicker.ChannelSlider>
-            <ColorPicker.ChannelInput
-              class="picker-hex-input"
-              channel="hex"
-            />
-          </ColorPicker.Content>
-        </ColorPicker.Root>
-
-        <div class="menu-divider" />
-
-        <div class="menu-title">Velikost textu písně</div>
-        <Slider.Root
-          class="size-slider"
-          :default-value="[lyricsFontSize]"
-          :value="[lyricsFontSize]"
-          :min="12"
-          :max="28"
-          :step="1"
-          @value-change="handleLyricsSizeChange"
-        >
-          <div class="slider-meta">
-            <Slider.Label class="slider-label">Text</Slider.Label>
-            <Slider.ValueText class="slider-value">{{ lyricsFontSize }}px</Slider.ValueText>
+              <component
+                :is="option.icon"
+                :size="16"
+              />
+              <span>{{ option.label }}</span>
+            </button>
           </div>
-          <Slider.Control class="slider-control">
-            <Slider.Track class="slider-track">
-              <Slider.Range class="slider-range" />
-            </Slider.Track>
-            <Slider.Thumb
-              :index="0"
-              class="slider-thumb"
-            >
-              <Slider.HiddenInput />
-            </Slider.Thumb>
-          </Slider.Control>
-        </Slider.Root>
 
-        <div class="menu-title menu-title--spaced">Velikost akordů</div>
-        <Slider.Root
-          class="size-slider"
-          :default-value="[chordFontSize]"
-          :value="[chordFontSize]"
-          :min="12"
-          :max="28"
-          :step="1"
-          @value-change="handleChordSizeChange"
-        >
-          <div class="slider-meta">
-            <Slider.Label class="slider-label">Akordy</Slider.Label>
-            <Slider.ValueText class="slider-value">{{ chordFontSize }}px</Slider.ValueText>
+          <div class="menu-divider" />
+
+          <div class="menu-title">Nástroj</div>
+
+          <div
+            class="theme-grid"
+            role="group"
+            aria-label="Výběr nástroje"
+          >
+            <button
+              v-for="option in instrumentOptions"
+              :key="option.value"
+              type="button"
+              class="theme-card"
+              :class="{ 'theme-card--active': preferredInstrument === option.value }"
+              @click="setPreferredInstrument(option.value)"
+            >
+              <span>{{ option.label }}</span>
+            </button>
           </div>
-          <Slider.Control class="slider-control">
-            <Slider.Track class="slider-track">
-              <Slider.Range class="slider-range" />
-            </Slider.Track>
-            <Slider.Thumb
-              :index="0"
-              class="slider-thumb"
+
+          <div class="menu-divider" />
+
+          <div class="menu-title">Barva aplikace</div>
+          <div
+            class="swatch-row"
+            role="group"
+            aria-label="Výběr barvy aplikace"
+          >
+            <button
+              v-for="color in accentSwatches"
+              :key="`accent-${color}`"
+              type="button"
+              class="swatch-button"
+              :class="{ 'swatch-button--active': accentColor === color }"
+              @click="setAccentColor(color)"
             >
-              <Slider.HiddenInput />
-            </Slider.Thumb>
-          </Slider.Control>
-        </Slider.Root>
+              <span
+                class="swatch-fill"
+                :style="{ backgroundColor: color }"
+              />
+            </button>
 
-        <div class="menu-divider" />
+            <button
+              type="button"
+              class="swatch-button swatch-button--custom"
+              aria-label="Vybrat vlastní barvu aplikace"
+              @click="handleAccentTriggerClick"
+            >
+              <span
+                class="swatch-fill"
+                :style="{ backgroundColor: accentColor }"
+              />
+              <Palette
+                :size="11"
+                :color="accentIconColor"
+              />
+            </button>
+          </div>
 
-        <Button
-          class="reset-button"
-          label="Obnovit výchozí"
-          color-variation="Secondary"
-          style-variation="Text"
-          @click="handleResetDefaults"
-        />
-      </Menu.Content>
-    </Menu.Positioner>
-  </Menu.Root>
+          <ColorPicker.Root
+            v-if="isAccentPickerOpen"
+            inline
+            :model-value="accentPickerValue"
+            @update:model-value="handleAccentPickerChange"
+          >
+            <ColorPicker.Content class="picker-content picker-content--inline">
+              <ColorPicker.Area class="picker-area">
+                <ColorPicker.AreaBackground class="picker-area-bg" />
+                <ColorPicker.AreaThumb class="picker-thumb" />
+              </ColorPicker.Area>
+              <ColorPicker.ChannelSlider
+                class="picker-slider"
+                channel="hue"
+              >
+                <ColorPicker.ChannelSliderTrack class="picker-slider-track" />
+                <ColorPicker.ChannelSliderThumb class="picker-thumb" />
+              </ColorPicker.ChannelSlider>
+              <ColorPicker.ChannelInput
+                class="picker-hex-input"
+                channel="hex"
+              />
+            </ColorPicker.Content>
+          </ColorPicker.Root>
+
+          <div class="menu-title">Barva akordů</div>
+          <div
+            class="swatch-row"
+            role="group"
+            aria-label="Výběr barvy akordů"
+          >
+            <button
+              v-for="color in chordSwatches"
+              :key="`chord-${color}`"
+              type="button"
+              class="swatch-button"
+              :class="{ 'swatch-button--active': chordColor === color }"
+              @click="setChordColor(color)"
+            >
+              <span
+                class="swatch-fill"
+                :style="{ backgroundColor: color }"
+              />
+            </button>
+
+            <button
+              type="button"
+              class="swatch-button swatch-button--custom"
+              aria-label="Vybrat vlastní barvu akordů"
+              @click="handleChordTriggerClick"
+            >
+              <span
+                class="swatch-fill"
+                :style="{ backgroundColor: chordColor }"
+              />
+              <Palette
+                :size="11"
+                :color="chordIconColor"
+              />
+            </button>
+          </div>
+
+          <ColorPicker.Root
+            v-if="isChordPickerOpen"
+            inline
+            :model-value="chordPickerValue"
+            @update:model-value="handleChordPickerChange"
+          >
+            <ColorPicker.Content class="picker-content picker-content--inline">
+              <ColorPicker.Area class="picker-area">
+                <ColorPicker.AreaBackground class="picker-area-bg" />
+                <ColorPicker.AreaThumb class="picker-thumb" />
+              </ColorPicker.Area>
+              <ColorPicker.ChannelSlider
+                class="picker-slider"
+                channel="hue"
+              >
+                <ColorPicker.ChannelSliderTrack class="picker-slider-track" />
+                <ColorPicker.ChannelSliderThumb class="picker-thumb" />
+              </ColorPicker.ChannelSlider>
+              <ColorPicker.ChannelInput
+                class="picker-hex-input"
+                channel="hex"
+              />
+            </ColorPicker.Content>
+          </ColorPicker.Root>
+
+          <div class="menu-divider" />
+
+          <div class="menu-title">Velikost textu písně</div>
+          <Slider.Root
+            class="size-slider"
+            :default-value="[lyricsFontSize]"
+            :value="[lyricsFontSize]"
+            :min="12"
+            :max="28"
+            :step="1"
+            @value-change="handleLyricsSizeChange"
+          >
+            <div class="slider-meta">
+              <Slider.Label class="slider-label">Text</Slider.Label>
+              <Slider.ValueText class="slider-value">{{ lyricsFontSize }}px</Slider.ValueText>
+            </div>
+            <Slider.Control class="slider-control">
+              <Slider.Track class="slider-track">
+                <Slider.Range class="slider-range" />
+              </Slider.Track>
+              <Slider.Thumb
+                :index="0"
+                class="slider-thumb"
+              >
+                <Slider.HiddenInput />
+              </Slider.Thumb>
+            </Slider.Control>
+          </Slider.Root>
+
+          <div class="menu-title menu-title--spaced">Velikost akordů</div>
+          <Slider.Root
+            class="size-slider"
+            :default-value="[chordFontSize]"
+            :value="[chordFontSize]"
+            :min="12"
+            :max="28"
+            :step="1"
+            @value-change="handleChordSizeChange"
+          >
+            <div class="slider-meta">
+              <Slider.Label class="slider-label">Akordy</Slider.Label>
+              <Slider.ValueText class="slider-value">{{ chordFontSize }}px</Slider.ValueText>
+            </div>
+            <Slider.Control class="slider-control">
+              <Slider.Track class="slider-track">
+                <Slider.Range class="slider-range" />
+              </Slider.Track>
+              <Slider.Thumb
+                :index="0"
+                class="slider-thumb"
+              >
+                <Slider.HiddenInput />
+              </Slider.Thumb>
+            </Slider.Control>
+          </Slider.Root>
+
+          <div class="menu-divider" />
+        </div>
+
+        <div class="menu-footer">
+          <Button
+            class="reset-button"
+            label="Obnovit výchozí"
+            color-variation="Secondary"
+            style-variation="Text"
+            @click="handleResetDefaults"
+          />
+        </div>
+      </Popover.Content>
+    </Popover.Positioner>
+  </Popover.Root>
 </template>
 
 <style scoped>
   .app-options-menu {
     margin-top: var(--space-xs);
-    min-width: 220px;
+    width: min(92vw, 300px);
     background: var(--bg-primary);
     border: 1px solid var(--bg-tertiary);
     border-radius: var(--radius-md);
     box-shadow: 0 10px 22px color-mix(in srgb, var(--text-primary) 12%, transparent);
-    padding: var(--space-sm);
+    max-height: min(82vh, 680px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     z-index: 20;
+  }
+
+  .app-options-menu[hidden] {
+    display: none !important;
+  }
+
+  .app-options-scroll {
+    padding: var(--space-sm);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+  }
+
+  .menu-footer {
+    position: sticky;
+    bottom: 0;
+    border-top: 1px solid color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
+    background: var(--bg-primary);
+    padding: var(--space-sm);
   }
 
   .menu-title {
@@ -387,7 +453,7 @@
   }
 
   .theme-card {
-    min-height: 64px;
+    min-height: 56px;
     border: 1px solid var(--bg-tertiary);
     background: var(--bg-secondary);
     color: var(--text-primary);
@@ -568,6 +634,19 @@
 
   .menu-title--spaced {
     margin-top: var(--space-xs);
+  }
+
+  @media (max-width: 480px) {
+    .app-options-menu {
+      width: min(94vw, 320px);
+      max-height: calc(100dvh - 1.25rem);
+    }
+
+    .theme-card {
+      min-height: 52px;
+      font-size: 0.8rem;
+      gap: 4px;
+    }
   }
 
   .picker-area {

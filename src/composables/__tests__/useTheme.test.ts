@@ -97,12 +97,36 @@ describe('useTheme', () => {
     );
   });
 
+  it('defaults preferred instrument to guitar and persists manual changes', async () => {
+    const { useTheme } = await loadUseThemeModule();
+
+    const state = useTheme();
+
+    expect(state.preferredInstrument.value).toBe('guitar');
+
+    state.setPreferredInstrument('ukulele');
+
+    expect(state.preferredInstrument.value).toBe('ukulele');
+    expect(localStorage.getItem('my-pisnicka:instrument')).toBe('ukulele');
+  });
+
+  it('reads persisted preferred instrument on first load', async () => {
+    localStorage.setItem('my-pisnicka:instrument', 'ukulele');
+
+    const { useTheme } = await loadUseThemeModule();
+
+    const state = useTheme();
+
+    expect(state.preferredInstrument.value).toBe('ukulele');
+  });
+
   it('resetToDefaults clears persisted size preferences and restores default tokens', async () => {
     const { useTheme } = await loadUseThemeModule();
 
     const state = useTheme();
     state.setLyricsFontSize(24);
     state.setChordFontSize(13);
+    state.setPreferredInstrument('ukulele');
 
     state.resetToDefaults();
 
@@ -114,6 +138,8 @@ describe('useTheme', () => {
     expect(document.documentElement.style.getPropertyValue('--font-size-chords').trim()).toBe(
       '16px'
     );
+    expect(state.preferredInstrument.value).toBe('guitar');
+    expect(localStorage.getItem('my-pisnicka:instrument')).toBe('guitar');
     expect(localStorage.getItem('my-pisnicka:lyrics-font-size')).toBeNull();
     expect(localStorage.getItem('my-pisnicka:chord-font-size')).toBeNull();
   });
