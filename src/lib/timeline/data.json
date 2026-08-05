@@ -1,5 +1,16 @@
 [
   {
+    "time": "5. srpen 2026",
+    "text": [
+      "Přidána volba preferovaného nástroje (kytara/ukulele) s uložením do localStorage a napojením na vykreslení akordových diagramů.",
+      "Upraven dialog Nastavení akordů: kompaktnější rozložení, opravené zavírání kliknutím mimo dialog a lepší chování na menších displejích.",
+      "Doplněna databáze hmatů pro ukulele a upraveno vykreslení diagramů tak, aby nepřetékaly přes vyhrazený box.",
+      "Přidáno funkční oznámení o ukládání dat (bez analytiky a reklam) s potvrzením uloženým v localStorage.",
+      "Na domovské stránce přidán badge Nové u položky Informace podle poslední navštívené položky timeline.",
+      "V seznamu písní je nově zalamování dlouhých názvů na více řádků."
+    ]
+  },
+  {
     "time": "19. červenec 2026",
     "text": [
       "Ikonky pro ovládání písně aktualizovány aby více odpovídali realitě.",
