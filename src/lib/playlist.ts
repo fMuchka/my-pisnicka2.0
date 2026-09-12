@@ -140,7 +140,10 @@ export async function fetchPlaylistSongRefs(playlistId: string): Promise<Playlis
   return snapshot.docs.map(mapPlaylistSongRef).filter((songRef) => songRef.sourceSongId.length > 0);
 }
 
-export async function addSongToPlaylist(playlistId: string, sourceSongId: string): Promise<boolean> {
+export async function addSongToPlaylist(
+  playlistId: string,
+  sourceSongId: string
+): Promise<boolean> {
   const songsCollection = collection(db, 'playlists', playlistId, 'songs');
   const existingQuery = query(songsCollection, where('sourceSongId', '==', sourceSongId), limit(1));
   const existingSnapshot = await getDocs(existingQuery);
@@ -167,7 +170,10 @@ export async function addSongToPlaylist(playlistId: string, sourceSongId: string
   return true;
 }
 
-export async function removeSongFromPlaylist(playlistId: string, playlistSongRefId: string): Promise<void> {
+export async function removeSongFromPlaylist(
+  playlistId: string,
+  playlistSongRefId: string
+): Promise<void> {
   await deleteDoc(doc(db, 'playlists', playlistId, 'songs', playlistSongRefId));
 
   await updateDoc(doc(db, 'playlists', playlistId), {

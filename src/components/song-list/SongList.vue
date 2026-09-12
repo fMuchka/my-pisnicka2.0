@@ -307,7 +307,8 @@
   );
 
   const filteredSongs = computed(() => {
-    const sourceSongs = sourceMode.value === 'global' ? userSongs.value : selectedPlaylistSongs.value;
+    const sourceSongs =
+      sourceMode.value === 'global' ? userSongs.value : selectedPlaylistSongs.value;
     const query = normalizedSearch.value;
     const selectedChords = selectedChordLookup.value;
     const selectedCategoryIds = new Set(selectedCategoryFilters.value);
@@ -352,7 +353,9 @@
       .sort(byArtistThenTitle);
   });
 
-  const playlistsById = computed(() => new Map(playlists.value.map((playlist) => [playlist.id, playlist])));
+  const playlistsById = computed(
+    () => new Map(playlists.value.map((playlist) => [playlist.id, playlist]))
+  );
 
   const selectedPlaylist = computed(() => {
     if (selectedPlaylistId.value == null) {
@@ -377,13 +380,12 @@
   const availableSongsForPlaylist = computed(() => {
     const usedSongIds = selectedPlaylistSongLookup.value;
 
-    return [...userSongs.value]
-      .filter((song) => !usedSongIds.has(song.id))
-      .sort(byArtistThenTitle);
+    return [...userSongs.value].filter((song) => !usedSongIds.has(song.id)).sort(byArtistThenTitle);
   });
 
   const canCreatePlaylist = computed(
-    () => !isSessionGuestView.value && currentUserId.value.length > 0 && playlistScope.value === 'mine'
+    () =>
+      !isSessionGuestView.value && currentUserId.value.length > 0 && playlistScope.value === 'mine'
   );
 
   const canEditSelectedPlaylist = computed(() => {
