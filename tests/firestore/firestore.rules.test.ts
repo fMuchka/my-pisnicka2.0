@@ -6,7 +6,7 @@ import {
   assertFails,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { describe, it, beforeEach, beforeAll, afterAll } from 'vitest';
 
 const PROJECT_ID = 'my-pisnicka-rules-tests';
@@ -18,6 +18,7 @@ const rules = fs.readFileSync(path.resolve(process.cwd(), 'firestore.rules'), 'u
 let testEnv: RulesTestEnvironment;
 
 const authedDb = (uid: string) => testEnv.authenticatedContext(uid).firestore();
+const guestDb = () => testEnv.unauthenticatedContext().firestore();
 
 describe('firestore.rules', () => {
   beforeAll(async () => {
@@ -169,5 +170,76 @@ describe('firestore.rules', () => {
     const db = authedDb('user-a');
 
     await assertSucceeds(deleteDoc(doc(db, 'songCatalog/catalog-1')));
+  });
+
+  it('allows owner to create playlist and add playlist song', async () => {
+    const db = authedDb('user-a');
+
+    await assertSucceeds(
+      setDoc(doc(db, 'playlists/playlist-1'), {
+        name: 'My Playlist',
+        ownerId: 'user-a',
+        visibility: 'private',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      })
+    );
+
+    await assertSucceeds(
+      setDoc(doc(db, 'playlists/playlist-1/songs/ref-1'), {
+        sourceSongId: 'song-1',
+        position: 0,
+        addedAt: Timestamp.now(),
+      })
+    );
+  });
+
+  it('denies reading private playlist to non-owner', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'playlists/playlist-1'), {
+        name: 'Private Playlist',
+        ownerId: 'user-a',
+        visibility: 'private',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    });
+
+    await assertFails(getDoc(doc(authedDb('user-b'), 'playlists/playlist-1')));
+  });
+
+  it('allows reading public playlist to non-owner and guest', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'playlists/playlist-1'), {
+        name: 'Public Playlist',
+        ownerId: 'user-a',
+        visibility: 'public',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    });
+
+    await assertSucceeds(getDoc(doc(authedDb('user-b'), 'playlists/playlist-1')));
+    await assertSucceeds(getDoc(doc(guestDb(), 'playlists/playlist-1')));
+  });
+
+  it('denies adding playlist song to playlist owned by another user', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'playlists/playlist-1'), {
+        name: 'Owned by A',
+        ownerId: 'user-a',
+        visibility: 'public',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    });
+
+    await assertFails(
+      setDoc(doc(authedDb('user-b'), 'playlists/playlist-1/songs/ref-1'), {
+        sourceSongId: 'song-1',
+        position: 0,
+        addedAt: Timestamp.now(),
+      })
+    );
   });
 });

@@ -142,6 +142,53 @@ service cloud.firestore {
         && data.value.size() <= 80;
     }
 
+    function canReadPlaylistData(data) {
+      return data.visibility == 'public' || isOwner(data.ownerId);
+    }
+
+    function isValidPlaylist(data) {
+      return data.keys().hasOnly(['name', 'ownerId', 'visibility', 'createdAt', 'updatedAt'])
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 120
+        && data.ownerId is string
+        && data.ownerId.size() > 0
+        && data.visibility in ['private', 'public']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPlaylistSong(data) {
+      return data.keys().hasOnly(['sourceSongId', 'position', 'addedAt'])
+        && data.sourceSongId is string
+        && data.sourceSongId.size() > 0
+        && data.position is number
+        && data.position >= 0
+        && data.addedAt is timestamp;
+    }
+
+    function isValidPlaylistCreate() {
+      return isSignedIn()
+        && isValidPlaylist(request.resource.data)
+        && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    function isValidPlaylistUpdate() {
+      return isOwner(resource.data.ownerId)
+        && isValidPlaylist(request.resource.data)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function canManagePlaylist(playlistId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/playlists/$(playlistId)).data.ownerId == request.auth.uid;
+    }
+
+    function canReadPlaylist(playlistId) {
+      return canReadPlaylistData(get(/databases/$(database)/documents/playlists/$(playlistId)).data);
+    }
+
     function isValidSongCatalogCreate() {
       return isSignedIn()
         && isValidSongCatalogEntry(request.resource.data)
@@ -174,6 +221,20 @@ service cloud.firestore {
       allow create: if isValidNewSong();
       allow update: if isValidSongUpdate();
       allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    match /playlists/{playlistId} {
+      allow read: if canReadPlaylistData(resource.data);
+      allow create: if isValidPlaylistCreate();
+      allow update: if isValidPlaylistUpdate();
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    match /playlists/{playlistId}/songs/{playlistSongId} {
+      allow read: if canReadPlaylist(playlistId);
+      allow create: if canManagePlaylist(playlistId) && isValidPlaylistSong(request.resource.data);
+      allow update: if canManagePlaylist(playlistId) && isValidPlaylistSong(request.resource.data);
+      allow delete: if canManagePlaylist(playlistId);
     }
 
     match /sessions/{sessionId} {
