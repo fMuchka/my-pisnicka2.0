@@ -127,6 +127,7 @@
     <template v-else>
       <SongList
         :external-search="songListSearch"
+        :session-host-id="querySessionDetails.hostId"
         @update:external-search="(newVal) => (songListSearch = newVal)"
       />
     </template>

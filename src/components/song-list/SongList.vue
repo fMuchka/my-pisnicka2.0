@@ -12,11 +12,23 @@
   import { STATIC_CHORD_FILTER_LIST } from '../../lib/chords/chords';
   import Routes from '../../router/Routes';
   import type { Song } from '../../lib/song';
+  import {
+    addSongToPlaylist,
+    createPlaylist,
+    fetchPlaylistSongRefs,
+    fetchPublicPlaylists,
+    fetchUserPlaylists,
+    removeSongFromPlaylist,
+    type Playlist,
+    type PlaylistVisibility,
+  } from '../../lib/playlist';
+  import { useAuth } from '../../composables/useAuth';
   import { songListStore } from '../../stores/songList';
   import { storeToRefs } from 'pinia';
 
   interface Props {
     externalSearch?: string;
+    sessionHostId?: string;
   }
 
   interface Emits {
@@ -27,16 +39,18 @@
   const emit = defineEmits<Emits>();
 
   const router = useRouter();
+  const { user } = useAuth();
 
   const { userSongs, songCategories, isRefreshing, refresh } = useSongListData();
   const store = songListStore();
-  const { viewMode, searchQuery, selectedChordFilters, selectedCategoryFilters } =
+  const { viewMode, sourceMode, searchQuery, selectedChordFilters, selectedCategoryFilters } =
     storeToRefs(store);
   const CHORD_VIRTUAL_ITEM_HEIGHT = 36;
   const CHORD_VIRTUAL_VIEWPORT_HEIGHT = 180;
   const CHORD_VIRTUAL_OVERSCAN = 6;
 
   type ChordComboboxItem = { label: string; value: string };
+  type PlaylistScope = 'mine' | 'public' | 'host';
 
   type VirtualizedItem<T> = { index: number; item: T };
 
@@ -92,6 +106,20 @@
   }
 
   const isOptionsMenuOpen = ref(false);
+  const playlistScope = ref<PlaylistScope>('mine');
+  const playlists = ref<Playlist[]>([]);
+  const selectedPlaylistId = ref<string | null>(null);
+  const selectedPlaylistSongRefs = ref<
+    Array<{ id: string; sourceSongId: string; position: number }>
+  >([]);
+  const playlistNameInput = ref('');
+  const playlistVisibility = ref<PlaylistVisibility>('private');
+  const playlistSongToAdd = ref('');
+  const isPlaylistLoading = ref(false);
+  const isPlaylistSongLoading = ref(false);
+  const isCreatingPlaylist = ref(false);
+  const isAddingPlaylistSong = ref(false);
+  const playlistError = ref<string | null>(null);
   const chordScrollerRef = ref<HTMLDivElement | null>(null);
   const chordScrollTop = ref(0);
   const filters = useFilter({ sensitivity: 'base' });
@@ -132,6 +160,21 @@
       }
     }
   );
+
+  const isPlaylistMode = computed(() => sourceMode.value === 'playlists');
+  const sessionHostId = computed(() => props.sessionHostId?.trim() ?? '');
+  const currentUserId = computed(() => user.value?.uid ?? '');
+  const isSessionGuestView = computed(
+    () => sessionHostId.value.length > 0 && sessionHostId.value !== currentUserId.value
+  );
+
+  watch(isSessionGuestView, (isGuest) => {
+    if (isGuest) {
+      playlistScope.value = 'host';
+    } else if (playlistScope.value === 'host') {
+      playlistScope.value = 'mine';
+    }
+  });
 
   const byArtistThenTitle = (a: Song, b: Song): number => {
     return (
@@ -264,11 +307,12 @@
   );
 
   const filteredSongs = computed(() => {
+    const sourceSongs = sourceMode.value === 'global' ? userSongs.value : selectedPlaylistSongs.value;
     const query = normalizedSearch.value;
     const selectedChords = selectedChordLookup.value;
     const selectedCategoryIds = new Set(selectedCategoryFilters.value);
 
-    return [...userSongs.value]
+    return [...sourceSongs]
       .filter((song) => {
         if (selectedCategoryIds.size > 0) {
           const songCategoryIds = new Set(song.categories ?? []);
@@ -306,6 +350,255 @@
         );
       })
       .sort(byArtistThenTitle);
+  });
+
+  const playlistsById = computed(() => new Map(playlists.value.map((playlist) => [playlist.id, playlist])));
+
+  const selectedPlaylist = computed(() => {
+    if (selectedPlaylistId.value == null) {
+      return null;
+    }
+
+    return playlistsById.value.get(selectedPlaylistId.value) ?? null;
+  });
+
+  const selectedPlaylistSongLookup = computed(
+    () => new Set(selectedPlaylistSongRefs.value.map((songRef) => songRef.sourceSongId))
+  );
+
+  const selectedPlaylistSongs = computed(() => {
+    const globalSongById = new Map(userSongs.value.map((song) => [song.id, song]));
+
+    return selectedPlaylistSongRefs.value
+      .map((songRef) => globalSongById.get(songRef.sourceSongId))
+      .filter((song): song is Song => song !== undefined);
+  });
+
+  const availableSongsForPlaylist = computed(() => {
+    const usedSongIds = selectedPlaylistSongLookup.value;
+
+    return [...userSongs.value]
+      .filter((song) => !usedSongIds.has(song.id))
+      .sort(byArtistThenTitle);
+  });
+
+  const canCreatePlaylist = computed(
+    () => !isSessionGuestView.value && currentUserId.value.length > 0 && playlistScope.value === 'mine'
+  );
+
+  const canEditSelectedPlaylist = computed(() => {
+    if (selectedPlaylist.value == null) {
+      return false;
+    }
+
+    return selectedPlaylist.value.ownerId === currentUserId.value;
+  });
+
+  const canAddSongToPlaylist = computed(
+    () =>
+      canEditSelectedPlaylist.value &&
+      selectedPlaylistId.value !== null &&
+      playlistSongToAdd.value.length > 0 &&
+      !isAddingPlaylistSong.value
+  );
+
+  const loadPlaylistSongs = async () => {
+    if (!selectedPlaylistId.value) {
+      selectedPlaylistSongRefs.value = [];
+      return;
+    }
+
+    isPlaylistSongLoading.value = true;
+
+    try {
+      selectedPlaylistSongRefs.value = await fetchPlaylistSongRefs(selectedPlaylistId.value);
+    } catch {
+      selectedPlaylistSongRefs.value = [];
+      playlistError.value = 'Nepodařilo se načíst písně playlistu.';
+    } finally {
+      isPlaylistSongLoading.value = false;
+    }
+  };
+
+  const ensureSelectedPlaylist = () => {
+    if (playlists.value.length === 0) {
+      selectedPlaylistId.value = null;
+      selectedPlaylistSongRefs.value = [];
+      return;
+    }
+
+    const hasSelected =
+      selectedPlaylistId.value !== null &&
+      playlists.value.some((playlist) => playlist.id === selectedPlaylistId.value);
+
+    if (!hasSelected) {
+      selectedPlaylistId.value = playlists.value[0]?.id ?? null;
+    }
+  };
+
+  const loadPlaylists = async () => {
+    if (!isPlaylistMode.value) {
+      return;
+    }
+
+    playlistError.value = null;
+    isPlaylistLoading.value = true;
+
+    try {
+      if (isSessionGuestView.value) {
+        const hostPublic = await fetchPublicPlaylists();
+        playlists.value = hostPublic.filter((playlist) => playlist.ownerId === sessionHostId.value);
+      } else if (playlistScope.value === 'public') {
+        playlists.value = await fetchPublicPlaylists(currentUserId.value || undefined);
+      } else {
+        if (!currentUserId.value) {
+          playlists.value = [];
+        } else {
+          playlists.value = await fetchUserPlaylists(currentUserId.value);
+        }
+      }
+
+      ensureSelectedPlaylist();
+      await loadPlaylistSongs();
+    } catch {
+      playlists.value = [];
+      selectedPlaylistId.value = null;
+      selectedPlaylistSongRefs.value = [];
+      playlistError.value = 'Nepodařilo se načíst playlisty.';
+    } finally {
+      isPlaylistLoading.value = false;
+    }
+  };
+
+  watch(
+    [isPlaylistMode, playlistScope, sessionHostId, currentUserId],
+    () => {
+      void loadPlaylists();
+    },
+    { immediate: true }
+  );
+
+  watch(selectedPlaylistId, () => {
+    if (isPlaylistMode.value) {
+      void loadPlaylistSongs();
+    }
+  });
+
+  watch(availableSongsForPlaylist, (songs) => {
+    if (songs.length === 0) {
+      playlistSongToAdd.value = '';
+      return;
+    }
+
+    if (!songs.some((song) => song.id === playlistSongToAdd.value)) {
+      playlistSongToAdd.value = songs[0]?.id ?? '';
+    }
+  });
+
+  const createNewPlaylist = async () => {
+    if (!canCreatePlaylist.value || isCreatingPlaylist.value) {
+      return;
+    }
+
+    const name = playlistNameInput.value.trim();
+
+    if (name.length === 0) {
+      playlistError.value = 'Název playlistu nesmí být prázdný.';
+      return;
+    }
+
+    isCreatingPlaylist.value = true;
+    playlistError.value = null;
+
+    try {
+      await createPlaylist({
+        name,
+        ownerId: currentUserId.value,
+        visibility: playlistVisibility.value,
+      });
+
+      playlistNameInput.value = '';
+      await loadPlaylists();
+    } catch {
+      playlistError.value = 'Playlist se nepodařilo vytvořit.';
+    } finally {
+      isCreatingPlaylist.value = false;
+    }
+  };
+
+  const addSongToSelectedPlaylist = async () => {
+    if (!selectedPlaylistId.value || !canAddSongToPlaylist.value) {
+      return;
+    }
+
+    isAddingPlaylistSong.value = true;
+    playlistError.value = null;
+
+    try {
+      await addSongToPlaylist(selectedPlaylistId.value, playlistSongToAdd.value);
+      await loadPlaylistSongs();
+    } catch {
+      playlistError.value = 'Píseň se nepodařilo přidat do playlistu.';
+    } finally {
+      isAddingPlaylistSong.value = false;
+    }
+  };
+
+  const removeSongFromSelectedPlaylist = async (sourceSongId: string) => {
+    if (!selectedPlaylistId.value || !canEditSelectedPlaylist.value) {
+      return;
+    }
+
+    const matchingSongRef = selectedPlaylistSongRefs.value.find(
+      (songRef) => songRef.sourceSongId === sourceSongId
+    );
+
+    if (!matchingSongRef) {
+      return;
+    }
+
+    playlistError.value = null;
+
+    try {
+      await removeSongFromPlaylist(selectedPlaylistId.value, matchingSongRef.id);
+      await loadPlaylistSongs();
+    } catch {
+      playlistError.value = 'Píseň se nepodařilo odebrat z playlistu.';
+    }
+  };
+
+  const setSourceMode = (mode: 'global' | 'playlists') => {
+    sourceMode.value = mode;
+  };
+
+  const setPlaylistScope = (scope: 'mine' | 'public') => {
+    playlistScope.value = scope;
+  };
+
+  const setSelectedPlaylist = (playlistId: string) => {
+    selectedPlaylistId.value = playlistId;
+  };
+
+  const emptyMessage = computed(() => {
+    if (sourceMode.value === 'playlists' && playlists.value.length === 0) {
+      if (isSessionGuestView.value) {
+        return 'Host zatím nemá žádný veřejný playlist.';
+      }
+
+      if (playlistScope.value === 'public') {
+        return 'Zatím nejsou dostupné veřejné playlisty.';
+      }
+
+      return 'Zatím nemáš žádný playlist.';
+    }
+
+    if (sourceMode.value === 'playlists' && selectedPlaylist.value == null) {
+      return 'Vyber playlist.';
+    }
+
+    return hasActiveFilters.value
+      ? 'Žádné písně neodpovídají hledání.'
+      : 'Zatím nejsou dostupné žádné písně.';
   });
 
   const canOpenSongs = true;
@@ -382,6 +675,29 @@
   <section class="song-list">
     <header class="song-list__header">
       <h1 class="song-list__title">Seznam písní</h1>
+
+      <div
+        class="song-list__source-switch"
+        role="group"
+        aria-label="Zdroj písní"
+      >
+        <button
+          type="button"
+          class="song-list__source-button"
+          :class="{ 'song-list__source-button--active': sourceMode === 'playlists' }"
+          @click="setSourceMode('playlists')"
+        >
+          Playlisty
+        </button>
+        <button
+          type="button"
+          class="song-list__source-button"
+          :class="{ 'song-list__source-button--active': sourceMode === 'global' }"
+          @click="setSourceMode('global')"
+        >
+          Globální písně
+        </button>
+      </div>
 
       <Menu.Root
         :open="isOptionsMenuOpen"
@@ -608,6 +924,138 @@
       </Menu.Root>
     </header>
 
+    <section
+      v-if="isPlaylistMode"
+      class="song-list__playlist-panel"
+    >
+      <p
+        v-if="isSessionGuestView"
+        class="song-list__playlist-note"
+      >
+        V relaci vidíš pouze veřejné playlisty hosta.
+      </p>
+
+      <div
+        v-else
+        class="song-list__playlist-scope"
+        role="group"
+        aria-label="Rozsah playlistů"
+      >
+        <button
+          type="button"
+          class="song-list__playlist-scope-btn"
+          :class="{ 'song-list__playlist-scope-btn--active': playlistScope === 'mine' }"
+          @click="setPlaylistScope('mine')"
+        >
+          Moje
+        </button>
+        <button
+          type="button"
+          class="song-list__playlist-scope-btn"
+          :class="{ 'song-list__playlist-scope-btn--active': playlistScope === 'public' }"
+          @click="setPlaylistScope('public')"
+        >
+          Veřejné
+        </button>
+      </div>
+
+      <div
+        v-if="canCreatePlaylist"
+        class="song-list__playlist-create"
+      >
+        <input
+          v-model="playlistNameInput"
+          type="text"
+          class="song-list__playlist-input"
+          placeholder="Nový playlist"
+          aria-label="Název nového playlistu"
+        />
+        <label class="song-list__playlist-visibility">
+          <input
+            v-model="playlistVisibility"
+            type="checkbox"
+            true-value="public"
+            false-value="private"
+          />
+          Veřejný
+        </label>
+        <button
+          type="button"
+          class="song-list__playlist-create-btn"
+          :disabled="isCreatingPlaylist"
+          @click="createNewPlaylist"
+        >
+          {{ isCreatingPlaylist ? 'Vytvářím...' : 'Vytvořit' }}
+        </button>
+      </div>
+
+      <div
+        v-if="playlistError"
+        class="song-list__playlist-error"
+        role="alert"
+      >
+        {{ playlistError }}
+      </div>
+
+      <div
+        v-if="isPlaylistLoading"
+        class="song-list__playlist-note"
+      >
+        Načítám playlisty...
+      </div>
+
+      <div
+        v-else-if="playlists.length > 0"
+        class="song-list__playlist-list"
+      >
+        <button
+          v-for="playlist in playlists"
+          :key="playlist.id"
+          type="button"
+          class="song-list__playlist-item"
+          :class="{ 'song-list__playlist-item--active': selectedPlaylistId === playlist.id }"
+          @click="setSelectedPlaylist(playlist.id)"
+        >
+          <span>{{ playlist.name }}</span>
+          <small>{{ playlist.visibility === 'public' ? 'veřejný' : 'soukromý' }}</small>
+        </button>
+      </div>
+
+      <div
+        v-if="canEditSelectedPlaylist && selectedPlaylistId"
+        class="song-list__playlist-add"
+      >
+        <select
+          v-model="playlistSongToAdd"
+          class="song-list__playlist-select"
+          aria-label="Přidat globální píseň do playlistu"
+        >
+          <option
+            v-for="song in availableSongsForPlaylist"
+            :key="song.id"
+            :value="song.id"
+          >
+            {{ song.artist }} - {{ song.title }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="song-list__playlist-add-btn"
+          :disabled="!canAddSongToPlaylist"
+          @click="addSongToSelectedPlaylist"
+        >
+          {{ isAddingPlaylistSong ? 'Přidávám...' : 'Přidat do playlistu' }}
+        </button>
+      </div>
+
+      <div
+        v-if="isPlaylistSongLoading"
+        class="song-list__playlist-note"
+      >
+        Načítám písně playlistu...
+      </div>
+    </section>
+
     <div class="song-list__search-wrapper">
       <Search
         class="song-list__search-icon"
@@ -635,22 +1083,37 @@
       v-if="filteredSongs.length === 0"
       class="song-list__empty"
     >
-      {{
-        hasActiveFilters
-          ? 'Žádné písně neodpovídají hledání.'
-          : 'Zatím nejsou dostupné žádné písně.'
-      }}
+      {{ emptyMessage }}
     </p>
 
+    <ul
+      v-else-if="sourceMode === 'playlists' && canEditSelectedPlaylist"
+      class="song-list__playlist-song-actions"
+    >
+      <li
+        v-for="song in filteredSongs"
+        :key="`remove-${song.id}`"
+        class="song-list__playlist-song-actions-item"
+      >
+        <button
+          type="button"
+          class="song-list__playlist-remove-btn"
+          @click="removeSongFromSelectedPlaylist(song.id)"
+        >
+          Odebrat {{ song.artist }} - {{ song.title }}
+        </button>
+      </li>
+    </ul>
+
     <SongListFlatView
-      v-else-if="viewMode === 'flat'"
+      v-if="filteredSongs.length > 0 && viewMode === 'flat'"
       :songs="filteredSongs"
       :on-song-click="handleSongClick"
       :is-interactive="canOpenSongs"
     />
 
     <SongListTreeView
-      v-else
+      v-if="filteredSongs.length > 0 && viewMode !== 'flat'"
       :songs="filteredSongs"
       artists-label="Interpreti"
       :auto-expand-on-filter="normalizedSearch.length > 0"
@@ -681,6 +1144,164 @@
   .song-list__title {
     font-size: clamp(1.35rem, 1.2rem + 1vw, 1.8rem);
     letter-spacing: 0.02em;
+  }
+
+  .song-list__source-switch {
+    display: inline-flex;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--bg-tertiary);
+    overflow: hidden;
+  }
+
+  .song-list__source-button {
+    border: none;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .song-list__source-button--active {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-secondary));
+  }
+
+  .song-list__playlist-panel {
+    display: grid;
+    gap: var(--space-sm);
+    border: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--bg-secondary) 75%, var(--bg-primary));
+    padding: var(--space-sm);
+  }
+
+  .song-list__playlist-note {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .song-list__playlist-error {
+    color: var(--color-error-dark);
+    background: var(--color-error-light);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+
+  .song-list__playlist-scope {
+    display: inline-flex;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .song-list__playlist-scope-btn {
+    border: none;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .song-list__playlist-scope-btn--active {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-secondary));
+  }
+
+  .song-list__playlist-create {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: var(--space-xs);
+    align-items: center;
+  }
+
+  .song-list__playlist-input,
+  .song-list__playlist-select {
+    border: 1px solid var(--bg-tertiary);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    min-height: 34px;
+    padding: 0 8px;
+    font: inherit;
+  }
+
+  .song-list__playlist-visibility {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .song-list__playlist-create-btn,
+  .song-list__playlist-add-btn,
+  .song-list__playlist-remove-btn {
+    border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    min-height: 34px;
+    padding: 0 10px;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .song-list__playlist-list {
+    display: grid;
+    gap: 6px;
+  }
+
+  .song-list__playlist-item {
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    text-align: left;
+    padding: 8px;
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .song-list__playlist-item small {
+    color: var(--text-secondary);
+  }
+
+  .song-list__playlist-item--active {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--bg-tertiary));
+    background: color-mix(in srgb, var(--accent) 12%, var(--bg-secondary));
+  }
+
+  .song-list__playlist-add {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-xs);
+  }
+
+  .song-list__playlist-song-actions {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 6px;
+  }
+
+  .song-list__playlist-song-actions-item {
+    display: flex;
+  }
+
+  .song-list__playlist-remove-btn {
+    width: 100%;
+    text-align: left;
   }
 
   .song-list__search-wrapper {
@@ -1062,6 +1683,11 @@
     }
 
     .song-list-options__view-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .song-list__playlist-create,
+    .song-list__playlist-add {
       grid-template-columns: minmax(0, 1fr);
     }
   }

@@ -8,6 +8,7 @@ import SongList from '../SongList.vue';
 import type { Song, SongCategory } from '../../../lib/song';
 import type { Timestamp } from 'firebase/firestore';
 import { songListStore } from '../../../stores/songList';
+import type { Playlist } from '../../../lib/playlist';
 
 type MockRef<T> = { __v_isRef: true; value: T };
 
@@ -20,6 +21,12 @@ function mockRef<T>(value: T): MockRef<T> {
 
 const mockRouterPush = vi.fn();
 const mockRefresh = vi.fn();
+const mockFetchUserPlaylists = vi.fn();
+const mockFetchPublicPlaylists = vi.fn();
+const mockFetchPlaylistSongRefs = vi.fn();
+const mockCreatePlaylist = vi.fn();
+const mockAddSongToPlaylist = vi.fn();
+const mockRemoveSongFromPlaylist = vi.fn();
 
 const mockUserSongs = mockRef<Song[]>([]);
 const mockSongCategories = mockRef<SongCategory[]>([]);
@@ -42,6 +49,15 @@ vi.mock('../../../composables/useAuth', () => ({
   useAuth: () => ({
     user: mockUser,
   }),
+}));
+
+vi.mock('../../../lib/playlist', () => ({
+  fetchUserPlaylists: (...args: unknown[]) => mockFetchUserPlaylists(...args),
+  fetchPublicPlaylists: (...args: unknown[]) => mockFetchPublicPlaylists(...args),
+  fetchPlaylistSongRefs: (...args: unknown[]) => mockFetchPlaylistSongRefs(...args),
+  createPlaylist: (...args: unknown[]) => mockCreatePlaylist(...args),
+  addSongToPlaylist: (...args: unknown[]) => mockAddSongToPlaylist(...args),
+  removeSongFromPlaylist: (...args: unknown[]) => mockRemoveSongFromPlaylist(...args),
 }));
 
 vi.mock('vue-router', () => ({
@@ -125,6 +141,15 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 }
 
 describe('SongList', () => {
+  const mockPlaylists: Playlist[] = [
+    {
+      id: 'playlist-1',
+      name: 'Moje pecky',
+      ownerId: 'user-123',
+      visibility: 'private',
+    },
+  ];
+
   const mockSongs: Song[] = [
     {
       id: 'song-1',
@@ -151,12 +176,72 @@ describe('SongList', () => {
     mockSongCategories.value = [];
     mockIsRefreshing.value = false;
     mockUser.value = { uid: 'user-123', displayName: 'Test User' };
+    mockFetchUserPlaylists.mockResolvedValue([]);
+    mockFetchPublicPlaylists.mockResolvedValue([]);
+    mockFetchPlaylistSongRefs.mockResolvedValue([]);
+    mockCreatePlaylist.mockResolvedValue(undefined);
+    mockAddSongToPlaylist.mockResolvedValue(true);
+    mockRemoveSongFromPlaylist.mockResolvedValue(undefined);
   });
 
   it('renders section with title', () => {
     render(SongList);
 
     expect(screen.getByText('Seznam písní')).toBeInTheDocument();
+  });
+
+  it('renders source switch for playlists and global songs', () => {
+    render(SongList);
+
+    expect(screen.getByRole('button', { name: 'Playlisty' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Globální písně' })).toBeInTheDocument();
+  });
+
+  it('loads user playlists in playlist mode', async () => {
+    const user = userEvent.setup();
+    mockFetchUserPlaylists.mockResolvedValue(mockPlaylists);
+
+    render(SongList);
+
+    await user.click(screen.getByRole('button', { name: 'Playlisty' }));
+
+    await waitFor(() => {
+      expect(mockFetchUserPlaylists).toHaveBeenCalledWith('user-123');
+      expect(screen.getByText('Moje pecky')).toBeInTheDocument();
+    });
+  });
+
+  it('session guest playlist mode loads host public playlists only', async () => {
+    const user = userEvent.setup();
+    mockUser.value = null;
+    mockFetchPublicPlaylists.mockResolvedValue([
+      {
+        id: 'host-public',
+        name: 'Host veřejný',
+        ownerId: 'host-123',
+        visibility: 'public',
+      },
+      {
+        id: 'other-public',
+        name: 'Cizí veřejný',
+        ownerId: 'other-999',
+        visibility: 'public',
+      },
+    ]);
+
+    render(SongList, {
+      props: {
+        sessionHostId: 'host-123',
+      },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Playlisty' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Host veřejný')).toBeInTheDocument();
+      expect(screen.queryByText('Cizí veřejný')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Veřejné' })).not.toBeInTheDocument();
+    });
   });
 
   it('renders options trigger button', () => {

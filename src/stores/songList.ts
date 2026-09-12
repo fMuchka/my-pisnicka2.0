@@ -2,9 +2,11 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 type ViewMode = 'flat' | 'tree';
+type SourceMode = 'global' | 'playlists';
 
 export const songListStore = defineStore('songList', () => {
   const viewMode = ref<ViewMode>('tree');
+  const sourceMode = ref<SourceMode>('global');
   const isTreeViewExpanded = ref<boolean>(false);
   const searchQuery = ref<string>('');
   const selectedChordFilters = ref<string[]>([]);
@@ -65,6 +67,7 @@ export const songListStore = defineStore('songList', () => {
 
   return {
     viewMode,
+    sourceMode,
     isTreeViewExpanded,
     searchQuery,
     selectedChordFilters,
