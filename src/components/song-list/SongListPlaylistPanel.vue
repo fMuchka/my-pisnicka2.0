@@ -1,8 +1,16 @@
 <script setup lang="ts">
+  import { computed } from 'vue';
+  import { Select, createListCollection } from '@ark-ui/vue/select';
+  import { ChevronsUpDown, Music2 } from 'lucide-vue-next';
   import type { Playlist } from '../../lib/playlist';
-  import type { Song } from '../../lib/song';
 
   type PlaylistScope = 'mine' | 'public' | 'host';
+  type PlaylistOption = {
+    label: string;
+    value: string;
+    count: number;
+    visibility: Playlist['visibility'];
+  };
 
   interface Props {
     isSessionGuestView: boolean;
@@ -11,27 +19,51 @@
     playlistError: string | null;
     isPlaylistLoading: boolean;
     playlists: Playlist[];
+    playlistSongCounts: Record<string, number>;
     selectedPlaylistId: string | null;
-    canEditSelectedPlaylist: boolean;
-    availableSongsForPlaylist: Song[];
-    playlistSongToAdd: string;
-    canAddSongToPlaylist: boolean;
-    isAddingPlaylistSong: boolean;
     isPlaylistSongLoading: boolean;
-    filteredSongs: Song[];
   }
 
   interface Emits {
     (event: 'set-playlist-scope', value: 'mine' | 'public'): void;
     (event: 'open-create-playlist-dialog'): void;
     (event: 'set-selected-playlist', value: string): void;
-    (event: 'update:playlist-song-to-add', value: string): void;
-    (event: 'add-song'): void;
-    (event: 'remove-song', value: string): void;
   }
 
-  defineProps<Props>();
+  const props = defineProps<Props>();
   const emit = defineEmits<Emits>();
+
+  const playlistCollection = computed(() =>
+    createListCollection<PlaylistOption>({
+      items: props.playlists.map((playlist) => ({
+        label: playlist.name,
+        value: playlist.id,
+        count: props.playlistSongCounts[playlist.id] ?? 0,
+        visibility: playlist.visibility,
+      })),
+    })
+  );
+
+  const selectedPlaylistValue = computed({
+    get: () => (props.selectedPlaylistId ? [props.selectedPlaylistId] : []),
+    set: (value: string[]) => {
+      const nextValue = value[0];
+
+      if (nextValue !== undefined) {
+        emit('set-selected-playlist', nextValue);
+      }
+    },
+  });
+
+  const selectedPlaylistItem = computed(() => {
+    const currentId = props.selectedPlaylistId;
+
+    if (!currentId) {
+      return null;
+    }
+
+    return playlistCollection.value.items.find((item) => item.value === currentId) ?? null;
+  });
 </script>
 
 <template>
@@ -97,47 +129,79 @@
 
     <div
       v-else-if="playlists.length > 0"
-      class="song-list__playlist-list"
+      class="song-list__playlist-select-row"
     >
-      <button
-        v-for="playlist in playlists"
-        :key="playlist.id"
-        type="button"
-        class="song-list__playlist-item"
-        :class="{ 'song-list__playlist-item--active': selectedPlaylistId === playlist.id }"
-        @click="emit('set-selected-playlist', playlist.id)"
+      <Select.Root
+        v-model="selectedPlaylistValue"
+        :collection="playlistCollection"
+        class="song-list__playlist-select-root"
       >
-        <span>{{ playlist.name }}</span>
-        <small>{{ playlist.visibility === 'public' ? 'veřejný' : 'soukromý' }}</small>
-      </button>
-    </div>
+        <Select.Label class="song-list__playlist-select-label">Playlist</Select.Label>
+        <Select.Control class="song-list__playlist-select-control">
+          <Select.Trigger
+            data-testid="playlist-select-trigger"
+            class="song-list__playlist-select-trigger"
+            aria-label="Vybraný playlist"
+          >
+            <div
+              v-if="selectedPlaylistItem"
+              class="song-list__playlist-trigger-value"
+            >
+              <span class="song-list__playlist-trigger-label">{{
+                selectedPlaylistItem.label
+              }}</span>
+              <span class="song-list__playlist-option-badge">
+                <Music2
+                  :size="12"
+                  aria-hidden="true"
+                />
+                {{ selectedPlaylistItem.count }}
+              </span>
+            </div>
+            <Select.ValueText
+              v-else
+              class="song-list__playlist-trigger-placeholder"
+              placeholder="Vybrat playlist"
+            />
+          </Select.Trigger>
+          <Select.Indicator class="song-list__playlist-select-indicator">
+            <ChevronsUpDown :size="16" />
+          </Select.Indicator>
+        </Select.Control>
 
-    <div
-      v-if="canEditSelectedPlaylist && selectedPlaylistId"
-      class="song-list__playlist-add"
-    >
-      <select
-        :value="playlistSongToAdd"
-        class="song-list__playlist-select"
-        aria-label="Přidat globální píseň do playlistu"
-        @change="emit('update:playlist-song-to-add', ($event.target as HTMLSelectElement).value)"
-      >
-        <option
-          v-for="song in availableSongsForPlaylist"
-          :key="song.id"
-          :value="song.id"
-        >
-          {{ song.artist }} - {{ song.title }}
-        </option>
-      </select>
-      <button
-        type="button"
-        class="song-list__playlist-add-btn"
-        :disabled="!canAddSongToPlaylist"
-        @click="emit('add-song')"
-      >
-        {{ isAddingPlaylistSong ? 'Přidávám...' : 'Přidat do playlistu' }}
-      </button>
+        <Teleport to="body">
+          <Select.Positioner>
+            <Select.Content class="song-list__playlist-select-content">
+              <Select.Item
+                v-for="item in playlistCollection.items"
+                :key="item.value"
+                :item="item"
+                class="song-list__playlist-option"
+              >
+                <div class="song-list__playlist-option-main">
+                  <Select.ItemText class="song-list__playlist-option-label">
+                    {{ item.label }}
+                  </Select.ItemText>
+                  <span class="song-list__playlist-option-badge">
+                    <Music2
+                      :size="12"
+                      aria-hidden="true"
+                    />
+                    {{ item.count }}
+                  </span>
+                </div>
+                <div class="song-list__playlist-option-meta">
+                  <span class="song-list__playlist-option-visibility">
+                    {{ item.visibility === 'public' ? 'veřejný' : 'soukromý' }}
+                  </span>
+                </div>
+              </Select.Item>
+            </Select.Content>
+          </Select.Positioner>
+        </Teleport>
+
+        <Select.HiddenSelect />
+      </Select.Root>
     </div>
 
     <div
@@ -146,25 +210,6 @@
     >
       Načítám písně playlistu...
     </div>
-
-    <ul
-      v-if="filteredSongs.length > 0 && canEditSelectedPlaylist"
-      class="song-list__playlist-song-actions"
-    >
-      <li
-        v-for="song in filteredSongs"
-        :key="`remove-${song.id}`"
-        class="song-list__playlist-song-actions-item"
-      >
-        <button
-          type="button"
-          class="song-list__playlist-remove-btn"
-          @click="emit('remove-song', song.id)"
-        >
-          Odebrat {{ song.artist }} - {{ song.title }}
-        </button>
-      </li>
-    </ul>
   </section>
 </template>
 
@@ -218,19 +263,7 @@
     display: flex;
   }
 
-  .song-list__playlist-select {
-    border: 1px solid var(--bg-tertiary);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border-radius: var(--radius-sm);
-    min-height: 34px;
-    padding: 0 8px;
-    font: inherit;
-  }
-
-  .song-list__playlist-create-btn,
-  .song-list__playlist-add-btn,
-  .song-list__playlist-remove-btn {
+  .song-list__playlist-create-btn {
     border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent);
     background: var(--bg-secondary);
     color: var(--text-primary);
@@ -241,61 +274,140 @@
     cursor: pointer;
   }
 
-  .song-list__playlist-list {
+  .song-list__playlist-select-row {
     display: grid;
-    gap: 6px;
   }
 
-  .song-list__playlist-item {
+  .song-list__playlist-select-root {
+    display: grid;
+    gap: 4px;
+  }
+
+  .song-list__playlist-select-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .song-list__playlist-select-control {
+    position: relative;
+  }
+
+  .song-list__playlist-select-trigger {
+    width: 100%;
+    min-height: 38px;
+    padding: 0 38px 0 10px;
     border: 1px solid var(--bg-tertiary);
     border-radius: var(--radius-sm);
     background: var(--bg-secondary);
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
     text-align: left;
-    padding: 8px;
     font: inherit;
     cursor: pointer;
+  }
+
+  .song-list__playlist-select-trigger[data-placeholder-shown] {
+    color: var(--text-secondary);
+  }
+
+  .song-list__playlist-select-trigger:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    outline-offset: 1px;
+  }
+
+  .song-list__playlist-select-indicator {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .song-list__playlist-trigger-value {
+    width: 100%;
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 8px;
+  }
+
+  .song-list__playlist-trigger-label,
+  .song-list__playlist-trigger-placeholder {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .song-list__playlist-select-content {
+    min-width: var(--reference-width);
+    max-height: min(var(--available-height, 300px), 300px);
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-panel);
+    z-index: 30;
+  }
+
+  .song-list__playlist-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+
+  .song-list__playlist-option[data-highlighted] {
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+  }
+
+  .song-list__playlist-option[data-state='checked'] {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .song-list__playlist-option-main,
+  .song-list__playlist-option-meta {
+    display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .song-list__playlist-item small {
+  .song-list__playlist-option-label {
+    font-weight: 600;
+  }
+
+  .song-list__playlist-option-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 28px;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-secondary));
+    color: var(--accent);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .song-list__playlist-option-badge svg {
+    flex-shrink: 0;
+  }
+
+  .song-list__playlist-option-visibility {
     color: var(--text-secondary);
-  }
-
-  .song-list__playlist-item--active {
-    border-color: color-mix(in srgb, var(--accent) 50%, var(--bg-tertiary));
-    background: color-mix(in srgb, var(--accent) 12%, var(--bg-secondary));
-  }
-
-  .song-list__playlist-add {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--space-xs);
-  }
-
-  .song-list__playlist-song-actions {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 6px;
-  }
-
-  .song-list__playlist-song-actions-item {
-    display: flex;
-  }
-
-  .song-list__playlist-remove-btn {
-    width: 100%;
-    text-align: left;
-  }
-
-  @media (max-width: 560px) {
-    .song-list__playlist-add {
-      grid-template-columns: minmax(0, 1fr);
-    }
+    font-size: 0.8rem;
   }
 </style>

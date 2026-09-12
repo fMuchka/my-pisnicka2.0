@@ -9,6 +9,7 @@ import type { Timestamp } from 'firebase/firestore';
 
 describe('SongListTreeView', () => {
   const mockOnSongClick = vi.fn();
+  const mockOnToggleSongSelection = vi.fn();
 
   const mockSongs: Song[] = [
     {
@@ -48,6 +49,30 @@ describe('SongListTreeView', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+  });
+
+  it('renders selection checkboxes and toggles selection without opening the song', async () => {
+    const user = userEvent.setup();
+
+    render(SongListTreeView, {
+      props: {
+        songs: mockSongs,
+        artistsLabel: 'Interpreti',
+        onSongClick: mockOnSongClick,
+        isInteractive: true,
+        selectionMode: true,
+        selectedSongIds: ['song-2'],
+        onToggleSongSelection: mockOnToggleSongSelection,
+      },
+    });
+
+    const selectedCheckbox = screen.getByLabelText('Vybrat píseň Bohemian Rhapsody');
+    expect(selectedCheckbox).toBeChecked();
+
+    await user.click(screen.getByLabelText('Vybrat píseň Another One Bites the Dust'));
+
+    expect(mockOnToggleSongSelection).toHaveBeenCalledWith(mockSongs[0]);
+    expect(mockOnSongClick).not.toHaveBeenCalled();
   });
 
   it('renders tree view with artist branches', () => {

@@ -27,13 +27,15 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
   const isCreatePlaylistDialogOpen = ref(false);
   const playlistScope = ref<PlaylistScope>('mine');
   const playlists = ref<Playlist[]>([]);
+  const playlistSongCounts = ref<Record<string, number>>({});
   const selectedPlaylistId = ref<string | null>(null);
   const selectedPlaylistSongRefs = ref<PlaylistSongRef[]>([]);
-  const playlistSongToAdd = ref('');
+  const selectedGlobalSongIds = ref<string[]>([]);
+  const selectedPlaylistSongIds = ref<string[]>([]);
   const isPlaylistLoading = ref(false);
   const isPlaylistSongLoading = ref(false);
   const isCreatingPlaylist = ref(false);
-  const isAddingPlaylistSong = ref(false);
+  const isBulkUpdatingPlaylist = ref(false);
   const playlistError = ref<string | null>(null);
 
   const isPlaylistMode = computed(() => params.sourceMode.value === 'playlists');
@@ -102,8 +104,15 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
     () =>
       canEditSelectedPlaylist.value &&
       selectedPlaylistId.value !== null &&
-      playlistSongToAdd.value.length > 0 &&
-      !isAddingPlaylistSong.value
+      selectedGlobalSongIds.value.length > 0 &&
+      !isBulkUpdatingPlaylist.value
+  );
+
+  const canRemoveSongsFromPlaylist = computed(
+    () =>
+      canEditSelectedPlaylist.value &&
+      selectedPlaylistSongIds.value.length > 0 &&
+      !isBulkUpdatingPlaylist.value
   );
 
   const loadPlaylistSongs = async () => {
@@ -116,12 +125,32 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
 
     try {
       selectedPlaylistSongRefs.value = await fetchPlaylistSongRefs(selectedPlaylistId.value);
+      playlistSongCounts.value = {
+        ...playlistSongCounts.value,
+        [selectedPlaylistId.value]: selectedPlaylistSongRefs.value.length,
+      };
     } catch {
       selectedPlaylistSongRefs.value = [];
       playlistError.value = 'Nepodařilo se načíst písně playlistu.';
     } finally {
       isPlaylistSongLoading.value = false;
     }
+  };
+
+  const loadPlaylistSongCounts = async () => {
+    if (playlists.value.length === 0) {
+      playlistSongCounts.value = {};
+      return;
+    }
+
+    const counts = await Promise.all(
+      playlists.value.map(async (playlist) => {
+        const songRefs = await fetchPlaylistSongRefs(playlist.id);
+        return [playlist.id, songRefs.length] as const;
+      })
+    );
+
+    playlistSongCounts.value = Object.fromEntries(counts);
   };
 
   const ensureSelectedPlaylist = () => {
@@ -163,9 +192,11 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
       }
 
       ensureSelectedPlaylist();
+      await loadPlaylistSongCounts();
       await loadPlaylistSongs();
     } catch {
       playlists.value = [];
+      playlistSongCounts.value = {};
       selectedPlaylistId.value = null;
       selectedPlaylistSongRefs.value = [];
       playlistError.value = 'Nepodařilo se načíst playlisty.';
@@ -183,20 +214,26 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
   );
 
   watch(selectedPlaylistId, () => {
+    selectedGlobalSongIds.value = [];
+    selectedPlaylistSongIds.value = [];
+
     if (isPlaylistMode.value) {
       void loadPlaylistSongs();
     }
   });
 
   watch(availableSongsForPlaylist, (songs) => {
-    if (songs.length === 0) {
-      playlistSongToAdd.value = '';
-      return;
-    }
+    const availableIds = new Set(songs.map((song) => song.id));
+    selectedGlobalSongIds.value = selectedGlobalSongIds.value.filter((songId) =>
+      availableIds.has(songId)
+    );
+  });
 
-    if (!songs.some((song) => song.id === playlistSongToAdd.value)) {
-      playlistSongToAdd.value = songs[0]?.id ?? '';
-    }
+  watch(selectedPlaylistSongs, (songs) => {
+    const availableIds = new Set(songs.map((song) => song.id));
+    selectedPlaylistSongIds.value = selectedPlaylistSongIds.value.filter((songId) =>
+      availableIds.has(songId)
+    );
   });
 
   const createNewPlaylist = async (input: PlaylistCreateInput) => {
@@ -235,40 +272,77 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
       return;
     }
 
-    isAddingPlaylistSong.value = true;
+    isBulkUpdatingPlaylist.value = true;
     playlistError.value = null;
 
     try {
-      await addSongToPlaylist(selectedPlaylistId.value, playlistSongToAdd.value);
+      await Promise.all(
+        selectedGlobalSongIds.value.map((songId) =>
+          addSongToPlaylist(selectedPlaylistId.value!, songId)
+        )
+      );
+      selectedGlobalSongIds.value = [];
       await loadPlaylistSongs();
     } catch {
       playlistError.value = 'Píseň se nepodařilo přidat do playlistu.';
     } finally {
-      isAddingPlaylistSong.value = false;
+      isBulkUpdatingPlaylist.value = false;
     }
   };
 
-  const removeSongFromSelectedPlaylist = async (sourceSongId: string) => {
-    if (!selectedPlaylistId.value || !canEditSelectedPlaylist.value) {
-      return;
-    }
-
-    const matchingSongRef = selectedPlaylistSongRefs.value.find(
-      (songRef) => songRef.sourceSongId === sourceSongId
-    );
-
-    if (!matchingSongRef) {
+  const removeSongFromSelectedPlaylist = async () => {
+    if (!selectedPlaylistId.value || !canRemoveSongsFromPlaylist.value) {
       return;
     }
 
     playlistError.value = null;
+    isBulkUpdatingPlaylist.value = true;
 
     try {
-      await removeSongFromPlaylist(selectedPlaylistId.value, matchingSongRef.id);
+      const songRefIdsToRemove = selectedPlaylistSongRefs.value
+        .filter((songRef) => selectedPlaylistSongIds.value.includes(songRef.sourceSongId))
+        .map((songRef) => songRef.id);
+
+      await Promise.all(
+        songRefIdsToRemove.map((songRefId) =>
+          removeSongFromPlaylist(selectedPlaylistId.value!, songRefId)
+        )
+      );
+      selectedPlaylistSongIds.value = [];
       await loadPlaylistSongs();
     } catch {
       playlistError.value = 'Píseň se nepodařilo odebrat z playlistu.';
+    } finally {
+      isBulkUpdatingPlaylist.value = false;
     }
+  };
+
+  const toggleGlobalSongSelection = (songId: string) => {
+    if (selectedGlobalSongIds.value.includes(songId)) {
+      selectedGlobalSongIds.value = selectedGlobalSongIds.value.filter((value) => value !== songId);
+      return;
+    }
+
+    selectedGlobalSongIds.value = [...selectedGlobalSongIds.value, songId];
+  };
+
+  const togglePlaylistSongSelection = (songId: string) => {
+    if (selectedPlaylistSongIds.value.includes(songId)) {
+      selectedPlaylistSongIds.value = selectedPlaylistSongIds.value.filter(
+        (value) => value !== songId
+      );
+      return;
+    }
+
+    selectedPlaylistSongIds.value = [...selectedPlaylistSongIds.value, songId];
+  };
+
+  const clearGlobalSongSelection = () => {
+    selectedGlobalSongIds.value = [];
+  };
+
+  const clearPlaylistSongSelection = () => {
+    selectedPlaylistSongIds.value = [];
   };
 
   const setPlaylistScope = (scope: 'mine' | 'public') => {
@@ -290,22 +364,29 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
     isCreatePlaylistDialogOpen,
     playlistScope,
     playlists,
+    playlistSongCounts,
     selectedPlaylist,
     selectedPlaylistId,
     selectedPlaylistSongs,
     availableSongsForPlaylist,
-    playlistSongToAdd,
+    selectedGlobalSongIds,
+    selectedPlaylistSongIds,
     isPlaylistLoading,
     isPlaylistSongLoading,
     isCreatingPlaylist,
-    isAddingPlaylistSong,
+    isBulkUpdatingPlaylist,
     playlistError,
     canCreatePlaylist,
     canEditSelectedPlaylist,
     canAddSongToPlaylist,
+    canRemoveSongsFromPlaylist,
     createNewPlaylist,
     addSongToSelectedPlaylist,
     removeSongFromSelectedPlaylist,
+    toggleGlobalSongSelection,
+    togglePlaylistSongSelection,
+    clearGlobalSongSelection,
+    clearPlaylistSongSelection,
     setPlaylistScope,
     setSelectedPlaylist,
     openCreatePlaylistDialog,

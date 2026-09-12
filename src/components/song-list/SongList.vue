@@ -3,6 +3,7 @@
   import { useRouter } from 'vue-router';
   import { Search, X } from 'lucide-vue-next';
   import CreatePlaylistDialog from '../dialogs/create-playlist/CreatePlaylistDialog.vue';
+  import SongListBulkActions from './SongListBulkActions.vue';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListOptionsMenu from './SongListOptionsMenu.vue';
   import SongListPlaylistPanel from './SongListPlaylistPanel.vue';
@@ -152,22 +153,28 @@
     isCreatePlaylistDialogOpen,
     playlistScope,
     playlists,
+    playlistSongCounts,
     selectedPlaylist,
     selectedPlaylistId,
     selectedPlaylistSongs,
-    availableSongsForPlaylist,
-    playlistSongToAdd,
+    selectedGlobalSongIds,
+    selectedPlaylistSongIds,
     isPlaylistLoading,
     isPlaylistSongLoading,
     isCreatingPlaylist,
-    isAddingPlaylistSong,
+    isBulkUpdatingPlaylist,
     playlistError,
     canCreatePlaylist,
     canEditSelectedPlaylist,
     canAddSongToPlaylist,
+    canRemoveSongsFromPlaylist,
     createNewPlaylist,
     addSongToSelectedPlaylist,
     removeSongFromSelectedPlaylist,
+    toggleGlobalSongSelection,
+    togglePlaylistSongSelection,
+    clearGlobalSongSelection,
+    clearPlaylistSongSelection,
     setPlaylistScope,
     setSelectedPlaylist,
     openCreatePlaylistDialog,
@@ -228,6 +235,73 @@
 
   const setSourceMode = (mode: 'global' | 'playlists') => {
     sourceMode.value = mode;
+  };
+
+  const showPlaylistSelectionMode = computed(
+    () => viewMode.value === 'tree' && canEditSelectedPlaylist.value
+  );
+
+  const selectedSongIdsForTree = computed(() => {
+    if (!showPlaylistSelectionMode.value) {
+      return [];
+    }
+
+    return sourceMode.value === 'global'
+      ? selectedGlobalSongIds.value
+      : selectedPlaylistSongIds.value;
+  });
+
+  const bulkActionLabel = computed(() => {
+    if (sourceMode.value === 'global') {
+      return selectedPlaylist.value
+        ? `Přidat vybrané do ${selectedPlaylist.value.name}`
+        : 'Přidat vybrané do playlistu';
+    }
+
+    return 'Odebrat vybrané z playlistu';
+  });
+
+  const bulkActionSummary = computed(() => {
+    if (sourceMode.value === 'global') {
+      return selectedPlaylist.value
+        ? `Globální písně pro playlist ${selectedPlaylist.value.name}`
+        : 'Globální písně';
+    }
+
+    return selectedPlaylist.value
+      ? `Písně v playlistu ${selectedPlaylist.value.name}`
+      : 'Písně v playlistu';
+  });
+
+  const handleTreeSongSelectionToggle = (song: Song) => {
+    if (!showPlaylistSelectionMode.value) {
+      return;
+    }
+
+    if (sourceMode.value === 'global') {
+      toggleGlobalSongSelection(song.id);
+      return;
+    }
+
+    togglePlaylistSongSelection(song.id);
+  };
+
+  const handleBulkAction = async () => {
+    if (sourceMode.value === 'global') {
+      await addSongToSelectedPlaylist();
+      return;
+    }
+
+    await removeSongFromSelectedPlaylist();
+  };
+
+  const clearTreeSelection = () => {
+    if (sourceMode.value === 'global') {
+      clearGlobalSongSelection();
+      return;
+    }
+
+    clearPlaylistSongSelection();
   };
 
   const emptyMessage = computed(() => {
@@ -316,20 +390,12 @@
       :playlist-error="playlistError"
       :is-playlist-loading="isPlaylistLoading"
       :playlists="playlists"
+      :playlist-song-counts="playlistSongCounts"
       :selected-playlist-id="selectedPlaylistId"
-      :can-edit-selected-playlist="canEditSelectedPlaylist"
-      :available-songs-for-playlist="availableSongsForPlaylist"
-      :playlist-song-to-add="playlistSongToAdd"
-      :can-add-song-to-playlist="canAddSongToPlaylist"
-      :is-adding-playlist-song="isAddingPlaylistSong"
       :is-playlist-song-loading="isPlaylistSongLoading"
-      :filtered-songs="filteredSongs"
       @set-playlist-scope="setPlaylistScope"
       @open-create-playlist-dialog="openCreatePlaylistDialog"
       @set-selected-playlist="setSelectedPlaylist"
-      @update:playlist-song-to-add="playlistSongToAdd = $event"
-      @add-song="addSongToSelectedPlaylist"
-      @remove-song="removeSongFromSelectedPlaylist"
     />
 
     <CreatePlaylistDialog
@@ -362,6 +428,19 @@
       </button>
     </div>
 
+    <SongListBulkActions
+      v-if="showPlaylistSelectionMode"
+      :label="bulkActionSummary"
+      :selected-count="selectedSongIdsForTree.length"
+      :primary-action-label="bulkActionLabel"
+      :primary-action-disabled="
+        sourceMode === 'global' ? !canAddSongToPlaylist : !canRemoveSongsFromPlaylist
+      "
+      :is-busy="isBulkUpdatingPlaylist"
+      @primary-action="handleBulkAction"
+      @clear-selection="clearTreeSelection"
+    />
+
     <p
       v-if="filteredSongs.length === 0"
       class="song-list__empty"
@@ -383,6 +462,9 @@
       :auto-expand-on-filter="normalizedSearch.length > 0"
       :on-song-click="handleSongClick"
       :is-interactive="canOpenSongs"
+      :selection-mode="showPlaylistSelectionMode"
+      :selected-song-ids="selectedSongIdsForTree"
+      :on-toggle-song-selection="handleTreeSongSelectionToggle"
     />
   </section>
 </template>

@@ -26,9 +26,15 @@
       autoExpandOnFilter?: boolean;
       onSongClick: (song: Song) => void;
       isInteractive: boolean;
+      selectionMode?: boolean;
+      selectedSongIds?: string[];
+      onToggleSongSelection?: (song: Song) => void;
     }>(),
     {
       autoExpandOnFilter: false,
+      selectionMode: false,
+      selectedSongIds: () => [],
+      onToggleSongSelection: undefined,
     }
   );
 
@@ -116,6 +122,24 @@
 
     props.onSongClick(song);
   };
+
+  const handleSongSelectionToggle = (songNodeId: string) => {
+    const song = songsByNodeId.value.get(songNodeId);
+    if (!song || props.onToggleSongSelection === undefined) {
+      return;
+    }
+
+    props.onToggleSongSelection(song);
+  };
+
+  const isSongSelected = (songNodeId: string) => {
+    const song = songsByNodeId.value.get(songNodeId);
+    if (!song) {
+      return false;
+    }
+
+    return props.selectedSongIds.includes(song.id);
+  };
 </script>
 
 <template>
@@ -183,11 +207,27 @@
               >
                 <TreeView.Item
                   class="song-list__tree-item"
-                  :class="{ 'song-list__tree-item--readonly': !props.isInteractive }"
+                  :class="{
+                    'song-list__tree-item--readonly': !props.isInteractive,
+                    'song-list__tree-item--selectable': props.selectionMode,
+                  }"
                   :aria-disabled="!props.isInteractive"
                   @click="handleSongNodeClick(songNode.id)"
                 >
                   <TreeView.ItemText class="song-list__tree-item-text">
+                    <label
+                      v-if="props.selectionMode"
+                      class="song-list__tree-item-checkbox-wrap"
+                      @click.stop
+                    >
+                      <input
+                        type="checkbox"
+                        class="song-list__tree-item-checkbox"
+                        :checked="isSongSelected(songNode.id)"
+                        :aria-label="`Vybrat píseň ${songNode.name}`"
+                        @change="handleSongSelectionToggle(songNode.id)"
+                      />
+                    </label>
                     <Music2 />
                     <span class="song-list__label-text">{{ songNode.name }}</span>
                   </TreeView.ItemText>
@@ -310,10 +350,34 @@
     cursor: default;
   }
 
+  .song-list__tree-item--selectable {
+    grid-template-columns: 1fr;
+  }
+
   .song-list__branch-control:hover,
   .song-list__tree-item:hover {
     background-color: color-mix(in srgb, var(--accent) 10%, var(--bg-secondary));
     color: var(--text-primary);
+  }
+
+  .song-list__tree-item-text {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tree-item-gap);
+  }
+
+  .song-list__tree-item-checkbox-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 2px;
+  }
+
+  .song-list__tree-item-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
   }
 
   .song-list__branch-indicator {

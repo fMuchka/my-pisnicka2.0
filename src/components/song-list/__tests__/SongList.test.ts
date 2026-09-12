@@ -110,6 +110,9 @@ vi.mock('../tree-view/SongListTreeView.vue', () => ({
       autoExpandOnFilter: { type: Boolean, required: false, default: false },
       onSongClick: { type: Function, required: true },
       isInteractive: { type: Boolean, required: true },
+      selectionMode: { type: Boolean, required: false, default: false },
+      selectedSongIds: { type: Array, required: false, default: () => [] },
+      onToggleSongSelection: { type: Function, required: false, default: undefined },
     },
     setup(props) {
       return () =>
@@ -126,6 +129,25 @@ vi.mock('../tree-view/SongListTreeView.vue', () => ({
             String(props.autoExpandOnFilter)
           ),
           h('div', { 'data-testid': 'tree-view-interactive' }, String(props.isInteractive)),
+          h('div', { 'data-testid': 'tree-view-selection-mode' }, String(props.selectionMode)),
+          h(
+            'div',
+            { 'data-testid': 'tree-view-selected-song-ids' },
+            JSON.stringify(props.selectedSongIds)
+          ),
+          h(
+            'button',
+            {
+              'data-testid': 'tree-view-toggle-first-selection',
+              onClick: () => {
+                const firstSong = (props.songs as Song[])[0];
+                if (firstSong !== undefined && props.onToggleSongSelection) {
+                  (props.onToggleSongSelection as (song: Song) => void)(firstSong);
+                }
+              },
+            },
+            'toggle-first-selection'
+          ),
         ]);
     },
   }),
@@ -207,7 +229,7 @@ describe('SongList', () => {
 
     await waitFor(() => {
       expect(mockFetchUserPlaylists).toHaveBeenCalledWith('user-123');
-      expect(screen.getByText('Moje pecky')).toBeInTheDocument();
+      expect(screen.getByTestId('playlist-select-trigger')).toHaveTextContent('Moje pecky');
     });
   });
 
@@ -238,9 +260,71 @@ describe('SongList', () => {
     await user.click(screen.getByRole('button', { name: 'Playlisty' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Host veřejný')).toBeInTheDocument();
+      expect(screen.getByTestId('playlist-select-trigger')).toHaveTextContent('Host veřejný');
       expect(screen.queryByText('Cizí veřejný')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Veřejné' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('adds selected global songs to selected playlist through bulk action bar', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+    mockFetchUserPlaylists.mockResolvedValue(mockPlaylists);
+
+    render(SongList);
+
+    await user.click(screen.getByRole('button', { name: 'Playlisty' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('playlist-select-trigger')).toHaveTextContent('Moje pecky');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Globální písně' }));
+    expect(screen.getByTestId('tree-view-selection-mode')).toHaveTextContent('true');
+
+    await user.click(screen.getByTestId('tree-view-toggle-first-selection'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Přidat vybrané do Moje pecky' })).toBeEnabled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Přidat vybrané do Moje pecky' }));
+
+    await waitFor(() => {
+      expect(mockAddSongToPlaylist).toHaveBeenCalledWith('playlist-1', 'song-1');
+    });
+  });
+
+  it('removes selected playlist songs through bulk action bar', async () => {
+    const user = userEvent.setup();
+    mockUserSongs.value = mockSongs;
+    mockFetchUserPlaylists.mockResolvedValue(mockPlaylists);
+    mockFetchPlaylistSongRefs.mockResolvedValue([
+      {
+        id: 'ref-1',
+        sourceSongId: 'song-1',
+        position: 0,
+      },
+    ]);
+
+    render(SongList);
+
+    await user.click(screen.getByRole('button', { name: 'Playlisty' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('tree-view-selection-mode')).toHaveTextContent('true');
+    });
+
+    await user.click(screen.getByTestId('tree-view-toggle-first-selection'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Odebrat vybrané z playlistu' })).toBeEnabled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Odebrat vybrané z playlistu' }));
+
+    await waitFor(() => {
+      expect(mockRemoveSongFromPlaylist).toHaveBeenCalledWith('playlist-1', 'ref-1');
     });
   });
 
