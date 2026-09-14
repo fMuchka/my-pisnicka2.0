@@ -10,6 +10,23 @@ import { signOut as signOutService } from '../lib/authService';
  */
 const user = ref<User | null>(null);
 const unsubscribe = ref<Unsubscribe | null>(null);
+const isAuthReady = ref(false);
+let resolveAuthReady: (() => void) | null = null;
+let authReadyPromise: Promise<void> | null = null;
+
+function getAuthReadyPromise(): Promise<void> {
+  if (isAuthReady.value) {
+    return Promise.resolve();
+  }
+
+  if (authReadyPromise == null) {
+    authReadyPromise = new Promise<void>((resolve) => {
+      resolveAuthReady = resolve;
+    });
+  }
+
+  return authReadyPromise;
+}
 
 /**
  * Subscribe to Firebase Auth state changes.
@@ -21,6 +38,12 @@ const unsubscribe = ref<Unsubscribe | null>(null);
 function subscribe() {
   return onAuthStateChanged(auth, (u) => {
     user.value = u ?? null;
+
+    if (!isAuthReady.value) {
+      isAuthReady.value = true;
+      resolveAuthReady?.();
+      resolveAuthReady = null;
+    }
   });
 }
 
@@ -55,6 +78,10 @@ export function useAuth() {
 
   const isAuthenticated = computed(() => user.value != null);
 
+  const waitForAuthReady = async () => {
+    await getAuthReadyPromise();
+  };
+
   /**
    * Guests can are Anonymous auth users
    * who got in through PIN or Session link
@@ -84,6 +111,8 @@ export function useAuth() {
   return {
     user,
     isAuthenticated,
+    isAuthReady,
+    waitForAuthReady,
     isGuest,
     logout,
   };
