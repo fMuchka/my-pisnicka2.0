@@ -852,4 +852,104 @@ describe('SongList', () => {
       expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
     });
   });
+
+  it('allows empty query submit when filters are selected and auto-switches to flat with first 10 results', async () => {
+    const user = userEvent.setup();
+    const store = songListStore();
+
+    store.viewMode = 'tree';
+    store.setChordFilters(['C']);
+    mockUserSongs.value = Array.from({ length: 21 }, (_, index) => ({
+      id: `song-filter-only-${index + 1}`,
+      title: `Song ${index + 1}`,
+      artist: `Artist ${index + 1}`,
+      chords: ['C'],
+      createdAt: new Date().toISOString() as unknown as Timestamp,
+      ownerId: '',
+    }));
+
+    render(SongList);
+
+    await user.click(screen.getByRole('button', { name: 'Hledat' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view')).toBeInTheDocument();
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('10 songs');
+    });
+
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Stránka 1 z 3')).toBeInTheDocument();
+  });
+
+  it('loads another 10 results when changing page in filter-only global search', async () => {
+    const user = userEvent.setup();
+    const store = songListStore();
+
+    store.viewMode = 'tree';
+    store.setChordFilters(['C']);
+    mockUserSongs.value = Array.from({ length: 21 }, (_, index) => ({
+      id: `song-page-${index + 1}`,
+      title: `Song ${index + 1}`,
+      artist: `Artist ${index + 1}`,
+      chords: ['C'],
+      createdAt: new Date().toISOString() as unknown as Timestamp,
+      ownerId: '',
+    }));
+
+    render(SongList);
+
+    await user.click(screen.getByRole('button', { name: 'Hledat' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Stránka 1 z 3')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Další' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Stránka 2 z 3')).toBeInTheDocument();
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('10 songs');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Další' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Stránka 3 z 3')).toBeInTheDocument();
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('1 songs');
+    });
+
+    expect(mockRefresh).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not show all global songs after clearing the last active filter', async () => {
+    const user = userEvent.setup();
+    const store = songListStore();
+
+    store.viewMode = 'tree';
+    store.setChordFilters(['C']);
+    mockUserSongs.value = Array.from({ length: 3 }, (_, index) => ({
+      id: `song-clear-filter-${index + 1}`,
+      title: `Song ${index + 1}`,
+      artist: `Artist ${index + 1}`,
+      chords: ['C'],
+      createdAt: new Date().toISOString() as unknown as Timestamp,
+      ownerId: '',
+    }));
+
+    render(SongList);
+
+    await user.click(screen.getByRole('button', { name: 'Hledat' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('flat-view-count')).toHaveTextContent('3 songs');
+    });
+
+    store.clearChordFilters();
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('flat-view')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('tree-view')).not.toBeInTheDocument();
+      expect(screen.getByText('Zadej hledání a potvrď tlačítkem Hledat.')).toBeInTheDocument();
+    });
+  });
 });

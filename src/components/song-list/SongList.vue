@@ -45,6 +45,7 @@
   const hasSubmittedGlobalSearch = ref(false);
   const submittedGlobalSearchQuery = ref('');
   const chordFilterQuery = ref('');
+  const globalPage = ref(1);
 
   watch(
     () => props.externalSearch,
@@ -167,7 +168,9 @@
       (props.externalSearch !== undefined && props.externalSearch.length > 0)
   );
 
-  const canSubmitGlobalSearch = computed(() => normalizedSearch.value.length > 0);
+  const canSubmitGlobalSearch = computed(
+    () => normalizedSearch.value.length > 0 || hasSelectedFilters.value
+  );
   const COMMON_CHORD_PRIORITY = ['C', 'D', 'E', 'G', 'Em', 'Am', 'A', 'H', 'F', 'Dm', 'Hm', 'Gm'];
   const MAX_VISIBLE_CHORDS_WITHOUT_SEARCH = 12;
   const MAX_VISIBLE_CHORDS_WITH_SEARCH = 160;
@@ -238,6 +241,18 @@
     () => totalMatchingChordCount.value > filteredChordOptions.value.length
   );
 
+  const isGlobalFilterOnlySearch = computed(
+    () =>
+      sourceMode.value === 'global' &&
+      hasSubmittedGlobalSearch.value &&
+      normalizedSubmittedGlobalSearch.value.length === 0 &&
+      hasSelectedFilters.value
+  );
+
+  const hasSubmittedGlobalCriteria = computed(
+    () => normalizedSubmittedGlobalSearch.value.length > 0 || hasSelectedFilters.value
+  );
+
   const {
     isPlaylistMode,
     isSessionGuestView,
@@ -278,7 +293,10 @@
   });
 
   const filteredSongs = computed(() => {
-    if (sourceMode.value === 'global' && !hasSubmittedGlobalSearch.value) {
+    if (
+      sourceMode.value === 'global' &&
+      (!hasSubmittedGlobalSearch.value || !hasSubmittedGlobalCriteria.value)
+    ) {
       return [];
     }
 
@@ -331,8 +349,39 @@
       .sort(byArtistThenTitle);
   });
 
+  const GLOBAL_PAGE_SIZE = 10;
+
+  const globalTotalPages = computed(() => {
+    if (!isGlobalFilterOnlySearch.value) {
+      return 1;
+    }
+
+    return Math.max(1, Math.ceil(filteredSongs.value.length / GLOBAL_PAGE_SIZE));
+  });
+
+  const pagedSongs = computed(() => {
+    if (!isGlobalFilterOnlySearch.value) {
+      return filteredSongs.value;
+    }
+
+    const start = (globalPage.value - 1) * GLOBAL_PAGE_SIZE;
+
+    return filteredSongs.value.slice(start, start + GLOBAL_PAGE_SIZE);
+  });
+
+  watch(filteredSongs, () => {
+    if (!isGlobalFilterOnlySearch.value) {
+      return;
+    }
+
+    if (globalPage.value > globalTotalPages.value) {
+      globalPage.value = globalTotalPages.value;
+    }
+  });
+
   const setSourceMode = (mode: 'global' | 'playlists') => {
     sourceMode.value = mode;
+    globalPage.value = 1;
 
     if (mode !== 'global') {
       isGlobalFiltersDrawerOpen.value = false;
@@ -407,7 +456,10 @@
   };
 
   const emptyMessage = computed(() => {
-    if (sourceMode.value === 'global' && !hasSubmittedGlobalSearch.value) {
+    if (
+      sourceMode.value === 'global' &&
+      (!hasSubmittedGlobalSearch.value || !hasSubmittedGlobalCriteria.value)
+    ) {
       return 'Zadej hledání a potvrď tlačítkem Hledat.';
     }
 
@@ -450,6 +502,7 @@
     searchQuery.value = '';
     hasSubmittedGlobalSearch.value = false;
     submittedGlobalSearchQuery.value = '';
+    globalPage.value = 1;
     emit('update:externalSearch', '');
   };
 
@@ -458,8 +511,31 @@
       return;
     }
 
+    const isFilterOnlySubmit = normalizedSearch.value.length === 0 && hasSelectedFilters.value;
+
     hasSubmittedGlobalSearch.value = true;
     submittedGlobalSearchQuery.value = searchQuery.value;
+    globalPage.value = 1;
+
+    if (isFilterOnlySubmit) {
+      viewMode.value = 'flat';
+    }
+
+    await refresh();
+  };
+
+  const changeGlobalPage = async (nextPage: number) => {
+    if (!isGlobalFilterOnlySearch.value) {
+      return;
+    }
+
+    const normalizedPage = Math.max(1, Math.min(nextPage, globalTotalPages.value));
+
+    if (normalizedPage === globalPage.value) {
+      return;
+    }
+
+    globalPage.value = normalizedPage;
     await refresh();
   };
 
@@ -687,15 +763,15 @@
     </p>
 
     <SongListFlatView
-      v-if="filteredSongs.length > 0 && viewMode === 'flat'"
-      :songs="filteredSongs"
+      v-if="pagedSongs.length > 0 && viewMode === 'flat'"
+      :songs="pagedSongs"
       :on-song-click="handleSongClick"
       :is-interactive="canOpenSongs"
     />
 
     <SongListTreeView
-      v-if="filteredSongs.length > 0 && viewMode !== 'flat'"
-      :songs="filteredSongs"
+      v-if="pagedSongs.length > 0 && viewMode !== 'flat'"
+      :songs="pagedSongs"
       artists-label="Interpreti"
       :auto-expand-on-filter="normalizedSearch.length > 0"
       :on-song-click="handleSongClick"
@@ -704,6 +780,34 @@
       :selected-song-ids="selectedSongIdsForTree"
       :on-toggle-song-selection="handleTreeSongSelectionToggle"
     />
+
+    <nav
+      v-if="isGlobalFilterOnlySearch && filteredSongs.length > 0 && globalTotalPages > 1"
+      class="song-list__pagination"
+      aria-label="Stránkování výsledků"
+    >
+      <button
+        type="button"
+        class="song-list__pagination-button"
+        :disabled="globalPage <= 1"
+        @click="changeGlobalPage(globalPage - 1)"
+      >
+        Předchozí
+      </button>
+
+      <p class="song-list__pagination-status">
+        Stránka {{ globalPage }} z {{ globalTotalPages }}
+      </p>
+
+      <button
+        type="button"
+        class="song-list__pagination-button"
+        :disabled="globalPage >= globalTotalPages"
+        @click="changeGlobalPage(globalPage + 1)"
+      >
+        Další
+      </button>
+    </nav>
 
     <button
       v-if="sourceMode === 'global' && isGlobalFiltersDrawerOpen"
@@ -1209,6 +1313,35 @@
   .song-list__drawer-action--primary {
     border-color: color-mix(in srgb, var(--accent) 55%, var(--bg-tertiary));
     background: color-mix(in srgb, var(--accent) 14%, var(--bg-primary));
+  }
+
+  .song-list__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .song-list__pagination-status {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .song-list__pagination-button {
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 6px 10px;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .song-list__pagination-button:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 
   @media (max-width: 560px) {
