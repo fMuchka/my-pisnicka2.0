@@ -42,6 +42,7 @@
     storeToRefs(store);
 
   const isOptionsMenuOpen = ref(false);
+  const isGlobalFiltersDrawerOpen = ref(false);
 
   watch(
     () => props.externalSearch,
@@ -129,6 +130,7 @@
   const selectedChordLookup = computed(
     () => new Set(selectedChordFilters.value.map(normalizeChord))
   );
+  const selectedCategoryLookup = computed(() => new Set(selectedCategoryFilters.value));
 
   const hasActiveFilters = computed(
     () =>
@@ -145,6 +147,18 @@
     selectedCategoryFilters.value
       .map((categoryId) => categoryNameById.value.get(categoryId))
       .filter((categoryLabel): categoryLabel is string => categoryLabel !== undefined)
+  );
+
+  const activeFilterCount = computed(
+    () => selectedChordFilters.value.length + selectedCategoryFilters.value.length
+  );
+
+  const hasSelectedFilters = computed(() => activeFilterCount.value > 0);
+
+  const shouldShowSearchClear = computed(
+    () =>
+      searchQuery.value.length > 0 ||
+      (props.externalSearch !== undefined && props.externalSearch.length > 0)
   );
 
   const {
@@ -235,6 +249,10 @@
 
   const setSourceMode = (mode: 'global' | 'playlists') => {
     sourceMode.value = mode;
+
+    if (mode !== 'global') {
+      isGlobalFiltersDrawerOpen.value = false;
+    }
   };
 
   const showPlaylistSelectionMode = computed(
@@ -349,13 +367,37 @@
     emit('update:externalSearch', '');
   };
 
+  const openGlobalFiltersDrawer = () => {
+    isGlobalFiltersDrawerOpen.value = true;
+  };
+
+  const closeGlobalFiltersDrawer = () => {
+    isGlobalFiltersDrawerOpen.value = false;
+  };
+
+  const toggleCategoryFilter = (categoryId: string) => {
+    store.toggleCategoryFilter(categoryId);
+  };
+
+  const toggleChordFilter = (chord: string) => {
+    store.toggleChordFilter(chord, normalizeChord);
+  };
+
+  const clearAllFilters = () => {
+    clearCategoryFilters();
+    clearChordFilters();
+  };
+
   const handleSongClick = (song: Song) => {
     router.push({ path: Routes.Song.replace(':songId', song.id) });
   };
 </script>
 
 <template>
-  <section class="song-list">
+  <section
+    class="song-list"
+    :class="{ 'song-list--drawer-open': isGlobalFiltersDrawerOpen }"
+  >
     <header class="song-list__header">
       <h1 class="song-list__title">Seznam písní</h1>
 
@@ -405,7 +447,79 @@
       @create="createNewPlaylist"
     />
 
-    <div class="song-list__search-wrapper">
+    <div
+      v-if="sourceMode === 'global'"
+      class="song-list__global-toolbar"
+    >
+      <div class="song-list__search-wrapper song-list__search-wrapper--global">
+        <Search
+          class="song-list__search-icon"
+          :size="16"
+        />
+        <input
+          v-model="searchQuery"
+          class="song-list__search-input song-list__search-input--global"
+          type="search"
+          placeholder="Hledat podle názvu nebo interpreta…"
+          aria-label="Hledat písně podle názvu nebo interpreta"
+        />
+        <button
+          v-if="shouldShowSearchClear"
+          type="button"
+          class="song-list__search-clear"
+          aria-label="Vymazat hledání"
+          @click="clearSearch"
+        >
+          <X :size="14" />
+        </button>
+      </div>
+
+      <div class="song-list__global-toolbar-row">
+        <div class="song-list__active-filter-chips">
+          <span
+            v-for="chord in selectedChordFilters"
+            :key="`selected-chord-${chord}`"
+            class="song-list__chip"
+          >
+            {{ chord }}
+          </span>
+
+          <span
+            v-for="categoryLabel in selectedCategoryLabels"
+            :key="`selected-category-${categoryLabel}`"
+            class="song-list__chip"
+          >
+            {{ categoryLabel }}
+          </span>
+
+          <button
+            v-if="hasSelectedFilters"
+            type="button"
+            class="song-list__chip song-list__chip--muted song-list__chip--button"
+            @click="clearAllFilters"
+          >
+            Vyčistit filtry
+          </button>
+        </div>
+
+        <div class="song-list__global-toolbar-actions">
+          <button
+            type="button"
+            class="song-list__drawer-toggle"
+            :aria-expanded="isGlobalFiltersDrawerOpen"
+            aria-controls="song-list-global-filters"
+            @click="openGlobalFiltersDrawer"
+          >
+            Filtry ({{ activeFilterCount }})
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-else
+      class="song-list__search-wrapper"
+    >
       <Search
         class="song-list__search-icon"
         :size="16"
@@ -418,7 +532,7 @@
         aria-label="Hledat písně podle názvu nebo interpreta"
       />
       <button
-        v-if="searchQuery.length > 0 || (externalSearch && externalSearch?.length > 0)"
+        v-if="shouldShowSearchClear"
         type="button"
         class="song-list__search-clear"
         aria-label="Vymazat hledání"
@@ -466,6 +580,99 @@
       :selected-song-ids="selectedSongIdsForTree"
       :on-toggle-song-selection="handleTreeSongSelectionToggle"
     />
+
+    <button
+      v-if="sourceMode === 'global' && isGlobalFiltersDrawerOpen"
+      type="button"
+      class="song-list__drawer-backdrop"
+      aria-label="Zavřít filtr písní"
+      @click="closeGlobalFiltersDrawer"
+    />
+
+    <aside
+      v-if="sourceMode === 'global'"
+      id="song-list-global-filters"
+      class="song-list__drawer"
+      :class="{ 'song-list__drawer--open': isGlobalFiltersDrawerOpen }"
+      :aria-hidden="!isGlobalFiltersDrawerOpen"
+    >
+      <header class="song-list__drawer-header">
+        <h2 class="song-list__drawer-title">Filtry</h2>
+        <button
+          type="button"
+          class="song-list__drawer-close"
+          aria-label="Zavřít filtr písní"
+          @click="closeGlobalFiltersDrawer"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="song-list__drawer-content">
+        <section class="song-list__drawer-section">
+          <h3 class="song-list__drawer-section-title">Kategorie</h3>
+          <p
+            v-if="songCategories.length === 0"
+            class="song-list__drawer-empty"
+          >
+            Kategorie nejsou dostupné.
+          </p>
+          <div
+            v-else
+            class="song-list__drawer-filter-grid"
+          >
+            <label
+              v-for="category in songCategories"
+              :key="category.id"
+              class="song-list__drawer-option"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedCategoryLookup.has(category.id)"
+                @change="toggleCategoryFilter(category.id)"
+              />
+              <span>{{ category.value }}</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="song-list__drawer-section">
+          <h3 class="song-list__drawer-section-title">Akordy</h3>
+          <div class="song-list__drawer-filter-grid song-list__drawer-filter-grid--compact">
+            <label
+              v-for="chord in availableChords"
+              :key="chord"
+              class="song-list__drawer-option"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedChordLookup.has(normalizeChord(chord))"
+                @change="toggleChordFilter(chord)"
+              />
+              <span>{{ chord }}</span>
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <footer class="song-list__drawer-footer">
+        <button
+          type="button"
+          class="song-list__drawer-action song-list__drawer-action--secondary"
+          :disabled="!hasSelectedFilters"
+          @click="clearAllFilters"
+        >
+          Vyčistit
+        </button>
+        <button
+          type="button"
+          class="song-list__drawer-action song-list__drawer-action--primary"
+          @click="closeGlobalFiltersDrawer"
+        >
+          Hotovo
+        </button>
+      </footer>
+    </aside>
   </section>
 </template>
 
@@ -487,6 +694,71 @@
     justify-content: space-between;
   }
 
+  .song-list__global-toolbar {
+    position: sticky;
+    top: var(--space-sm);
+    z-index: 4;
+    display: grid;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+    border-radius: var(--radius-md);
+    background: linear-gradient(160deg, var(--bg-secondary), var(--bg-primary));
+    box-shadow: var(--shadow-panel);
+  }
+
+  .song-list__global-toolbar-row {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .song-list__active-filter-chips {
+    display: inline-flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  .song-list__global-toolbar-actions {
+    display: inline-flex;
+    gap: var(--space-xs);
+  }
+
+  .song-list__chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--bg-tertiary));
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-primary));
+    color: var(--text-primary);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    padding: 4px 10px;
+  }
+
+  .song-list__chip--muted {
+    border-color: var(--bg-tertiary);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+  }
+
+  .song-list__chip--button {
+    cursor: pointer;
+  }
+
+  .song-list__drawer-toggle {
+    border-width: 1px;
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--bg-tertiary));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-primary));
+    color: var(--text-primary);
+    padding: 5px 12px;
+    font: inherit;
+    cursor: pointer;
+  }
+
   .song-list__title {
     font-size: clamp(1.35rem, 1.2rem + 1vw, 1.8rem);
     letter-spacing: 0.02em;
@@ -496,6 +768,10 @@
     position: relative;
     display: flex;
     align-items: center;
+  }
+
+  .song-list__search-wrapper--global {
+    width: 100%;
   }
 
   .song-list__search-icon {
@@ -514,6 +790,12 @@
     color: var(--text-primary);
     font-size: 18px;
     font-family: var(--font-body);
+  }
+
+  .song-list__search-input--global {
+    border: 2px solid color-mix(in srgb, var(--accent) 45%, var(--bg-tertiary));
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-md);
   }
 
   .song-list__search-input::-webkit-search-cancel-button,
@@ -567,6 +849,139 @@
     font-style: italic;
   }
 
+  .song-list__drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    border: none;
+    background: var(--overlay-backdrop);
+    z-index: 15;
+  }
+
+  .song-list__drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(400px, 100%);
+    height: 100dvh;
+    background: linear-gradient(160deg, var(--bg-secondary), var(--bg-primary));
+    border-left: 1px solid var(--bg-tertiary);
+    box-shadow: var(--shadow-panel);
+    z-index: 16;
+    transform: translateX(105%);
+    transition: transform var(--transition-slow);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .song-list__drawer--open {
+    transform: translateX(0);
+  }
+
+  .song-list__drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--bg-tertiary);
+  }
+
+  .song-list__drawer-title {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .song-list__drawer-close {
+    border: 1px solid var(--bg-tertiary);
+    border-radius: 999px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .song-list__drawer-content {
+    padding: var(--space-md);
+    overflow: auto;
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .song-list__drawer-section {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .song-list__drawer-section-title {
+    margin: 0;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .song-list__drawer-empty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .song-list__drawer-filter-grid {
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .song-list__drawer-filter-grid--compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .song-list__drawer-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    background: color-mix(in srgb, var(--bg-secondary) 75%, var(--bg-primary));
+    cursor: pointer;
+  }
+
+  .song-list__drawer-option input {
+    accent-color: var(--accent);
+  }
+
+  .song-list__drawer-footer {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    padding: var(--space-md);
+    border-top: 1px solid var(--bg-tertiary);
+  }
+
+  .song-list__drawer-action {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 7px 12px;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .song-list__drawer-action:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .song-list__drawer-action--primary {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--bg-tertiary));
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-primary));
+  }
+
   @media (max-width: 560px) {
     .song-list {
       padding: var(--space-md);
@@ -574,6 +989,14 @@
 
     .song-list__header {
       align-items: flex-start;
+    }
+
+    .song-list__global-toolbar {
+      top: 6px;
+    }
+
+    .song-list__drawer-filter-grid--compact {
+      grid-template-columns: 1fr;
     }
   }
 </style>
