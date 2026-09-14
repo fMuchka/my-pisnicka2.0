@@ -43,6 +43,8 @@
 
   const isOptionsMenuOpen = ref(false);
   const isGlobalFiltersDrawerOpen = ref(false);
+  const hasSubmittedGlobalSearch = ref(false);
+  const submittedGlobalSearchQuery = ref('');
 
   watch(
     () => props.externalSearch,
@@ -124,6 +126,9 @@
   };
 
   const normalizedSearch = computed(() => searchQuery.value.trim().toLocaleLowerCase('cs'));
+  const normalizedSubmittedGlobalSearch = computed(() =>
+    submittedGlobalSearchQuery.value.trim().toLocaleLowerCase('cs')
+  );
 
   const availableChords = computed(() => STATIC_CHORD_FILTER_LIST);
   const normalizeChord = (value: string): string => value.trim().toLocaleLowerCase('cs');
@@ -160,6 +165,8 @@
       searchQuery.value.length > 0 ||
       (props.externalSearch !== undefined && props.externalSearch.length > 0)
   );
+
+  const canSubmitGlobalSearch = computed(() => normalizedSearch.value.length > 0);
 
   const {
     isPlaylistMode,
@@ -201,9 +208,16 @@
   });
 
   const filteredSongs = computed(() => {
+    if (sourceMode.value === 'global' && !hasSubmittedGlobalSearch.value) {
+      return [];
+    }
+
     const sourceSongs =
       sourceMode.value === 'global' ? userSongs.value : selectedPlaylistSongs.value;
-    const query = normalizedSearch.value;
+    const query =
+      sourceMode.value === 'global'
+        ? normalizedSubmittedGlobalSearch.value
+        : normalizedSearch.value;
     const selectedChords = selectedChordLookup.value;
     const selectedCategoryIds = new Set(selectedCategoryFilters.value);
 
@@ -323,6 +337,10 @@
   };
 
   const emptyMessage = computed(() => {
+    if (sourceMode.value === 'global' && !hasSubmittedGlobalSearch.value) {
+      return 'Zadej hledání a potvrď tlačítkem Hledat.';
+    }
+
     if (sourceMode.value === 'playlists' && playlists.value.length === 0) {
       if (isSessionGuestView.value) {
         return 'Host zatím nemá žádný veřejný playlist.';
@@ -364,7 +382,19 @@
 
   const clearSearch = (): void => {
     searchQuery.value = '';
+    hasSubmittedGlobalSearch.value = false;
+    submittedGlobalSearchQuery.value = '';
     emit('update:externalSearch', '');
+  };
+
+  const submitGlobalSearch = async () => {
+    if (sourceMode.value !== 'global' || !canSubmitGlobalSearch.value) {
+      return;
+    }
+
+    hasSubmittedGlobalSearch.value = true;
+    submittedGlobalSearchQuery.value = searchQuery.value;
+    await refresh();
   };
 
   const openGlobalFiltersDrawer = () => {
@@ -462,6 +492,7 @@
           type="search"
           placeholder="Hledat podle názvu nebo interpreta…"
           aria-label="Hledat písně podle názvu nebo interpreta"
+          @keydown.enter.prevent="submitGlobalSearch"
         />
         <button
           v-if="shouldShowSearchClear"
@@ -503,6 +534,15 @@
         </div>
 
         <div class="song-list__global-toolbar-actions">
+          <button
+            type="button"
+            class="song-list__search-submit"
+            :disabled="!canSubmitGlobalSearch || isRefreshing"
+            @click="submitGlobalSearch"
+          >
+            Hledat
+          </button>
+
           <button
             type="button"
             class="song-list__drawer-toggle"
@@ -757,6 +797,23 @@
     padding: 5px 12px;
     font: inherit;
     cursor: pointer;
+  }
+
+  .song-list__search-submit {
+    border-width: 1px;
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--accent) 70%, var(--bg-tertiary));
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    padding: 5px 12px;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .song-list__search-submit:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 
   .song-list__title {
