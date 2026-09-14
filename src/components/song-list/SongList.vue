@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+  import { Toggle } from '@ark-ui/vue/toggle';
   import { useRouter } from 'vue-router';
   import { Search, X } from 'lucide-vue-next';
   import CreatePlaylistDialog from '../dialogs/create-playlist/CreatePlaylistDialog.vue';
   import SongListBulkActions from './SongListBulkActions.vue';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
-  import SongListOptionsMenu from './SongListOptionsMenu.vue';
   import SongListPlaylistPanel from './SongListPlaylistPanel.vue';
   import SongListSourceSwitch from './SongListSourceSwitch.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
@@ -41,10 +41,10 @@
   const { viewMode, sourceMode, searchQuery, selectedChordFilters, selectedCategoryFilters } =
     storeToRefs(store);
 
-  const isOptionsMenuOpen = ref(false);
   const isGlobalFiltersDrawerOpen = ref(false);
   const hasSubmittedGlobalSearch = ref(false);
   const submittedGlobalSearchQuery = ref('');
+  const chordFilterQuery = ref('');
 
   watch(
     () => props.externalSearch,
@@ -132,6 +132,7 @@
 
   const availableChords = computed(() => STATIC_CHORD_FILTER_LIST);
   const normalizeChord = (value: string): string => value.trim().toLocaleLowerCase('cs');
+  const normalizedChordFilterQuery = computed(() => normalizeChord(chordFilterQuery.value));
   const selectedChordLookup = computed(
     () => new Set(selectedChordFilters.value.map(normalizeChord))
   );
@@ -167,6 +168,75 @@
   );
 
   const canSubmitGlobalSearch = computed(() => normalizedSearch.value.length > 0);
+  const COMMON_CHORD_PRIORITY = ['C', 'D', 'E', 'G', 'Em', 'Am', 'A', 'H', 'F', 'Dm', 'Hm', 'Gm'];
+  const MAX_VISIBLE_CHORDS_WITHOUT_SEARCH = 12;
+  const MAX_VISIBLE_CHORDS_WITH_SEARCH = 160;
+
+  const commonChordsAvailable = computed(() => {
+    const availableByNormalized = new Map(
+      availableChords.value.map((chord) => [normalizeChord(chord), chord])
+    );
+
+    return COMMON_CHORD_PRIORITY.map((chord) => availableByNormalized.get(normalizeChord(chord)))
+      .filter((chord): chord is string => chord !== undefined);
+  });
+
+  const filteredChordOptions = computed(() => {
+    const selectedLookup = selectedChordLookup.value;
+    const query = normalizedChordFilterQuery.value;
+
+    if (query.length > 0) {
+      return availableChords.value
+        .filter((chord) => normalizeChord(chord).includes(query))
+        .slice(0, MAX_VISIBLE_CHORDS_WITH_SEARCH);
+    }
+
+    const selectedChords = availableChords.value.filter((chord) =>
+      selectedLookup.has(normalizeChord(chord))
+    );
+
+    const selectedChordNormalizedSet = new Set(selectedChords.map((chord) => normalizeChord(chord)));
+    const prioritizedCommonChords = commonChordsAvailable.value.filter(
+      (chord) => !selectedChordNormalizedSet.has(normalizeChord(chord))
+    );
+
+    if (selectedChords.length >= MAX_VISIBLE_CHORDS_WITHOUT_SEARCH) {
+      return selectedChords;
+    }
+
+    const commonSlots = Math.max(0, MAX_VISIBLE_CHORDS_WITHOUT_SEARCH - selectedChords.length);
+    const commonChords = prioritizedCommonChords.slice(0, commonSlots);
+    const commonChordNormalizedSet = new Set(commonChords.map((chord) => normalizeChord(chord)));
+
+    const remainingSlots = Math.max(0, MAX_VISIBLE_CHORDS_WITHOUT_SEARCH - selectedChords.length);
+    const remainingChords = availableChords.value
+      .filter((chord) => {
+        const normalizedChord = normalizeChord(chord);
+
+        return (
+          !selectedLookup.has(normalizedChord) &&
+          !commonChordNormalizedSet.has(normalizedChord) &&
+          !selectedChordNormalizedSet.has(normalizedChord)
+        );
+      })
+      .slice(0, Math.max(0, remainingSlots - commonChords.length));
+
+    return [...selectedChords, ...commonChords, ...remainingChords];
+  });
+
+  const totalMatchingChordCount = computed(() => {
+    const query = normalizedChordFilterQuery.value;
+
+    if (query.length === 0) {
+      return availableChords.value.length;
+    }
+
+    return availableChords.value.filter((chord) => normalizeChord(chord).includes(query)).length;
+  });
+
+  const hasHiddenChordResults = computed(
+    () => totalMatchingChordCount.value > filteredChordOptions.value.length
+  );
 
   const {
     isPlaylistMode,
@@ -376,10 +446,6 @@
     viewMode.value = nextViewMode;
   };
 
-  const handleRefresh = async () => {
-    await refresh();
-  };
-
   const clearSearch = (): void => {
     searchQuery.value = '';
     hasSubmittedGlobalSearch.value = false;
@@ -405,6 +471,20 @@
     isGlobalFiltersDrawerOpen.value = false;
   };
 
+  const handleGlobalEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && isGlobalFiltersDrawerOpen.value) {
+      closeGlobalFiltersDrawer();
+    }
+  };
+
+  onMounted(() => {
+    window.addEventListener('keydown', handleGlobalEscape);
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleGlobalEscape);
+  });
+
   const toggleCategoryFilter = (categoryId: string) => {
     store.toggleCategoryFilter(categoryId);
   };
@@ -429,29 +509,33 @@
     :class="{ 'song-list--drawer-open': isGlobalFiltersDrawerOpen }"
   >
     <header class="song-list__header">
-      <h1 class="song-list__title">Seznam písní</h1>
-
       <SongListSourceSwitch
         :source-mode="sourceMode"
         @set-source-mode="setSourceMode"
       />
 
-      <SongListOptionsMenu
-        v-model:open="isOptionsMenuOpen"
-        :view-mode="viewMode"
-        :available-chords="availableChords"
-        :song-categories="songCategories"
-        :selected-chord-filters="selectedChordFilters"
-        :selected-category-filters="selectedCategoryFilters"
-        :selected-category-labels="selectedCategoryLabels"
-        :is-refreshing="isRefreshing"
-        @set-view-mode="setViewMode"
-        @set-chord-filters="store.setChordFilters"
-        @clear-chord-filters="clearChordFilters"
-        @set-category-filters="store.setCategoryFilters"
-        @clear-category-filters="clearCategoryFilters"
-        @refresh="handleRefresh"
-      />
+      <div
+        class="song-list__view-switch"
+        role="group"
+        aria-label="Režim zobrazení seznamu písní"
+      >
+        <button
+          type="button"
+          class="song-list__view-switch-button"
+          :class="{ 'song-list__view-switch-button--active': viewMode === 'tree' }"
+          @click="setViewMode('tree')"
+        >
+          Strom
+        </button>
+        <button
+          type="button"
+          class="song-list__view-switch-button"
+          :class="{ 'song-list__view-switch-button--active': viewMode === 'flat' }"
+          @click="setViewMode('flat')"
+        >
+          Plochý seznam
+        </button>
+      </div>
     </header>
 
     <SongListPlaylistPanel
@@ -661,37 +745,71 @@
             v-else
             class="song-list__drawer-filter-grid"
           >
-            <label
+            <Toggle.Root
               v-for="category in songCategories"
               :key="category.id"
-              class="song-list__drawer-option"
+              class="song-list__drawer-toggle-option"
+              :pressed="selectedCategoryLookup.has(category.id)"
+              @pressed-change="toggleCategoryFilter(category.id)"
             >
-              <input
-                type="checkbox"
-                :checked="selectedCategoryLookup.has(category.id)"
-                @change="toggleCategoryFilter(category.id)"
-              />
               <span>{{ category.value }}</span>
-            </label>
+            </Toggle.Root>
           </div>
         </section>
 
         <section class="song-list__drawer-section">
           <h3 class="song-list__drawer-section-title">Akordy</h3>
-          <div class="song-list__drawer-filter-grid song-list__drawer-filter-grid--compact">
-            <label
-              v-for="chord in availableChords"
-              :key="chord"
-              class="song-list__drawer-option"
+          <div class="song-list__drawer-search-row">
+            <input
+              v-model="chordFilterQuery"
+              class="song-list__drawer-search-input"
+              type="search"
+              placeholder="Najít akord..."
+              aria-label="Najít akord"
+            />
+            <button
+              v-if="chordFilterQuery.length > 0"
+              type="button"
+              class="song-list__drawer-search-clear"
+              @click="chordFilterQuery = ''"
             >
-              <input
-                type="checkbox"
-                :checked="selectedChordLookup.has(normalizeChord(chord))"
-                @change="toggleChordFilter(chord)"
-              />
-              <span>{{ chord }}</span>
-            </label>
+              Vymazat
+            </button>
           </div>
+
+          <p
+            v-if="chordFilterQuery.length === 0"
+            class="song-list__drawer-help"
+          >
+            Zobrazené jsou nejčastější akordy. Další najdeš přes hledání.
+          </p>
+
+          <div class="song-list__drawer-filter-grid song-list__drawer-filter-grid--compact">
+            <Toggle.Root
+              v-for="chord in filteredChordOptions"
+              :key="chord"
+              class="song-list__drawer-toggle-option"
+              :pressed="selectedChordLookup.has(normalizeChord(chord))"
+              @pressed-change="toggleChordFilter(chord)"
+            >
+              <span>{{ chord }}</span>
+            </Toggle.Root>
+          </div>
+
+          <p
+            v-if="hasHiddenChordResults"
+            class="song-list__drawer-help"
+          >
+            Zobrazeno {{ filteredChordOptions.length }} z {{ totalMatchingChordCount }} akordů.
+            Upřesni hledání.
+          </p>
+
+          <p
+            v-if="chordFilterQuery.length > 0 && filteredChordOptions.length === 0"
+            class="song-list__drawer-empty"
+          >
+            Žádný akord neodpovídá hledání.
+          </p>
         </section>
       </div>
 
@@ -732,6 +850,28 @@
     gap: var(--space-sm);
     align-items: center;
     justify-content: space-between;
+  }
+
+  .song-list__view-switch {
+    display: inline-flex;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .song-list__view-switch-button {
+    border: none;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .song-list__view-switch-button--active {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-secondary));
   }
 
   .song-list__global-toolbar {
@@ -814,11 +954,6 @@
   .song-list__search-submit:disabled {
     opacity: 0.6;
     cursor: default;
-  }
-
-  .song-list__title {
-    font-size: clamp(1.35rem, 1.2rem + 1vw, 1.8rem);
-    letter-spacing: 0.02em;
   }
 
   .song-list__search-wrapper {
@@ -994,7 +1129,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .song-list__drawer-option {
+  .song-list__drawer-toggle-option {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1002,11 +1137,48 @@
     border-radius: var(--radius-sm);
     padding: 6px 8px;
     background: color-mix(in srgb, var(--bg-secondary) 75%, var(--bg-primary));
+    color: var(--text-primary);
+    font: inherit;
+    text-align: left;
     cursor: pointer;
   }
 
-  .song-list__drawer-option input {
-    accent-color: var(--accent);
+  .song-list__drawer-toggle-option[data-state='on'] {
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--bg-tertiary));
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-primary));
+  }
+
+  .song-list__drawer-search-row {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+  }
+
+  .song-list__drawer-search-input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font: inherit;
+  }
+
+  .song-list__drawer-search-clear {
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    padding: 8px 10px;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .song-list__drawer-help {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
   }
 
   .song-list__drawer-footer {

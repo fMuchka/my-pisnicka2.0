@@ -153,7 +153,7 @@ vi.mock('../tree-view/SongListTreeView.vue', () => ({
   }),
 }));
 
-// Polyfill ResizeObserver for jsdom (needed by Ark UI menu positioning)
+// Keep ResizeObserver polyfill available for compatibility with UI primitives in tests.
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {
     observe() {}
@@ -219,17 +219,17 @@ describe('SongList', () => {
     mockRemoveSongFromPlaylist.mockResolvedValue(undefined);
   });
 
-  it('renders section with title', () => {
+  it('does not render legacy song list heading', () => {
     render(SongList);
 
-    expect(screen.getByText('Seznam písní')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Seznam písní' })).not.toBeInTheDocument();
   });
 
   it('renders source switch for playlists and global songs', () => {
     render(SongList);
 
     expect(screen.getByRole('button', { name: 'Playlisty' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Globální písně' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Všechny písně' })).toBeInTheDocument();
   });
 
   it('loads user playlists in playlist mode', async () => {
@@ -292,7 +292,7 @@ describe('SongList', () => {
       expect(screen.getByTestId('playlist-select-trigger')).toHaveTextContent('Moje pecky');
     });
 
-    await user.click(screen.getByRole('button', { name: 'Globální písně' }));
+    await user.click(screen.getByRole('button', { name: 'Všechny písně' }));
 
     await submitGlobalSearch(user, 'Song');
 
@@ -344,10 +344,11 @@ describe('SongList', () => {
     });
   });
 
-  it('renders options trigger button', () => {
+  it('renders direct view mode controls', () => {
     render(SongList);
 
-    expect(screen.getByRole('button', { name: 'Možnosti seznamu písní' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Strom' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Plochý seznam' })).toBeInTheDocument();
   });
 
   it('renders search input for title and artist filtering', () => {
@@ -376,7 +377,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     const treeButton = screen.getByRole('button', { name: 'Strom' });
     await user.click(treeButton);
 
@@ -392,7 +392,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Strom' }));
     expect(screen.getByTestId('tree-view')).toBeInTheDocument();
 
@@ -408,26 +407,11 @@ describe('SongList', () => {
     expect(screen.getByText('Zadej hledání a potvrď tlačítkem Hledat.')).toBeInTheDocument();
   });
 
-  it('passes correct aria-label to view mode group in options menu', async () => {
-    const user = userEvent.setup();
+  it('passes correct aria-label to view mode group', () => {
     render(SongList);
-
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
 
     const viewModeGroup = screen.getByLabelText('Režim zobrazení seznamu písní');
     expect(viewModeGroup).toBeInTheDocument();
-  });
-
-  it('closes options menu when trigger is clicked again', async () => {
-    const user = userEvent.setup();
-    render(SongList);
-
-    const optionsTrigger = screen.getByRole('button', { name: 'Možnosti seznamu písní' });
-    await user.click(optionsTrigger);
-    expect(screen.getByRole('menu')).toHaveAttribute('data-state', 'open');
-
-    await user.click(optionsTrigger);
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('passes correct props to flat view component', async () => {
@@ -438,7 +422,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
 
     expect(screen.getByTestId('flat-view-count')).toHaveTextContent('2 songs');
@@ -453,7 +436,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Strom' }));
 
     expect(screen.getByTestId('tree-view-count')).toHaveTextContent('2 songs');
@@ -600,7 +582,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
@@ -617,7 +598,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
@@ -634,7 +614,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     await user.click(screen.getByTestId('flat-view-click-first'));
 
@@ -677,7 +656,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
 
     // The component sorts by artist then title
@@ -714,7 +692,6 @@ describe('SongList', () => {
 
     await submitGlobalSearch(user, 'Song');
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
 
     expect(screen.queryByText('Zadej hledání a potvrď tlačítkem Hledat.')).not.toBeInTheDocument();
@@ -735,14 +712,12 @@ describe('SongList', () => {
 
     const { unmount } = render(SongList);
     await submitGlobalSearch(user, 'Song');
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
     unmount();
     mockUser.value = { uid: 'owner-1', displayName: 'Owner' };
     render(SongList);
     await submitGlobalSearch(user, 'Song');
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
     await user.click(screen.getByRole('button', { name: 'Plochý seznam' }));
     expect(screen.getByTestId('flat-view-interactive')).toHaveTextContent('true');
   });
@@ -780,7 +755,7 @@ describe('SongList', () => {
 
     render(SongList);
 
-  await submitGlobalSearch(user, 'Song');
+    await submitGlobalSearch(user, 'Song');
 
     store.setChordFilters(['C', 'G', 'Em']);
 
@@ -830,13 +805,12 @@ describe('SongList', () => {
     });
   });
 
-  it('refreshes songs from options menu action', async () => {
+  it('refreshes songs when global search is submitted', async () => {
     const user = userEvent.setup();
 
     render(SongList);
 
-    await user.click(screen.getByRole('button', { name: 'Možnosti seznamu písní' }));
-    await user.click(screen.getByRole('button', { name: 'Načíst písně' }));
+    await submitGlobalSearch(user, 'Song');
 
     expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
@@ -870,7 +844,7 @@ describe('SongList', () => {
 
     render(SongList);
 
-  await submitGlobalSearch(user, 'Song');
+    await submitGlobalSearch(user, 'Song');
 
     store.setCategoryFilters(['cat-cz', 'cat-camp']);
 

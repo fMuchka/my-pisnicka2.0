@@ -31,7 +31,7 @@
       :class="{ 'song-list__source-button--active': sourceMode === 'global' }"
       @click="emit('set-source-mode', 'global')"
     >
-      Globální písně
+      Všechny písně
     </button>
   </div>
 </template>
