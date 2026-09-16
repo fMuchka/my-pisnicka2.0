@@ -16,7 +16,7 @@ type PlaylistScope = 'mine' | 'public' | 'host';
 type PlaylistCreateInput = { name: string; visibility: PlaylistVisibility };
 
 interface UseSongListPlaylistsParams {
-  sourceMode: Ref<'global' | 'playlists'>;
+  sourceMode: Ref<'songs' | 'playlists'>;
   sessionHostId: Ref<string>;
   currentUserId: Ref<string>;
   userSongs: Ref<Song[]>;
@@ -165,7 +165,7 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
       playlists.value.some((playlist) => playlist.id === selectedPlaylistId.value);
 
     if (!hasSelected) {
-      selectedPlaylistId.value = playlists.value[0]?.id ?? null;
+      selectedPlaylistId.value = null;
     }
   };
 
@@ -349,7 +349,7 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
     playlistScope.value = scope;
   };
 
-  const setSelectedPlaylist = (playlistId: string) => {
+  const setSelectedPlaylist = (playlistId: string | null) => {
     selectedPlaylistId.value = playlistId;
   };
 

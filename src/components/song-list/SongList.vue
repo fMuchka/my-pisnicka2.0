@@ -7,6 +7,7 @@
   import SongListBulkActions from './SongListBulkActions.vue';
   import SongListFlatView from './flat-view/SongListFlatView.vue';
   import SongListPlaylistPanel from './SongListPlaylistPanel.vue';
+  import SongListSongsModeSwitch from './SongListSongsModeSwitch.vue';
   import SongListSourceSwitch from './SongListSourceSwitch.vue';
   import SongListTreeView from './tree-view/SongListTreeView.vue';
   import { useSongListPlaylists } from '../../composables/useSongListPlaylists';
@@ -38,8 +39,14 @@
 
   const { userSongs, songCategories, isRefreshing, refresh } = useSongListData();
   const store = songListStore();
-  const { viewMode, sourceMode, searchQuery, selectedChordFilters, selectedCategoryFilters } =
-    storeToRefs(store);
+  const {
+    viewMode,
+    sourceMode,
+    songsMode,
+    searchQuery,
+    selectedChordFilters,
+    selectedCategoryFilters,
+  } = storeToRefs(store);
 
   const isGlobalFiltersDrawerOpen = ref(false);
   const hasSubmittedGlobalSearch = ref(false);
@@ -58,6 +65,12 @@
 
   const sessionHostId = computed(() => props.sessionHostId?.trim() ?? '');
   const currentUserId = computed(() => user.value?.uid ?? '');
+
+  const isSearchMode = computed(() => sourceMode.value === 'songs' && songsMode.value === 'search');
+  const isMineMode = computed(() => sourceMode.value === 'songs' && songsMode.value === 'mine');
+  const myOwnedSongs = computed(() =>
+    userSongs.value.filter((song) => song.ownerId === currentUserId.value)
+  );
 
   const byArtistThenTitle = (a: Song, b: Song): number => {
     return (
@@ -139,12 +152,17 @@
   );
   const selectedCategoryLookup = computed(() => new Set(selectedCategoryFilters.value));
 
-  const hasActiveFilters = computed(
-    () =>
-      normalizedSearch.value.length > 0 ||
+  const hasActiveFilters = computed(() => {
+    const query = isSearchMode.value
+      ? normalizedSubmittedGlobalSearch.value
+      : normalizedSearch.value;
+
+    return (
+      query.length > 0 ||
       selectedChordFilters.value.length > 0 ||
       selectedCategoryFilters.value.length > 0
-  );
+    );
+  });
 
   const categoryNameById = computed(
     () => new Map(songCategories.value.map((category) => [category.id, category.value]))
@@ -180,8 +198,9 @@
       availableChords.value.map((chord) => [normalizeChord(chord), chord])
     );
 
-    return COMMON_CHORD_PRIORITY.map((chord) => availableByNormalized.get(normalizeChord(chord)))
-      .filter((chord): chord is string => chord !== undefined);
+    return COMMON_CHORD_PRIORITY.map((chord) =>
+      availableByNormalized.get(normalizeChord(chord))
+    ).filter((chord): chord is string => chord !== undefined);
   });
 
   const filteredChordOptions = computed(() => {
@@ -198,7 +217,9 @@
       selectedLookup.has(normalizeChord(chord))
     );
 
-    const selectedChordNormalizedSet = new Set(selectedChords.map((chord) => normalizeChord(chord)));
+    const selectedChordNormalizedSet = new Set(
+      selectedChords.map((chord) => normalizeChord(chord))
+    );
     const prioritizedCommonChords = commonChordsAvailable.value.filter(
       (chord) => !selectedChordNormalizedSet.has(normalizeChord(chord))
     );
@@ -243,7 +264,7 @@
 
   const isGlobalFilterOnlySearch = computed(
     () =>
-      sourceMode.value === 'global' &&
+      isSearchMode.value &&
       hasSubmittedGlobalSearch.value &&
       normalizedSubmittedGlobalSearch.value.length === 0 &&
       hasSelectedFilters.value
@@ -264,7 +285,6 @@
     selectedPlaylistId,
     selectedPlaylistSongs,
     selectedGlobalSongIds,
-    selectedPlaylistSongIds,
     isPlaylistLoading,
     isPlaylistSongLoading,
     isCreatingPlaylist,
@@ -273,7 +293,6 @@
     canCreatePlaylist,
     canEditSelectedPlaylist,
     canAddSongToPlaylist,
-    canRemoveSongsFromPlaylist,
     createNewPlaylist,
     addSongToSelectedPlaylist,
     removeSongFromSelectedPlaylist,
@@ -293,19 +312,21 @@
   });
 
   const filteredSongs = computed(() => {
+    if (sourceMode.value === 'playlists') {
+      return [];
+    }
+
     if (
-      sourceMode.value === 'global' &&
+      isSearchMode.value &&
       (!hasSubmittedGlobalSearch.value || !hasSubmittedGlobalCriteria.value)
     ) {
       return [];
     }
 
-    const sourceSongs =
-      sourceMode.value === 'global' ? userSongs.value : selectedPlaylistSongs.value;
-    const query =
-      sourceMode.value === 'global'
-        ? normalizedSubmittedGlobalSearch.value
-        : normalizedSearch.value;
+    const sourceSongs = isMineMode.value ? myOwnedSongs.value : userSongs.value;
+    const query = isSearchMode.value
+      ? normalizedSubmittedGlobalSearch.value
+      : normalizedSearch.value;
     const selectedChords = selectedChordLookup.value;
     const selectedCategoryIds = new Set(selectedCategoryFilters.value);
 
@@ -379,104 +400,78 @@
     }
   });
 
-  const setSourceMode = (mode: 'global' | 'playlists') => {
+  const setSourceMode = (mode: 'songs' | 'playlists') => {
     sourceMode.value = mode;
     globalPage.value = 1;
 
-    if (mode !== 'global') {
+    if (mode !== 'songs' || songsMode.value !== 'search') {
+      isGlobalFiltersDrawerOpen.value = false;
+    }
+  };
+
+  const setSongsMode = (mode: 'mine' | 'search') => {
+    songsMode.value = mode;
+    globalPage.value = 1;
+
+    if (mode !== 'search') {
       isGlobalFiltersDrawerOpen.value = false;
     }
   };
 
   const showPlaylistSelectionMode = computed(
-    () => viewMode.value === 'tree' && canEditSelectedPlaylist.value
+    () => sourceMode.value === 'songs' && viewMode.value === 'tree' && canEditSelectedPlaylist.value
   );
 
-  const selectedSongIdsForTree = computed(() => {
-    if (!showPlaylistSelectionMode.value) {
-      return [];
-    }
+  const selectedSongIdsForTree = computed(() =>
+    showPlaylistSelectionMode.value ? selectedGlobalSongIds.value : []
+  );
 
-    return sourceMode.value === 'global'
-      ? selectedGlobalSongIds.value
-      : selectedPlaylistSongIds.value;
-  });
+  const bulkActionLabel = computed(() =>
+    selectedPlaylist.value
+      ? `Přidat vybrané do ${selectedPlaylist.value.name}`
+      : 'Přidat vybrané do playlistu'
+  );
 
-  const bulkActionLabel = computed(() => {
-    if (sourceMode.value === 'global') {
-      return selectedPlaylist.value
-        ? `Přidat vybrané do ${selectedPlaylist.value.name}`
-        : 'Přidat vybrané do playlistu';
-    }
-
-    return 'Odebrat vybrané z playlistu';
-  });
-
-  const bulkActionSummary = computed(() => {
-    if (sourceMode.value === 'global') {
-      return selectedPlaylist.value
-        ? `Globální písně pro playlist ${selectedPlaylist.value.name}`
-        : 'Globální písně';
-    }
-
-    return selectedPlaylist.value
-      ? `Písně v playlistu ${selectedPlaylist.value.name}`
-      : 'Písně v playlistu';
-  });
+  const bulkActionSummary = computed(() =>
+    selectedPlaylist.value ? `Písně pro playlist ${selectedPlaylist.value.name}` : 'Vybrané písně'
+  );
 
   const handleTreeSongSelectionToggle = (song: Song) => {
     if (!showPlaylistSelectionMode.value) {
       return;
     }
 
-    if (sourceMode.value === 'global') {
-      toggleGlobalSongSelection(song.id);
-      return;
-    }
-
-    togglePlaylistSongSelection(song.id);
+    toggleGlobalSongSelection(song.id);
   };
 
   const handleBulkAction = async () => {
-    if (sourceMode.value === 'global') {
-      await addSongToSelectedPlaylist();
-      return;
-    }
-
-    await removeSongFromSelectedPlaylist();
+    await addSongToSelectedPlaylist();
   };
 
   const clearTreeSelection = () => {
-    if (sourceMode.value === 'global') {
-      clearGlobalSongSelection();
-      return;
-    }
+    clearGlobalSongSelection();
+  };
 
+  const togglePlaylistExpansion = (playlistId: string) => {
+    setSelectedPlaylist(selectedPlaylistId.value === playlistId ? null : playlistId);
+  };
+
+  const handleRemoveSongFromPlaylist = async (songId: string) => {
     clearPlaylistSongSelection();
+    togglePlaylistSongSelection(songId);
+    await removeSongFromSelectedPlaylist();
   };
 
   const emptyMessage = computed(() => {
     if (
-      sourceMode.value === 'global' &&
+      isSearchMode.value &&
       (!hasSubmittedGlobalSearch.value || !hasSubmittedGlobalCriteria.value)
     ) {
       return 'Zadej hledání a potvrď tlačítkem Hledat.';
     }
 
-    if (sourceMode.value === 'playlists' && playlists.value.length === 0) {
-      if (isSessionGuestView.value) {
-        return 'Host zatím nemá žádný veřejný playlist.';
-      }
-
-      if (playlistScope.value === 'public') {
-        return 'Zatím nejsou dostupné veřejné playlisty.';
-      }
-
-      return 'Zatím nemáš žádný playlist.';
-    }
-
-    if (sourceMode.value === 'playlists' && selectedPlaylist.value == null) {
-      return 'Vyber playlist.';
+    if (isMineMode.value && myOwnedSongs.value.length === 0) {
+      return 'Zatím jsi nevytvořil žádnou píseň.';
     }
 
     return hasActiveFilters.value
@@ -507,7 +502,7 @@
   };
 
   const submitGlobalSearch = async () => {
-    if (sourceMode.value !== 'global' || !canSubmitGlobalSearch.value) {
+    if (!isSearchMode.value || !canSubmitGlobalSearch.value) {
       return;
     }
 
@@ -590,7 +585,14 @@
         @set-source-mode="setSourceMode"
       />
 
+      <SongListSongsModeSwitch
+        v-if="sourceMode === 'songs'"
+        :songs-mode="songsMode"
+        @set-songs-mode="setSongsMode"
+      />
+
       <div
+        v-if="sourceMode === 'songs'"
         class="song-list__view-switch"
         role="group"
         aria-label="Režim zobrazení seznamu písní"
@@ -624,10 +626,15 @@
       :playlists="playlists"
       :playlist-song-counts="playlistSongCounts"
       :selected-playlist-id="selectedPlaylistId"
+      :selected-playlist-songs="selectedPlaylistSongs"
+      :can-edit-selected-playlist="canEditSelectedPlaylist"
       :is-playlist-song-loading="isPlaylistSongLoading"
+      :is-updating-playlist="isBulkUpdatingPlaylist"
       @set-playlist-scope="setPlaylistScope"
       @open-create-playlist-dialog="openCreatePlaylistDialog"
-      @set-selected-playlist="setSelectedPlaylist"
+      @toggle-playlist="togglePlaylistExpansion"
+      @remove-song="handleRemoveSongFromPlaylist"
+      @song-click="handleSongClick"
     />
 
     <CreatePlaylistDialog
@@ -637,22 +644,100 @@
       @create="createNewPlaylist"
     />
 
-    <div
-      v-if="sourceMode === 'global'"
-      class="song-list__global-toolbar"
-    >
-      <div class="song-list__search-wrapper song-list__search-wrapper--global">
+    <template v-if="sourceMode === 'songs'">
+      <div
+        v-if="isSearchMode"
+        class="song-list__global-toolbar"
+      >
+        <div class="song-list__search-wrapper song-list__search-wrapper--global">
+          <Search
+            class="song-list__search-icon"
+            :size="16"
+          />
+          <input
+            v-model="searchQuery"
+            class="song-list__search-input song-list__search-input--global"
+            type="search"
+            placeholder="Hledat podle názvu nebo interpreta…"
+            aria-label="Hledat písně podle názvu nebo interpreta"
+            @keydown.enter.prevent="submitGlobalSearch"
+          />
+          <button
+            v-if="shouldShowSearchClear"
+            type="button"
+            class="song-list__search-clear"
+            aria-label="Vymazat hledání"
+            @click="clearSearch"
+          >
+            <X :size="14" />
+          </button>
+        </div>
+
+        <div class="song-list__global-toolbar-row">
+          <div class="song-list__active-filter-chips">
+            <span
+              v-for="chord in selectedChordFilters"
+              :key="`selected-chord-${chord}`"
+              class="song-list__chip"
+            >
+              {{ chord }}
+            </span>
+
+            <span
+              v-for="categoryLabel in selectedCategoryLabels"
+              :key="`selected-category-${categoryLabel}`"
+              class="song-list__chip"
+            >
+              {{ categoryLabel }}
+            </span>
+
+            <button
+              v-if="hasSelectedFilters"
+              type="button"
+              class="song-list__chip song-list__chip--muted song-list__chip--button"
+              @click="clearAllFilters"
+            >
+              Vyčistit filtry
+            </button>
+          </div>
+
+          <div class="song-list__global-toolbar-actions">
+            <button
+              type="button"
+              class="song-list__search-submit"
+              :disabled="!canSubmitGlobalSearch || isRefreshing"
+              @click="submitGlobalSearch"
+            >
+              Hledat
+            </button>
+
+            <button
+              type="button"
+              class="song-list__drawer-toggle"
+              :aria-expanded="isGlobalFiltersDrawerOpen"
+              aria-controls="song-list-global-filters"
+              @click="openGlobalFiltersDrawer"
+            >
+              Filtry ({{ activeFilterCount }})
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-else
+        class="song-list__search-wrapper"
+      >
         <Search
           class="song-list__search-icon"
           :size="16"
         />
         <input
           v-model="searchQuery"
-          class="song-list__search-input song-list__search-input--global"
+          class="song-list__search-input"
           type="search"
           placeholder="Hledat podle názvu nebo interpreta…"
           aria-label="Hledat písně podle názvu nebo interpreta"
-          @keydown.enter.prevent="submitGlobalSearch"
         />
         <button
           v-if="shouldShowSearchClear"
@@ -665,276 +750,198 @@
         </button>
       </div>
 
-      <div class="song-list__global-toolbar-row">
-        <div class="song-list__active-filter-chips">
-          <span
-            v-for="chord in selectedChordFilters"
-            :key="`selected-chord-${chord}`"
-            class="song-list__chip"
-          >
-            {{ chord }}
-          </span>
-
-          <span
-            v-for="categoryLabel in selectedCategoryLabels"
-            :key="`selected-category-${categoryLabel}`"
-            class="song-list__chip"
-          >
-            {{ categoryLabel }}
-          </span>
-
-          <button
-            v-if="hasSelectedFilters"
-            type="button"
-            class="song-list__chip song-list__chip--muted song-list__chip--button"
-            @click="clearAllFilters"
-          >
-            Vyčistit filtry
-          </button>
-        </div>
-
-        <div class="song-list__global-toolbar-actions">
-          <button
-            type="button"
-            class="song-list__search-submit"
-            :disabled="!canSubmitGlobalSearch || isRefreshing"
-            @click="submitGlobalSearch"
-          >
-            Hledat
-          </button>
-
-          <button
-            type="button"
-            class="song-list__drawer-toggle"
-            :aria-expanded="isGlobalFiltersDrawerOpen"
-            aria-controls="song-list-global-filters"
-            @click="openGlobalFiltersDrawer"
-          >
-            Filtry ({{ activeFilterCount }})
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-else
-      class="song-list__search-wrapper"
-    >
-      <Search
-        class="song-list__search-icon"
-        :size="16"
+      <SongListBulkActions
+        v-if="showPlaylistSelectionMode"
+        :label="bulkActionSummary"
+        :selected-count="selectedSongIdsForTree.length"
+        :primary-action-label="bulkActionLabel"
+        :primary-action-disabled="!canAddSongToPlaylist"
+        :is-busy="isBulkUpdatingPlaylist"
+        @primary-action="handleBulkAction"
+        @clear-selection="clearTreeSelection"
       />
-      <input
-        v-model="searchQuery"
-        class="song-list__search-input"
-        type="search"
-        placeholder="Hledat podle názvu nebo interpreta…"
-        aria-label="Hledat písně podle názvu nebo interpreta"
-      />
-      <button
-        v-if="shouldShowSearchClear"
-        type="button"
-        class="song-list__search-clear"
-        aria-label="Vymazat hledání"
-        @click="clearSearch"
+
+      <p
+        v-if="filteredSongs.length === 0"
+        class="song-list__empty"
       >
-        <X :size="14" />
-      </button>
-    </div>
-
-    <SongListBulkActions
-      v-if="showPlaylistSelectionMode"
-      :label="bulkActionSummary"
-      :selected-count="selectedSongIdsForTree.length"
-      :primary-action-label="bulkActionLabel"
-      :primary-action-disabled="
-        sourceMode === 'global' ? !canAddSongToPlaylist : !canRemoveSongsFromPlaylist
-      "
-      :is-busy="isBulkUpdatingPlaylist"
-      @primary-action="handleBulkAction"
-      @clear-selection="clearTreeSelection"
-    />
-
-    <p
-      v-if="filteredSongs.length === 0"
-      class="song-list__empty"
-    >
-      {{ emptyMessage }}
-    </p>
-
-    <SongListFlatView
-      v-if="pagedSongs.length > 0 && viewMode === 'flat'"
-      :songs="pagedSongs"
-      :on-song-click="handleSongClick"
-      :is-interactive="canOpenSongs"
-    />
-
-    <SongListTreeView
-      v-if="pagedSongs.length > 0 && viewMode !== 'flat'"
-      :songs="pagedSongs"
-      artists-label="Interpreti"
-      :auto-expand-on-filter="normalizedSearch.length > 0"
-      :on-song-click="handleSongClick"
-      :is-interactive="canOpenSongs"
-      :selection-mode="showPlaylistSelectionMode"
-      :selected-song-ids="selectedSongIdsForTree"
-      :on-toggle-song-selection="handleTreeSongSelectionToggle"
-    />
-
-    <nav
-      v-if="isGlobalFilterOnlySearch && filteredSongs.length > 0 && globalTotalPages > 1"
-      class="song-list__pagination"
-      aria-label="Stránkování výsledků"
-    >
-      <button
-        type="button"
-        class="song-list__pagination-button"
-        :disabled="globalPage <= 1"
-        @click="changeGlobalPage(globalPage - 1)"
-      >
-        Předchozí
-      </button>
-
-      <p class="song-list__pagination-status">
-        Stránka {{ globalPage }} z {{ globalTotalPages }}
+        {{ emptyMessage }}
       </p>
 
-      <button
-        type="button"
-        class="song-list__pagination-button"
-        :disabled="globalPage >= globalTotalPages"
-        @click="changeGlobalPage(globalPage + 1)"
+      <SongListFlatView
+        v-if="pagedSongs.length > 0 && viewMode === 'flat'"
+        :songs="pagedSongs"
+        :on-song-click="handleSongClick"
+        :is-interactive="canOpenSongs"
+      />
+
+      <SongListTreeView
+        v-if="pagedSongs.length > 0 && viewMode !== 'flat'"
+        :songs="pagedSongs"
+        artists-label="Interpreti"
+        :auto-expand-on-filter="normalizedSearch.length > 0"
+        :on-song-click="handleSongClick"
+        :is-interactive="canOpenSongs"
+        :selection-mode="showPlaylistSelectionMode"
+        :selected-song-ids="selectedSongIdsForTree"
+        :on-toggle-song-selection="handleTreeSongSelectionToggle"
+      />
+
+      <nav
+        v-if="isGlobalFilterOnlySearch && filteredSongs.length > 0 && globalTotalPages > 1"
+        class="song-list__pagination"
+        aria-label="Stránkování výsledků"
       >
-        Další
-      </button>
-    </nav>
-
-    <button
-      v-if="sourceMode === 'global' && isGlobalFiltersDrawerOpen"
-      type="button"
-      class="song-list__drawer-backdrop"
-      aria-label="Zavřít filtr písní"
-      @click="closeGlobalFiltersDrawer"
-    />
-
-    <aside
-      v-if="sourceMode === 'global'"
-      id="song-list-global-filters"
-      class="song-list__drawer"
-      :class="{ 'song-list__drawer--open': isGlobalFiltersDrawerOpen }"
-      :aria-hidden="!isGlobalFiltersDrawerOpen"
-    >
-      <header class="song-list__drawer-header">
-        <h2 class="song-list__drawer-title">Filtry</h2>
         <button
           type="button"
-          class="song-list__drawer-close"
-          aria-label="Zavřít filtr písní"
-          @click="closeGlobalFiltersDrawer"
+          class="song-list__pagination-button"
+          :disabled="globalPage <= 1"
+          @click="changeGlobalPage(globalPage - 1)"
         >
-          ×
+          Předchozí
         </button>
-      </header>
 
-      <div class="song-list__drawer-content">
-        <section class="song-list__drawer-section">
-          <h3 class="song-list__drawer-section-title">Kategorie</h3>
-          <p
-            v-if="songCategories.length === 0"
-            class="song-list__drawer-empty"
-          >
-            Kategorie nejsou dostupné.
-          </p>
-          <div
-            v-else
-            class="song-list__drawer-filter-grid"
-          >
-            <Toggle.Root
-              v-for="category in songCategories"
-              :key="category.id"
-              class="song-list__drawer-toggle-option"
-              :pressed="selectedCategoryLookup.has(category.id)"
-              @pressed-change="toggleCategoryFilter(category.id)"
-            >
-              <span>{{ category.value }}</span>
-            </Toggle.Root>
-          </div>
-        </section>
+        <p class="song-list__pagination-status">
+          Stránka {{ globalPage }} z {{ globalTotalPages }}
+        </p>
 
-        <section class="song-list__drawer-section">
-          <h3 class="song-list__drawer-section-title">Akordy</h3>
-          <div class="song-list__drawer-search-row">
-            <input
-              v-model="chordFilterQuery"
-              class="song-list__drawer-search-input"
-              type="search"
-              placeholder="Najít akord..."
-              aria-label="Najít akord"
-            />
-            <button
-              v-if="chordFilterQuery.length > 0"
-              type="button"
-              class="song-list__drawer-search-clear"
-              @click="chordFilterQuery = ''"
-            >
-              Vymazat
-            </button>
-          </div>
-
-          <p
-            v-if="chordFilterQuery.length === 0"
-            class="song-list__drawer-help"
-          >
-            Zobrazené jsou nejčastější akordy. Další najdeš přes hledání.
-          </p>
-
-          <div class="song-list__drawer-filter-grid song-list__drawer-filter-grid--compact">
-            <Toggle.Root
-              v-for="chord in filteredChordOptions"
-              :key="chord"
-              class="song-list__drawer-toggle-option"
-              :pressed="selectedChordLookup.has(normalizeChord(chord))"
-              @pressed-change="toggleChordFilter(chord)"
-            >
-              <span>{{ chord }}</span>
-            </Toggle.Root>
-          </div>
-
-          <p
-            v-if="hasHiddenChordResults"
-            class="song-list__drawer-help"
-          >
-            Zobrazeno {{ filteredChordOptions.length }} z {{ totalMatchingChordCount }} akordů.
-            Upřesni hledání.
-          </p>
-
-          <p
-            v-if="chordFilterQuery.length > 0 && filteredChordOptions.length === 0"
-            class="song-list__drawer-empty"
-          >
-            Žádný akord neodpovídá hledání.
-          </p>
-        </section>
-      </div>
-
-      <footer class="song-list__drawer-footer">
         <button
           type="button"
-          class="song-list__drawer-action song-list__drawer-action--secondary"
-          :disabled="!hasSelectedFilters"
-          @click="clearAllFilters"
+          class="song-list__pagination-button"
+          :disabled="globalPage >= globalTotalPages"
+          @click="changeGlobalPage(globalPage + 1)"
         >
-          Vyčistit
+          Další
         </button>
-        <button
-          type="button"
-          class="song-list__drawer-action song-list__drawer-action--primary"
-          @click="closeGlobalFiltersDrawer"
-        >
-          Hotovo
-        </button>
-      </footer>
-    </aside>
+      </nav>
+
+      <button
+        v-if="isSearchMode && isGlobalFiltersDrawerOpen"
+        type="button"
+        class="song-list__drawer-backdrop"
+        aria-label="Zavřít filtr písní"
+        @click="closeGlobalFiltersDrawer"
+      />
+
+      <aside
+        v-if="isSearchMode"
+        id="song-list-global-filters"
+        class="song-list__drawer"
+        :class="{ 'song-list__drawer--open': isGlobalFiltersDrawerOpen }"
+        :aria-hidden="!isGlobalFiltersDrawerOpen"
+      >
+        <header class="song-list__drawer-header">
+          <h2 class="song-list__drawer-title">Filtry</h2>
+          <button
+            type="button"
+            class="song-list__drawer-close"
+            aria-label="Zavřít filtr písní"
+            @click="closeGlobalFiltersDrawer"
+          >
+            ×
+          </button>
+        </header>
+
+        <div class="song-list__drawer-content">
+          <section class="song-list__drawer-section">
+            <h3 class="song-list__drawer-section-title">Kategorie</h3>
+            <p
+              v-if="songCategories.length === 0"
+              class="song-list__drawer-empty"
+            >
+              Kategorie nejsou dostupné.
+            </p>
+            <div
+              v-else
+              class="song-list__drawer-filter-grid"
+            >
+              <Toggle.Root
+                v-for="category in songCategories"
+                :key="category.id"
+                class="song-list__drawer-toggle-option"
+                :pressed="selectedCategoryLookup.has(category.id)"
+                @pressed-change="toggleCategoryFilter(category.id)"
+              >
+                <span>{{ category.value }}</span>
+              </Toggle.Root>
+            </div>
+          </section>
+
+          <section class="song-list__drawer-section">
+            <h3 class="song-list__drawer-section-title">Akordy</h3>
+            <div class="song-list__drawer-search-row">
+              <input
+                v-model="chordFilterQuery"
+                class="song-list__drawer-search-input"
+                type="search"
+                placeholder="Najít akord..."
+                aria-label="Najít akord"
+              />
+              <button
+                v-if="chordFilterQuery.length > 0"
+                type="button"
+                class="song-list__drawer-search-clear"
+                @click="chordFilterQuery = ''"
+              >
+                Vymazat
+              </button>
+            </div>
+
+            <p
+              v-if="chordFilterQuery.length === 0"
+              class="song-list__drawer-help"
+            >
+              Zobrazené jsou nejčastější akordy. Další najdeš přes hledání.
+            </p>
+
+            <div class="song-list__drawer-filter-grid song-list__drawer-filter-grid--compact">
+              <Toggle.Root
+                v-for="chord in filteredChordOptions"
+                :key="chord"
+                class="song-list__drawer-toggle-option"
+                :pressed="selectedChordLookup.has(normalizeChord(chord))"
+                @pressed-change="toggleChordFilter(chord)"
+              >
+                <span>{{ chord }}</span>
+              </Toggle.Root>
+            </div>
+
+            <p
+              v-if="hasHiddenChordResults"
+              class="song-list__drawer-help"
+            >
+              Zobrazeno {{ filteredChordOptions.length }} z {{ totalMatchingChordCount }} akordů.
+              Upřesni hledání.
+            </p>
+
+            <p
+              v-if="chordFilterQuery.length > 0 && filteredChordOptions.length === 0"
+              class="song-list__drawer-empty"
+            >
+              Žádný akord neodpovídá hledání.
+            </p>
+          </section>
+        </div>
+
+        <footer class="song-list__drawer-footer">
+          <button
+            type="button"
+            class="song-list__drawer-action song-list__drawer-action--secondary"
+            :disabled="!hasSelectedFilters"
+            @click="clearAllFilters"
+          >
+            Vyčistit
+          </button>
+          <button
+            type="button"
+            class="song-list__drawer-action song-list__drawer-action--primary"
+            @click="closeGlobalFiltersDrawer"
+          >
+            Hotovo
+          </button>
+        </footer>
+      </aside>
+    </template>
   </section>
 </template>
 

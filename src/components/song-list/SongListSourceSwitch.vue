@@ -1,10 +1,10 @@
 <script setup lang="ts">
   interface Props {
-    sourceMode: 'global' | 'playlists';
+    sourceMode: 'songs' | 'playlists';
   }
 
   interface Emits {
-    (event: 'set-source-mode', value: 'global' | 'playlists'): void;
+    (event: 'set-source-mode', value: 'songs' | 'playlists'): void;
   }
 
   defineProps<Props>();
@@ -15,7 +15,7 @@
   <div
     class="song-list__source-switch"
     role="group"
-    aria-label="Zdroj písní"
+    aria-label="Zobrazení"
   >
     <button
       type="button"
@@ -28,10 +28,10 @@
     <button
       type="button"
       class="song-list__source-button"
-      :class="{ 'song-list__source-button--active': sourceMode === 'global' }"
-      @click="emit('set-source-mode', 'global')"
+      :class="{ 'song-list__source-button--active': sourceMode === 'songs' }"
+      @click="emit('set-source-mode', 'songs')"
     >
-      Všechny písně
+      Písně
     </button>
   </div>
 </template>

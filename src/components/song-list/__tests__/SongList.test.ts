@@ -225,11 +225,11 @@ describe('SongList', () => {
     expect(screen.queryByRole('heading', { name: 'Seznam písní' })).not.toBeInTheDocument();
   });
 
-  it('renders source switch for playlists and global songs', () => {
+  it('renders source switch for playlists and songs', () => {
     render(SongList);
 
     expect(screen.getByRole('button', { name: 'Playlisty' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Všechny písně' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Písně' })).toBeInTheDocument();
   });
 
   it('loads user playlists in playlist mode', async () => {
@@ -242,7 +242,7 @@ describe('SongList', () => {
 
     await waitFor(() => {
       expect(mockFetchUserPlaylists).toHaveBeenCalledWith('user-123');
-      expect(screen.getByTestId('playlist-select-trigger')).toHaveTextContent('Moje pecky');
+      expect(screen.getByRole('button', { name: /Moje pecky/ })).toBeInTheDocument();
     });
   });
 
@@ -273,7 +273,7 @@ describe('SongList', () => {
     await user.click(screen.getByRole('button', { name: 'Playlisty' }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('playlist-select-trigger')).toHaveTextContent('Host veřejný');
+      expect(screen.getByRole('button', { name: /Host veřejný/ })).toBeInTheDocument();
       expect(screen.queryByText('Cizí veřejný')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Veřejné' })).not.toBeInTheDocument();
     });
@@ -289,10 +289,12 @@ describe('SongList', () => {
     await user.click(screen.getByRole('button', { name: 'Playlisty' }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('playlist-select-trigger')).toHaveTextContent('Moje pecky');
+      expect(screen.getByRole('button', { name: /Moje pecky/ })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Všechny písně' }));
+    await user.click(screen.getByRole('button', { name: /Moje pecky/ }));
+
+    await user.click(screen.getByRole('button', { name: 'Písně' }));
 
     await submitGlobalSearch(user, 'Song');
 
@@ -311,7 +313,7 @@ describe('SongList', () => {
     });
   });
 
-  it('removes selected playlist songs through bulk action bar', async () => {
+  it('removes a song from a playlist through the inline remove button', async () => {
     const user = userEvent.setup();
     mockUserSongs.value = mockSongs;
     mockFetchUserPlaylists.mockResolvedValue(mockPlaylists);
@@ -328,16 +330,16 @@ describe('SongList', () => {
     await user.click(screen.getByRole('button', { name: 'Playlisty' }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('tree-view-selection-mode')).toHaveTextContent('true');
+      expect(screen.getByRole('button', { name: /Moje pecky/ })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByTestId('tree-view-toggle-first-selection'));
+    await user.click(screen.getByRole('button', { name: /Moje pecky/ }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Odebrat vybrané z playlistu' })).toBeEnabled();
+      expect(screen.getByText('Artist A - Song 1')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Odebrat vybrané z playlistu' }));
+    await user.click(screen.getByRole('button', { name: 'Odebrat píseň z playlistu' }));
 
     await waitFor(() => {
       expect(mockRemoveSongFromPlaylist).toHaveBeenCalledWith('playlist-1', 'ref-1');
