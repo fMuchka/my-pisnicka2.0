@@ -2,7 +2,7 @@
   import { computed, onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
   import { ArrowUpDown, ArrowDown, ArrowUp, Plus, Search, Trash2, UserPlus } from 'lucide-vue-next';
-  import Button from '../components/core/Button.vue';
+  import Button from '../components/core/StyledButton.vue/index.js';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import DeleteClosedSessionsDialog from '../components/dialogs/delete-closed-sessions/DeleteClosedSessionsDialog.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';

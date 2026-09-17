@@ -5,7 +5,7 @@
   import { Check, ChevronDown, Pencil, Plus } from 'lucide-vue-next';
   import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import Button from '../components/core/Button.vue';
+  import Button from '../components/core/StyledButton.vue/index.js';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import SongChordsDialog from '../components/dialogs/song-chords/SongChordsDialog.vue';

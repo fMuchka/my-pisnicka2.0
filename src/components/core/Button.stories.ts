@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { Plus } from 'lucide-vue-next';
-import Button from './Button.vue';
+import Button from './StyledButton.vue/index.js';
 
 const meta = {
   title: 'Core/Button',

@@ -2,7 +2,7 @@
   import { Dialog } from '@ark-ui/vue/dialog';
   import { Tabs } from '@ark-ui/vue/tabs';
   import { computed } from 'vue';
-  import Button from '../../core/Button.vue';
+  import Button from '../../core/StyledButton.vue/index.js';
   import SongChordOverview from '../../song/SongChordOverview.vue';
   import { transposeChord } from '../../../lib/chords/chords';
 
