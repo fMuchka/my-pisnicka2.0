@@ -38,3 +38,5 @@ playwright-report
 dev-dist
 
 skills
+*storybook.log
+storybook-static

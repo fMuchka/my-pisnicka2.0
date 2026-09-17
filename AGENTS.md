@@ -51,6 +51,8 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 - **ARK UI**: Headless component library; import specific submodules like `@ark-ui/vue/menu`, `@ark-ui/vue` (Field, PasswordInput, PinInput)
 - **CSS Variables**: [src/App.vue](src/App.vue) defines design tokens (colors, spacing, typography) with light/dark theme via `[data-theme='dark']`
 - **Core components**: Reusable UI in [src/components/core/](src/components/core/) (e.g., `Button.vue`)
+- **Design tokens**: CSS custom properties live in [src/styles/global.css](src/styles/global.css) (light theme in `:root`, dark theme in `[data-theme='dark']`), imported by `App.vue`. Kept separate from the app shell so base components can render correctly outside of it (e.g. in Storybook).
+- **Storybook**: Base/core components get a co-located `*.stories.ts` next to the component (e.g. `Button.vue` + `Button.stories.ts`), not a separate `stories/` folder. `.storybook/preview.ts` imports `global.css` directly and includes a light/dark toolbar toggle (`@storybook/addon-themes`, toggling `data-theme` on `<html>` the same way `useTheme()` does).
 - **Icons**: `lucide-vue-next` for SVG icons
 - **Folder duplication**: Both `src/components/top-navigation` and `src/components/TopNavigation` exist (legacy cleanup pending)
 
@@ -81,6 +83,8 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 - `npm run deploy` – Build + Firebase Hosting deploy
 - `npm run lint` – ESLint `.ts` and `.vue` files
 - `npm run format` – Prettier auto-fix
+- `npm run storybook` – Storybook dev server (port 6006) for isolated component development
+- `npm run build-storybook` – Static Storybook build
 
 ### Firebase Emulator Usage
 
