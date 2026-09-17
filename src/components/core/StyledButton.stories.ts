@@ -3,7 +3,7 @@ import { Plus } from 'lucide-vue-next';
 import Button from './StyledButton.vue/index.js';
 
 const meta = {
-  title: 'Core/Button',
+  title: 'Core/Styled Button',
   component: Button,
   tags: ['autodocs'],
   argTypes: {
