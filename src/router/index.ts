@@ -37,20 +37,26 @@ export const router = createRouter({
  * @param from - Source route
  * @param next - Navigation callback
  */
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to) => {
   // Fresh auth check on each navigation (useAuth() hooks into Firebase listener)
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, waitForAuthReady } = useAuth();
   const isPublicSongDetailRoute = to.path.startsWith('/song/') && to.path !== Routes.SongCreate;
 
   // Public routes (Join, Session and Song detail don't require auth)
   if (to.path === Routes.Join || to.path === Routes.Session || isPublicSongDetailRoute) {
-    next();
-  } else {
-    // Protected routes: redirect to Login if not authenticated
-    if (to.path !== Routes.Login && !isAuthenticated.value) {
-      next({ path: Routes.Login });
-    } else {
-      next();
-    }
+    return true;
   }
+
+  if (to.path === Routes.Login) {
+    return true;
+  }
+
+  await waitForAuthReady();
+
+  // Protected routes: redirect to Login if not authenticated
+  if (!isAuthenticated.value) {
+    return { path: Routes.Login };
+  }
+
+  return true;
 });
