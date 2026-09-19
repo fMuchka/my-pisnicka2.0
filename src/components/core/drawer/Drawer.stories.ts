@@ -51,17 +51,65 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { args: { open: false } };
 
 export const WithoutIcon: Story = {
   args: {
     titleIcon: undefined,
+    open: false,
   },
 };
 
 export const WithoutTitle: Story = {
   args: {
+    open: false,
     title: '',
     titleIcon: undefined,
   },
+};
+
+export const KeepOpen: Story = {
+  args: {
+    titleIcon: undefined,
+    open: false,
+    keepOpen: true,
+  },
+  render: (args) => ({
+    components: { Button, Drawer },
+    setup() {
+      const open = ref(false);
+
+      const ConfirmContent: FunctionalComponent = () =>
+        h('div', { style: 'display: flex; flex-direction: column; gap: 16px;' }, [
+          h(
+            'p',
+            { style: 'margin: 0; color: var(--ink-muted); font-size: 14px; line-height: 21px;' },
+            'Tento drawer nejde zavřít křížkem, klávesou Esc ani tažením — jen potvrzením.'
+          ),
+          h(Button, {
+            label: 'Potvrdit',
+            onClick: () => {
+              open.value = false;
+            },
+          }),
+        ]);
+
+      return { args: { ...args, content: ConfirmContent }, open };
+    },
+    template: `
+      <div>
+        <Button
+          label="Otevřít filtry"
+          color-variation="secondary"
+          style-variation="outlined"
+          @click="open = true"
+        />
+        <Drawer
+          v-bind="args"
+          :open="open"
+          @update:open="open = $event"
+        />
+      </div>
+    `,
+  }),
 };

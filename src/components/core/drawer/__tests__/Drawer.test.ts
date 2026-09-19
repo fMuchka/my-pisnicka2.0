@@ -62,4 +62,16 @@ describe('Drawer', () => {
 
     expect(emitted()['update:open']).toContainEqual([false]);
   });
+
+  it('hides the close button when keepOpen is set, so it cannot be dismissed by clicking it', () => {
+    render(Drawer, {
+      props: {
+        open: true,
+        title: 'Filtry',
+        keepOpen: true,
+      },
+    });
+
+    expect(screen.queryByRole('button', { name: 'Zavřít' })).toBeNull();
+  });
 });
