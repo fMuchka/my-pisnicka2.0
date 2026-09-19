@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { Plus } from 'lucide-vue-next';
-import Button from './StyledButton.vue/index.js';
+import StyledButton from './StyledButton.vue';
 
 const meta = {
   title: 'Core/Styled Button',
-  component: Button,
+  component: StyledButton,
   tags: ['autodocs'],
   argTypes: {
     colorVariation: {
@@ -22,7 +22,7 @@ const meta = {
     colorVariation: 'Primary',
     styleVariation: 'Filled',
   },
-} satisfies Meta<typeof Button>;
+} satisfies Meta<typeof StyledButton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -53,8 +53,8 @@ export const WithIcon: Story = {
   },
 };
 
-// Icon-only: no `label`. Also surfaces that `.btn-icon`'s square styling in
-// Button.vue's CSS is never actually applied by the component's class logic.
+// Icon-only: no `label`. The button keeps its normal pill shape since there's
+// no dedicated icon-only styling.
 export const IconOnly: Story = {
   args: {
     label: '',

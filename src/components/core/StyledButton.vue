@@ -86,68 +86,62 @@
 
 <style scoped>
   .btn {
-    padding: 12px 24px;
+    padding: 0 var(--space-lg);
     border: none;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-body);
-    font-size: 16px;
-    font-weight: 500;
+    border-radius: var(--radius-md);
+    font: var(--text-button);
     cursor: pointer;
     transition: all var(--transition-fast);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-sm);
-    min-height: 44px;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: white;
-    border: 2px solid var(--accent);
-  }
-
-  .btn-primary:hover {
-    transform: scale(1.02);
-    box-shadow: var(--shadow-accent);
-  }
-
-  .btn-primary:focus {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .btn:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    min-height: 48px;
   }
 
   .btn:disabled {
-    opacity: 0.6;
     cursor: not-allowed;
   }
 
+  .btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .btn-primary {
+    background: var(--brand-fill);
+    color: var(--on-brand);
+    border: 2px solid var(--brand-fill);
+  }
+
+  .btn-primary:hover {
+    background: var(--brand-light);
+    border-color: var(--brand-light);
+    box-shadow: var(--shadow-accent);
+  }
+
   .btn-primary:disabled {
-    background: var(--bg-tertiary);
+    background: var(--surface-secondary);
     color: var(--text-disabled);
-    border-color: var(--bg-tertiary);
+    border-color: var(--surface-secondary);
   }
 
   .btn-primary:disabled:hover {
-    transform: none;
+    background: var(--surface-secondary);
+    border-color: var(--surface-secondary);
     box-shadow: none;
   }
 
   .btn-secondary {
     background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--bg-tertiary);
+    color: var(--ink);
+    border: 1px solid var(--border);
   }
 
   .btn-secondary:disabled {
     background: transparent;
     color: var(--text-disabled);
-    border-color: var(--bg-tertiary);
+    border-color: var(--border);
   }
 
   .btn-secondary:disabled:hover {
@@ -155,31 +149,31 @@
   }
 
   .btn-secondary:hover {
-    background: var(--bg-secondary);
+    background: var(--surface-secondary);
   }
 
   .btn-filled.btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--bg-tertiary);
+    background: var(--surface-secondary);
+    color: var(--ink);
+    border: 1px solid var(--border);
   }
 
   .btn-filled.btn-secondary:disabled {
-    background: var(--bg-secondary);
+    background: var(--surface-secondary);
     color: var(--text-disabled);
-    border-color: var(--bg-tertiary);
+    border-color: var(--border);
   }
 
   .btn-outlined {
     background: transparent;
-    color: var(--accent);
-    border: 2px solid var(--accent);
+    color: var(--brand);
+    border: 2px solid var(--brand);
   }
 
   .btn-outlined:disabled {
     background: transparent;
     color: var(--text-disabled);
-    border-color: var(--bg-tertiary);
+    border-color: var(--border);
   }
 
   .btn-outlined:disabled:hover {
@@ -187,19 +181,19 @@
   }
 
   .btn-outlined.btn-secondary {
-    color: var(--text-primary);
-    border: 1px solid var(--bg-tertiary);
+    color: var(--ink);
+    border: 1px solid var(--border);
   }
 
   .btn-outlined:hover {
-    background: var(--bg-secondary);
+    background: var(--surface-secondary);
   }
 
   .btn-text {
     background: transparent;
-    color: var(--accent);
+    color: var(--brand);
     border: 1px solid transparent;
-    padding: 8px 12px;
+    padding: 0 var(--space-xs);
   }
 
   .btn-text:disabled {
@@ -212,35 +206,10 @@
   }
 
   .btn-text.btn-secondary {
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .btn-text:hover {
-    background: var(--bg-secondary);
-  }
-
-  .btn-icon {
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    font-size: 20px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--bg-tertiary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .btn-icon:hover {
-    background: var(--bg-tertiary);
-  }
-
-  .btn-icon:disabled {
-    background: var(--bg-secondary);
-    border-color: var(--bg-tertiary);
-  }
-
-  .btn-icon:disabled:hover {
-    background: var(--bg-secondary);
+    background: var(--surface-secondary);
   }
 </style>
