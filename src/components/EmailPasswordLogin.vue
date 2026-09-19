@@ -132,7 +132,7 @@
 
   .form-label {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
     font-weight: 500;
   }
 
@@ -140,17 +140,17 @@
     width: 100%;
     padding: 12px 16px;
     font-size: 16px;
-    font-family: var(--font-body);
-    color: var(--text-primary);
-    background-color: var(--bg-primary);
-    border: 1px solid var(--bg-tertiary);
-    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background-color: var(--surface-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     transition: border-color 150ms ease;
   }
 
   .form-input:focus {
     outline: none;
-    border: 2px solid var(--accent);
+    border: 2px solid var(--brand);
     padding: 11px 15px; /* Adjust for thicker border */
   }
 
@@ -160,11 +160,11 @@
 
   /* Error state */
   .form-input-error {
-    border-color: var(--color-error);
+    border-color: var(--danger);
   }
 
   .error {
-    color: var(--color-error);
+    color: var(--danger);
   }
 
   .password-control {
@@ -188,7 +188,7 @@
     padding: 4px;
     border: none;
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
     cursor: pointer;
   }
 </style>
