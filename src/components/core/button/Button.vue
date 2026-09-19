@@ -1,25 +1,10 @@
 <script setup lang="ts">
-  import type { LucideProps } from 'lucide-vue-next';
-  import { computed, type EmitsOptions, type FunctionalComponent } from 'vue';
-
-  type ButtonIconPosition = 'prepend' | 'append';
-  type ButtonRoleVariation = 'primary' | 'secondary';
-  type ButtonStyleVariation = 'filled' | 'outlined' | 'text';
+  import { computed } from 'vue';
+  import type { ButtonRoleVariation, ButtonStyleVariation, ButtonIcon } from './types';
 
   defineOptions({
     inheritAttrs: false,
   });
-
-  export type ButtonIcon = {
-    position: ButtonIconPosition;
-    component: FunctionalComponent<
-      LucideProps,
-      Record<string, unknown[]>,
-      Record<string, unknown>,
-      EmitsOptions
-    >;
-    props?: LucideProps;
-  };
 
   const props = withDefaults(
     defineProps<{
