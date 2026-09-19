@@ -7,6 +7,7 @@
   const props = withDefaults(
     defineProps<{
       open: boolean;
+      keepOpen?: boolean;
       title?: string;
       titleIcon?: DrawerTitleIcon;
       content?: FunctionalComponent;
@@ -15,6 +16,7 @@
       title: '',
       titleIcon: undefined,
       content: undefined,
+      keepOpen: false,
     }
   );
 
@@ -30,6 +32,8 @@
 <template>
   <Teleport to="body">
     <Drawer.Root
+      :close-on-escape="!props.keepOpen"
+      :close-on-interact-outside="!props.keepOpen"
       :open="props.open"
       @open-change="handleOpenChange"
     >
@@ -38,8 +42,12 @@
         <Drawer.Content
           class="content"
           data-testid="drawer-content"
+          :draggable="!props.keepOpen"
         >
-          <Drawer.Grabber class="grabber">
+          <Drawer.Grabber
+            v-if="!props.keepOpen"
+            class="grabber"
+          >
             <Drawer.GrabberIndicator class="grabberIndicator" />
           </Drawer.Grabber>
           <Drawer.Title class="title">
@@ -55,6 +63,7 @@
             v-if="props.content"
           />
           <Drawer.CloseTrigger
+            v-if="!props.keepOpen"
             class="closeTrigger"
             aria-label="Zavřít"
           >
