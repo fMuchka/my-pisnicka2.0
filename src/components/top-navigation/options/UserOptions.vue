@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
-  import Button, { type ButtonIcon } from '../../core/button/Button.vue/index.js';
+  import Button from '../../core/button/Button.vue';
   import { User, LogOut, Key } from 'lucide-vue-next';
   import { Menu } from '@ark-ui/vue/menu';
   import LoginDialog from '../../dialogs/login/LoginDialog.vue';
@@ -9,6 +9,7 @@
   import { useAuth } from '../../../composables/useAuth';
   import { useRouter } from 'vue-router';
   import Routes from '../../../router/Routes';
+  import type { ButtonIcon } from '../../core/button/types.ts';
 
   type MenuItem = {
     label: string;
@@ -79,7 +80,7 @@
         class="user-trigger"
         :icon="triggerIcon"
         :label="userLabel"
-        style-variation="Text"
+        style-variation="text"
         aria-label="Uživatelské možnosti"
       />
     </Menu.Trigger>
@@ -95,7 +96,7 @@
             class="user-menu-button"
             :icon="menuItem.icon"
             :label="menuItem.label"
-            style-variation="Text"
+            style-variation="text"
             :aria-label="menuItem.label"
             @click="menuItem.action"
           />
@@ -109,7 +110,7 @@
       class="user-trigger"
       :icon="triggerIcon"
       :label="userLabel"
-      style-variation="Text"
+      style-variation="text"
       aria-label="Uživatelské možnosti"
       @click="isLoginDialogOpen = true"
     />

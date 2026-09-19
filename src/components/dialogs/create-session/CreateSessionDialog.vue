@@ -3,7 +3,7 @@
   import { Field } from '@ark-ui/vue';
   import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
-  import Button from '../../core/button/Button.vue/index.js';
+  import Button from '../../core/button/Button.vue';
   import { createSession, createSessionRouterQuery } from '../../../lib/session';
   import { useAuth } from '../../../composables/useAuth';
   import Routes from '../../../router/Routes';

@@ -4,7 +4,7 @@
   import { useRouter } from 'vue-router';
   import Routes from '../../router/Routes';
   import AppOptions from './options/AppOptions.vue';
-  import Button from '../core/button/Button.vue/index.js';
+  import Button from '../core/button/Button.vue';
   import PageHeader from '../PageHeader.vue';
   import UserOptions from './options/UserOptions.vue';
   import { useAuth } from '../../composables/useAuth';
@@ -96,8 +96,8 @@
           class="back-button"
           label="Zpět"
           :icon="{ component: ArrowLeft, position: 'prepend' }"
-          color-variation="Secondary"
-          style-variation="Text"
+          color-variation="secondary"
+          style-variation="text"
           type="button"
           aria-label="Zpět"
           @click="goBack"

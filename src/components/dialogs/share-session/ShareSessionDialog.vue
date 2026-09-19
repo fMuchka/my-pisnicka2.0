@@ -2,7 +2,7 @@
   import { computed, ref } from 'vue';
   import { Dialog } from '@ark-ui/vue/dialog';
   import { SegmentGroup } from '@ark-ui/vue/segment-group';
-  import Button from '../../core/button/Button.vue/index.js';
+  import Button from '../../core/button/Button.vue';
   import PinCodeInput from '../../core/PinCodeInput.vue';
   import QrCode from '../../core/QrCode.vue';
   import type { PIN } from '../../../lib/pin';

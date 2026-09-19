@@ -4,7 +4,7 @@
   import { Slider } from '@ark-ui/vue/slider';
   import { Moon, Palette, Settings, Sun } from 'lucide-vue-next';
   import { computed, ref, watch, type Component } from 'vue';
-  import Button from '../../core/button/Button.vue/index.js';
+  import Button from '../../core/button/Button.vue';
   import { getContrastTextColor, useTheme, type Theme } from '../../../composables/useTheme';
   import type { Instrument } from '../../../lib/chords/chords.database';
 
@@ -151,7 +151,7 @@
     <Popover.Trigger as-child>
       <Button
         :icon="{ component: Settings, position: 'prepend' }"
-        style-variation="Text"
+        style-variation="text"
         aria-label="Nastavení aplikace"
       />
     </Popover.Trigger>
@@ -392,8 +392,8 @@
           <Button
             class="reset-button"
             label="Obnovit výchozí"
-            color-variation="Secondary"
-            style-variation="Text"
+            color-variation="secondary"
+            style-variation="text"
             @click="handleResetDefaults"
           />
         </div>

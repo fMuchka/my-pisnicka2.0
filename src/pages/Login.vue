@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { useRouter } from 'vue-router';
   import EmailPasswordLogin from '../components/EmailPasswordLogin.vue';
-  import Button from '../components/core/button/Button.vue/index.js';
+  import Button from '../components/core/button/Button.vue';
   import Routes from '../router/Routes';
 
   const router = useRouter();
