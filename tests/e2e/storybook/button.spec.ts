@@ -20,7 +20,7 @@ async function getButtonStyles(button: Locator) {
   });
 }
 
-test.describe('StyledButton styling', () => {
+test.describe('Button styling', () => {
   test('primary filled button has a solid brand background and white text', async ({ page }) => {
     await page.goto(storyUrl('primary'));
     const button = page.getByRole('button', { name: 'Uložit' });
