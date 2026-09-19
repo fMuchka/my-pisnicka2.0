@@ -2,7 +2,7 @@
   import { Field, PasswordInput } from '@ark-ui/vue';
   import { EyeIcon, EyeOffIcon } from 'lucide-vue-next';
   import { ref } from 'vue';
-  import Button from './core/StyledButton.vue/index.js';
+  import Button from './core/Button.vue/index.js';
   import { loginWithEmailPassword } from '../lib/authService';
 
   const emit = defineEmits<{ login: [] }>();

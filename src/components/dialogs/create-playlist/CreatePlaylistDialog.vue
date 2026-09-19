@@ -2,7 +2,7 @@
   import { Dialog } from '@ark-ui/vue/dialog';
   import { Field } from '@ark-ui/vue';
   import { computed, ref, watch } from 'vue';
-  import Button from '../../core/StyledButton.vue/index.js';
+  import Button from '../../core/Button.vue/index.js';
   import type { PlaylistVisibility } from '../../../lib/playlist';
 
   interface Props {

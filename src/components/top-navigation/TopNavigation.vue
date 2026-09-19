@@ -4,7 +4,7 @@
   import { useRouter } from 'vue-router';
   import Routes from '../../router/Routes';
   import AppOptions from './options/AppOptions.vue';
-  import Button from '../core/StyledButton.vue/index.js';
+  import Button from '../core/Button.vue/index.js';
   import PageHeader from '../PageHeader.vue';
   import UserOptions from './options/UserOptions.vue';
   import { useAuth } from '../../composables/useAuth';
