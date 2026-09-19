@@ -16,21 +16,34 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: '**/storybook/**',
+    },
+    {
+      name: 'storybook',
+      testDir: './tests/e2e/storybook',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:6006' },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    env: {
-      VITE_FIREBASE_EMULATOR: 'true',
-      VITE_DISABLE_FIREBASE_EMULATOR: 'false',
-      VITE_FIRESTORE_EMULATOR_HOST: 'localhost',
-      VITE_FIRESTORE_EMULATOR_PORT: '8080',
-      VITE_FIREBASE_AUTH_EMULATOR_HOST: 'localhost',
-      VITE_FIREBASE_AUTH_EMULATOR_PORT: '9099',
-      VITE_FIREBASE_STORAGE_EMULATOR_HOST: 'localhost',
-      VITE_FIREBASE_STORAGE_EMULATOR_PORT: '9199',
+  webServer: [
+    {
+      command: 'npm run dev',
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+      env: {
+        VITE_FIREBASE_EMULATOR: 'true',
+        VITE_DISABLE_FIREBASE_EMULATOR: 'false',
+        VITE_FIRESTORE_EMULATOR_HOST: 'localhost',
+        VITE_FIRESTORE_EMULATOR_PORT: '8080',
+        VITE_FIREBASE_AUTH_EMULATOR_HOST: 'localhost',
+        VITE_FIREBASE_AUTH_EMULATOR_PORT: '9099',
+        VITE_FIREBASE_STORAGE_EMULATOR_HOST: 'localhost',
+        VITE_FIREBASE_STORAGE_EMULATOR_PORT: '9199',
+      },
     },
-  },
+    {
+      command: 'npm run storybook -- --ci',
+      url: 'http://localhost:6006',
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });
