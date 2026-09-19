@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { Plus } from 'lucide-vue-next';
   import { useRouter } from 'vue-router';
-  import Button from '../components/core/Button.vue/index.js';
+  import Button from '../components/core/button/Button.vue/index.js';
   import SongList from '../components/song-list/SongList.vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import Routes from '../router/Routes';

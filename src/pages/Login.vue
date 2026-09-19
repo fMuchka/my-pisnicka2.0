@@ -1,9 +1,8 @@
 <script setup lang="ts">
   import { useRouter } from 'vue-router';
   import EmailPasswordLogin from '../components/EmailPasswordLogin.vue';
-  import Button from '../components/core/Button.vue/index.js';
+  import Button from '../components/core/button/Button.vue/index.js';
   import Routes from '../router/Routes';
-  import PageHeader from '../components/PageHeader.vue';
 
   const router = useRouter();
   const onLogin = () => {
@@ -13,17 +12,10 @@
   const goToJoin = () => {
     router.push(Routes.Join);
   };
-
-  const TITLE = 'MyPísnička';
-  const TAG_LINE = 'S přáteli hraj a zpívej, bav se a zábavu sdílej';
 </script>
 
 <template>
   <div class="container">
-    <PageHeader
-      :title="TITLE"
-      :tagline="TAG_LINE"
-    />
     <EmailPasswordLogin @login="onLogin" />
 
     <div class="divider">
@@ -33,7 +25,7 @@
     <Button
       label="Připojit se bez účtu"
       aria-label="Pokračovat bez účtu"
-      color-variation="Secondary"
+      color-variation="secondary"
       @click="() => goToJoin()"
     />
   </div>

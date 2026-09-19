@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import Button from '../components/core/Button.vue/index.js';
+  import Button from '../components/core/button/Button.vue/index.js';
   import PinCodeInput from '../components/core/PinCodeInput.vue';
   import { ref, computed } from 'vue';
   import {

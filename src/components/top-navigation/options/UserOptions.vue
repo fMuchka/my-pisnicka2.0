@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
-  import Button, { type ButtonIcon } from '../../core/Button.vue/index.js';
+  import Button, { type ButtonIcon } from '../../core/button/Button.vue/index.js';
   import { User, LogOut, Key } from 'lucide-vue-next';
   import { Menu } from '@ark-ui/vue/menu';
   import LoginDialog from '../../dialogs/login/LoginDialog.vue';
