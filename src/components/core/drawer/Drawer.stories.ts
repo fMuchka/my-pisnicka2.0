@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { ListMusicIcon } from 'lucide-vue-next';
-import { h, type FunctionalComponent } from 'vue';
+import { h, ref, type FunctionalComponent } from 'vue';
+import Button from '../button/Button.vue';
 import Drawer from './Drawer.vue';
 
 const SampleContent: FunctionalComponent = () =>
@@ -15,27 +16,42 @@ const meta = {
   component: Drawer,
   tags: ['autodocs'],
   argTypes: {
-    open: { control: 'boolean' },
     title: { control: 'text' },
+    open: { table: { disable: true } },
   },
   args: {
-    open: true,
     title: 'Filtry',
     titleIcon: { component: ListMusicIcon },
     content: SampleContent,
   },
+  render: (args) => ({
+    components: { Button, Drawer },
+    setup() {
+      const open = ref(false);
+      return { args, open };
+    },
+    template: `
+      <div>
+        <Button
+          label="Otevřít filtry"
+          color-variation="secondary"
+          style-variation="outlined"
+          @click="open = true"
+        />
+        <Drawer
+          v-bind="args"
+          :open="open"
+          @update:open="open = $event"
+        />
+      </div>
+    `,
+  }),
 } satisfies Meta<typeof Drawer>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Open: Story = {};
-
-export const Closed: Story = {
-  args: {
-    open: false,
-  },
-};
+export const Default: Story = {};
 
 export const WithoutIcon: Story = {
   args: {
