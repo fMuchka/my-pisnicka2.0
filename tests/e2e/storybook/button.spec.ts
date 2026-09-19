@@ -4,7 +4,7 @@ import { test, expect, type Locator } from '@playwright/test';
 // so a broken CSS custom property (e.g. a var() pointing at a token that no
 // longer exists) shows up as a real computed-style failure instead of
 // silently collapsing the button to invisible/bare text.
-const storyUrl = (id: string) => `/iframe.html?id=core-styled-button--${id}&viewMode=story`;
+const storyUrl = (id: string) => `/iframe.html?id=core-button--${id}&viewMode=story`;
 
 async function getButtonStyles(button: Locator) {
   return button.evaluate((el) => {
