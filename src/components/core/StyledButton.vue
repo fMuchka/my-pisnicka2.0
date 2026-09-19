@@ -2,12 +2,16 @@
   import type { LucideProps } from 'lucide-vue-next';
   import { computed, type EmitsOptions, type FunctionalComponent } from 'vue';
 
+  type ButtonIconPosition = 'prepend' | 'append';
+  type ButtonRoleVariation = 'primary' | 'secondary';
+  type ButtonStyleVariation = 'filled' | 'outlined' | 'text';
+
   defineOptions({
     inheritAttrs: false,
   });
 
   export type ButtonIcon = {
-    position: 'prepend' | 'append';
+    position: ButtonIconPosition;
     component: FunctionalComponent<
       LucideProps,
       Record<string, unknown[]>,
@@ -20,46 +24,20 @@
   const props = withDefaults(
     defineProps<{
       label?: string;
-      colorVariation?: 'Primary' | 'Secondary';
-      styleVariation?: 'Filled' | 'Outlined' | 'Text';
+      colorVariation?: ButtonRoleVariation;
+      styleVariation?: ButtonStyleVariation;
       icon?: ButtonIcon;
     }>(),
     {
       label: '',
-      colorVariation: 'Primary',
-      styleVariation: 'Filled',
+      colorVariation: 'primary',
+      styleVariation: 'filled',
       icon: undefined,
     }
   );
 
-  const variationClass = computed(() => {
-    switch (props.colorVariation) {
-      case 'Primary':
-        return 'primary';
-
-      case 'Secondary':
-        return 'secondary';
-
-      default:
-        return 'primary';
-    }
-  });
-
-  const styledClass = computed(() => {
-    switch (props.styleVariation) {
-      case 'Filled':
-        return 'filled';
-
-      case 'Outlined':
-        return 'outlined';
-
-      case 'Text':
-        return 'text';
-
-      default:
-        return 'filled';
-    }
-  });
+  const variationClass = computed(() => props.colorVariation ?? 'primary');
+  const styledClass = computed(() => props.styleVariation ?? 'filled');
 
   const hasIcon = computed(() => props.icon && props.icon.component);
   const isPrependIcon = computed(() => props.icon?.position === 'prepend');

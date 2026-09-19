@@ -19,8 +19,8 @@ const meta = {
   },
   args: {
     label: 'Uložit',
-    colorVariation: 'Primary',
-    styleVariation: 'Filled',
+    colorVariation: 'primary',
+    styleVariation: 'filled',
   },
 } satisfies Meta<typeof StyledButton>;
 
@@ -31,19 +31,19 @@ export const Primary: Story = {};
 
 export const Secondary: Story = {
   args: {
-    colorVariation: 'Secondary',
+    colorVariation: 'secondary',
   },
 };
 
 export const Outlined: Story = {
   args: {
-    styleVariation: 'Outlined',
+    styleVariation: 'outlined',
   },
 };
 
 export const Text: Story = {
   args: {
-    styleVariation: 'Text',
+    styleVariation: 'text',
   },
 };
 
