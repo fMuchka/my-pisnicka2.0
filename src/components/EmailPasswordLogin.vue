@@ -63,7 +63,10 @@
 </script>
 
 <template>
-  <div class="login-form">
+  <form
+    class="login-form"
+    @submit.prevent="handleConfirmClick"
+  >
     <Field.Root
       class="form-group"
       :invalid="validationChecks.user || validationChecks.credentials"
@@ -111,9 +114,9 @@
     <Button
       label="Přihlásit se"
       aria-label="Přihlásit se"
-      @click="handleConfirmClick"
+      type="submit"
     />
-  </div>
+  </form>
 </template>
 
 <style scoped>
