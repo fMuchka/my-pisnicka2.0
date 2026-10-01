@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
 export const TEST_CREDENTIALS = {
-  email: 'test@test.com',
+  email: 'test',
   password: 'test123',
 };
 

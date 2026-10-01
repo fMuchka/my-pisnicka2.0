@@ -38,7 +38,7 @@ test.describe('Login flow', () => {
     await login(page);
 
     await page.getByRole('button', { name: /uživatelské možnosti/i }).click();
-    await page.getByRole('button', { name: /odhlásit se/i }).click();
+    await page.getByRole('menuitem', { name: /odhlásit se/i }).click();
 
     await expect(page).toHaveURL(/\/login$/);
   });

@@ -95,9 +95,9 @@ const applyTheme = (nextTheme: Theme) => {
   document.documentElement.setAttribute('data-theme', nextTheme);
 };
 
-const readThemeToken = (token: '--accent' | '--text-chord'): string => {
+const readThemeToken = (token: '--brand' | '--text-chord'): string => {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return token === '--accent'
+    return token === '--brand'
       ? DEFAULT_ACCENT_BY_THEME[DEFAULT_THEME]
       : DEFAULT_CHORD_BY_THEME[DEFAULT_THEME];
   }
@@ -155,7 +155,7 @@ const initializeTheme = () => {
     localStorage.getItem(CHORD_FONT_SIZE_STORAGE_KEY) ?? ''
   );
 
-  accentColor.value = isHexColor(storedAccent) ? storedAccent : readThemeToken('--accent');
+  accentColor.value = isHexColor(storedAccent) ? storedAccent : readThemeToken('--brand');
   chordColor.value = isHexColor(storedChord) ? storedChord : readThemeToken('--text-chord');
   preferredInstrument.value = isInstrument(storedInstrument)
     ? storedInstrument
