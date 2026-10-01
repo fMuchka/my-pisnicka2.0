@@ -27,7 +27,6 @@
   <Drawer
     :open="isVisible"
     keep-open
-    hide-backdrop
     :title="COOKIE_NOTICE_TITLE"
     :content="cookieNoticeContent"
   />
