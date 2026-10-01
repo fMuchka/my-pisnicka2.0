@@ -19,6 +19,21 @@ export default defineConfig({
       testIgnore: '**/storybook/**',
     },
     {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testIgnore: '**/storybook/**',
+    },
+    {
+      name: 'android',
+      use: { ...devices['Pixel 7'] },
+      testIgnore: '**/storybook/**',
+    },
+    {
+      name: 'ios',
+      use: { ...devices['iPhone 15'] },
+      testIgnore: '**/storybook/**',
+    },
+    {
       name: 'storybook',
       testDir: './tests/e2e/storybook',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:6006' },
