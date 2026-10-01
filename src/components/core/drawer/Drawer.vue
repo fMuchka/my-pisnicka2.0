@@ -8,6 +8,7 @@
     defineProps<{
       open: boolean;
       keepOpen?: boolean;
+      hideBackdrop?: boolean;
       title?: string;
       titleIcon?: DrawerTitleIcon;
       content?: FunctionalComponent;
@@ -17,6 +18,7 @@
       titleIcon: undefined,
       content: undefined,
       keepOpen: false,
+      hideBackdrop: false,
     }
   );
 
@@ -37,10 +39,14 @@
       :open="props.open"
       @open-change="handleOpenChange"
     >
-      <Drawer.Backdrop class="backdrop" />
+      <Drawer.Backdrop
+        v-if="!props.hideBackdrop"
+        class="backdrop"
+      />
       <Drawer.Positioner class="positioner">
         <Drawer.Content
           class="content"
+          :class="{ 'content--card': props.hideBackdrop }"
           data-testid="drawer-content"
           :draggable="!props.keepOpen"
         >
@@ -132,6 +138,11 @@
 
   .content[data-state='closed'] {
     animation: drawer-fade-out var(--transition-fast) ease-in;
+  }
+
+  .content--card {
+    border-top: 1px solid var(--border);
+    box-shadow: var(--shadow-raised);
   }
 
   .grabber {
