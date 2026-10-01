@@ -40,3 +40,4 @@ dev-dist
 skills
 *storybook.log
 storybook-static
+.claude/settings.json
