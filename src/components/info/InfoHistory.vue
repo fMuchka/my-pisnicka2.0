@@ -373,6 +373,9 @@
   }
 
   .release-body {
+    --group-icon-size: 0.9rem;
+    --group-icon-gap: 6px;
+
     display: grid;
     gap: var(--space-xs);
     padding: var(--space-xs) var(--space-md) var(--space-sm);
@@ -382,7 +385,7 @@
   .group-title {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--group-icon-gap);
     margin-top: var(--space-sm);
     font-size: 0.72rem;
     font-weight: 700;
@@ -392,8 +395,8 @@
   }
 
   .group-icon {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: var(--group-icon-size);
+    height: var(--group-icon-size);
   }
 
   .group-title--new .group-icon {
@@ -407,6 +410,11 @@
 
   .changes {
     list-style: none;
+  }
+
+  /* Bullets start where the heading text starts, so the type icons hang out as section markers. */
+  .group-title + .changes {
+    padding-left: calc(var(--group-icon-size) + var(--group-icon-gap));
   }
 
   .change-row {
