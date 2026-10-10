@@ -1,88 +1,155 @@
 [
   {
-    "time": "5. srpen 2026",
-    "text": [
-      "Přidána volba preferovaného nástroje (kytara/ukulele) s uložením do localStorage a napojením na vykreslení akordových diagramů.",
-      "Upraven dialog Nastavení akordů: kompaktnější rozložení, opravené zavírání kliknutím mimo dialog a lepší chování na menších displejích.",
-      "Doplněna databáze hmatů pro ukulele a upraveno vykreslení diagramů tak, aby nepřetékaly přes vyhrazený box.",
-      "Přidáno funkční oznámení o ukládání dat (bez analytiky a reklam) s potvrzením uloženým v localStorage.",
-      "Na domovské stránce přidán badge Nové u položky Informace podle poslední navštívené položky timeline.",
-      "V seznamu písní je nově zalamování dlouhých názvů na více řádků."
+    "date": "2026-08-05",
+    "title": "Ukulele a sušenky",
+    "changes": [
+      {
+        "type": "new",
+        "text": "Volba nástroje: kytara, nebo ukulele",
+        "details": "Volba se uloží do prohlížeče a podle ní se vykreslují akordové diagramy."
+      },
+      {
+        "type": "new",
+        "text": "Hmaty pro ukulele",
+        "details": "Doplněná databáze hmatů, takže diagramy fungují i pro ukulele."
+      },
+      {
+        "type": "new",
+        "text": "Oznámení o ukládání dat",
+        "details": "Žádná analytika, žádné reklamy. Potvrzení se uloží do prohlížeče, takže se neptáme znovu."
+      },
+      {
+        "type": "new",
+        "text": "Štítek Nové u Informací na domovské stránce",
+        "details": "Svítí, dokud si neotevřeš nejnovější změny."
+      },
+      {
+        "type": "improved",
+        "text": "Kompaktnější dialog Nastavení akordů",
+        "details": "Lépe se chová na menších displejích."
+      },
+      { "type": "improved", "text": "Dlouhé názvy písní se zalamují na více řádků" },
+      { "type": "fix", "text": "Dialog Nastavení akordů jde zavřít klepnutím mimo" },
+      { "type": "fix", "text": "Diagramy už nepřetékají ze svého boxu" }
     ]
   },
   {
-    "time": "19. červenec 2026",
-    "text": [
-      "Ikonky pro ovládání písně aktualizovány aby více odpovídali realitě.",
-      "Při hraní (během auto posunu) písně lze upravovat pomocí ovládání pozici (nahoru/dolu). Skáče mezi sekcemi. Pozici lze upravit i manuálním posunem.",
-      "Auto posun se na chvíli zastaví, pokud jeho pozice je upravena pomocí ovládání pozice.",
-      "Během přípravy lze upravit rychlost auto posunu."
+    "date": "2026-07-19",
+    "title": "Ovládání během hraní",
+    "changes": [
+      {
+        "type": "new",
+        "text": "Skoky mezi sekcemi během auto posunu",
+        "details": "Ovládáním nahoru/dolů poskočíš o sekci. Pozici jde upravit i ručním posunem."
+      },
+      { "type": "new", "text": "Rychlost auto posunu jde měnit už v přípravě" },
+      {
+        "type": "improved",
+        "text": "Auto posun se po skoku na chvíli zastaví",
+        "details": "Ať máš čas se zorientovat, než text zase pojede."
+      },
+      { "type": "improved", "text": "Ikonky ovládání písně víc odpovídají realitě" }
     ]
   },
   {
-    "time": "18. červenec 2026",
-    "text": [
-      "Dialogy pro tvorbu a editaci písní odstraněny. Nyní lze písně editovat přímo, lze tedy lépe vidět výsledný vzhled a informace jsou přehledněji zobrazeny.",
-      "Dialog pro přidání akordu nad označeným textem nyní nabízí i přidání do sekce."
+    "date": "2026-07-18",
+    "title": "Úpravy přímo v písni",
+    "changes": [
+      {
+        "type": "improved",
+        "text": "Písně se upravují přímo, bez dialogů",
+        "details": "Při úpravě rovnou vidíš výsledný vzhled a informace jsou přehlednější."
+      },
+      { "type": "new", "text": "Akord nad označeným textem jde přidat i do sekce" }
     ]
   },
   {
-    "time": "7. červenec 2026",
-    "text": [
-      "Přidány diagramy pro sus2 a sus4 variace akordů. Aplikace nyní tyto variace podporuje."
+    "date": "2026-07-07",
+    "title": "Akordy sus2 a sus4",
+    "changes": [
+      {
+        "type": "new",
+        "text": "Diagramy pro sus2 a sus4",
+        "details": "Aplikace teď tyhle variace akordů podporuje."
+      }
     ]
   },
   {
-    "time": "6. červen 2026",
-    "text": [
-      "Nyní lze přidat k písni kategorie, což může pomoci při hledání.",
-      "Zároveň lze přidat informace o CAPO.",
-      "Nová sekce, informací o písni pak zobrazí CAPO, tóninu a transpozici.",
-      "Přehled akordových diagramů byl přesunut do dialogu nastavení akordů, kde lze aplikovat konkrétní transpozici.",
-      "Zobrazení akordů bylo upraveno, aby více vyhovovalo menším zařízením."
+    "date": "2026-06-06",
+    "title": "Kategorie a capo",
+    "changes": [
+      { "type": "new", "text": "Kategorie písní", "details": "Pomůžou při hledání." },
+      { "type": "new", "text": "Informace o capu" },
+      {
+        "type": "new",
+        "text": "Sekce Informace o písni",
+        "details": "Ukáže capo, tóninu a transpozici."
+      },
+      {
+        "type": "improved",
+        "text": "Diagramy přesunuté do nastavení akordů",
+        "details": "Rovnou tam jde použít konkrétní transpozici."
+      },
+      { "type": "improved", "text": "Akordy se lépe vejdou na menší zařízení" }
     ]
   },
   {
-    "time": "14. květen 2026",
-    "text": [
-      "Přidání grafického režimu tvorby a úpravy písní.",
-      "Nyní lze přidat/odebrat sekce a akordy bez nutnosti psaní datové podoby.",
-      "Pro přidání akordu, označte část textu, před kterou se má akord zobrazit."
+    "date": "2026-05-14",
+    "title": "Grafický editor písní",
+    "changes": [
+      {
+        "type": "new",
+        "text": "Grafický režim tvorby a úprav písní",
+        "details": "Sekce a akordy přidáš bez psaní datové podoby. Akord přidáš označením textu, před kterým se má zobrazit."
+      }
     ]
   },
   {
-    "time": "10. květen 2026",
-    "text": [
-      "Sekce Akordy v zobrazení Písně nyní obsahuje kromě přehledu všech akordů i jejich diagramy."
+    "date": "2026-05-10",
+    "title": "Diagramy v sekci Akordy",
+    "changes": [{ "type": "improved", "text": "Sekce Akordy ukazuje i diagramy" }]
+  },
+  {
+    "date": "2026-05-04",
+    "title": "Chytřejší seznam písní",
+    "changes": [
+      {
+        "type": "new",
+        "text": "Možnosti seznamu písní",
+        "details": "Přepnutí mezi stromem a plochým seznamem a filtrování podle akordů."
+      },
+      {
+        "type": "improved",
+        "text": "Seznam si pamatuje svůj stav",
+        "details": "Filtry i rozbalení zůstanou, i když přejdeš jinam a vrátíš se."
+      }
     ]
   },
   {
-    "time": "4. květen 2026",
-    "text": [
-      "Seznam písní si nyní pamatuje svůj stav (filtrování; rozbalení; ...) při přecházení mezi stránkami.",
-      "Přidání Možností pro seznam písní. Obsahuje přepnutí mezi zobrazením (strom/ plochý seznam) a filtrování pomocí akordů."
+    "date": "2026-05-03",
+    "title": "Nová úvodní stránka",
+    "changes": [
+      { "type": "new", "text": "Stránka Informace" },
+      { "type": "improved", "text": "Předělaná úvodní stránka" }
     ]
   },
   {
-    "time": "3. květen 2026",
-    "text": ["Předělání Úvodní stránky.", "Přidání Info stránky."]
+    "date": "2026-04-30",
+    "milestone": true,
+    "title": "První ostrý provoz",
+    "text": "Hodně toho chybí, hodně toho už má. Akce úspěšná."
   },
   {
-    "time": "30. duben 2026",
-    "text": [
-      "První ostrý provoz nové verze MyPísnička. Hodně toho chybí, hodně toho už má. Akce úspěšná."
-    ]
+    "date": "2025-12",
+    "milestone": true,
+    "title": "Začátek MyPísničky 2.0",
+    "text": "Víc parády pro úzký okruh přátel a zároveň částečně veřejný dosah."
   },
   {
-    "time": "Prosinec 2025",
-    "text": [
-      "Začátek práce na MyPísnička 2.0. Vizí je dodat tomu více parády, pro úzký okruh přátel a zároveň zachovat částečně veřejný dosah."
-    ]
-  },
-  {
-    "time": "Září 2025",
-    "text": [
-      "První verze MyPísnička (https://fmuchka.github.io/my-pisnicka/), slouží pouze jako statický veřejný zpěvník, kterej toho moc neumí."
-    ]
+    "date": "2025-09",
+    "milestone": true,
+    "title": "První verze MyPísničky",
+    "text": "Statický veřejný zpěvník, který toho moc neuměl.",
+    "link": "https://fmuchka.github.io/my-pisnicka/"
   }
 ]
