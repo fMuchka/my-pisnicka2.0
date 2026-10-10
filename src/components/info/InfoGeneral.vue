@@ -24,11 +24,15 @@
     {
       icon: Users,
       title: 'Relace',
-      text: 'Společné hraní v reálném čase — všichni koukají na stejnou píseň.',
+      text: 'Společné hraní v reálném čase — všichni koukají na stejnou píseň. (Posun se nesynchronizuje.)',
     },
   ];
 
   const FAQS = [
+    {
+      question: 'Jaké výhody má účet?',
+      answer: 'Můžeš přidávat písně, ukládat si je do playlistů a vytvářet Relace.',
+    },
     {
       question: 'Jak získám účet?',
       answer:
