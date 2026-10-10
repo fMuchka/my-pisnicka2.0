@@ -1,12 +1,3 @@
-import type { LucideProps } from 'lucide-vue-next';
-import type { EmitsOptions, FunctionalComponent } from 'vue';
+import type { LucideIcon } from '../types';
 
-export type DrawerTitleIcon = {
-  component: FunctionalComponent<
-    LucideProps,
-    Record<string, unknown[]>,
-    Record<string, unknown>,
-    EmitsOptions
-  >;
-  props?: LucideProps;
-};
+export type DrawerTitleIcon = LucideIcon;
