@@ -5,10 +5,6 @@ import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
 import Join from '../Join.vue';
 
-vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
-  default: { template: '<header />' },
-}));
-
 vi.mock('../../components/core/PinCodeInput.vue', () => ({
   default: defineComponent({
     props: {

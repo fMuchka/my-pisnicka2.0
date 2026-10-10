@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { defineComponent, h } from 'vue';
 import Home from '../Home.vue';
 import Routes from '../../router/Routes';
 import { getLatestTimelineTime } from '../../lib/timeline/timeline';
@@ -13,15 +12,6 @@ const router = vi.hoisted(() => ({ push: vi.fn() }));
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: router.push }),
-}));
-
-vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
-  default: defineComponent({
-    name: 'TopNavigation',
-    setup() {
-      return () => h('div', { 'data-testid': 'top-navigation' });
-    },
-  }),
 }));
 
 describe('Home Page', () => {

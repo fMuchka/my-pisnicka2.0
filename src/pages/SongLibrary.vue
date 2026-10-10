@@ -1,13 +1,14 @@
 <script setup lang="ts">
+  import { usePageNavigation } from '../composables/usePageNavigation';
   import { Plus } from 'lucide-vue-next';
   import { useRouter } from 'vue-router';
   import Button from '../components/core/button/Button.vue';
   import SongList from '../components/song-list/SongList.vue';
-  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import Routes from '../router/Routes';
 
   const TITLE = 'Knihovna';
-  const TAG_LINE = 'Ne všechny písně, co čekají, jsou zapomenuté';
+
+  usePageNavigation({ pageTitle: TITLE });
   const router = useRouter();
 
   const openCreateSongPage = () => {
@@ -16,11 +17,6 @@
 </script>
 
 <template>
-  <TopNavigation
-    :page-title="TITLE"
-    :page-subtitle="TAG_LINE"
-  />
-
   <div
     class="container"
     data-testid="song-library-view"

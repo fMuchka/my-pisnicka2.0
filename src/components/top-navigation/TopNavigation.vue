@@ -1,63 +1,20 @@
 <script setup lang="ts">
-  import { ArrowLeft } from 'lucide-vue-next';
   import { computed } from 'vue';
-  import { useRouter } from 'vue-router';
-  import Routes from '../../router/Routes';
-  import AppOptions from './options/AppOptions.vue';
-  import Button from '../core/button/Button.vue';
-  import PageHeader from '../PageHeader.vue';
-  import UserOptions from './options/UserOptions.vue';
-  import { useAuth } from '../../composables/useAuth';
 
   const props = withDefaults(
     defineProps<{
       pageTitle?: string;
-      pageSubtitle?: string;
-      showBack?: boolean;
-      backToPath?: string;
       fadeAway?: boolean;
     }>(),
     {
-      showBack: true,
       pageTitle: undefined,
-      pageSubtitle: undefined,
-      backToPath: undefined,
       fadeAway: false,
     }
   );
 
-  const { isAuthenticated } = useAuth();
+  const emit = defineEmits<{ home: [] }>();
 
-  const router = useRouter();
   const hasPageTitle = computed(() => Boolean(props.pageTitle?.trim()));
-  const hasPageSubtitle = computed(() => Boolean(props.pageSubtitle?.trim()));
-  const showContextRow = computed(
-    () => props.showBack === true || hasPageTitle.value || hasPageSubtitle.value
-  );
-
-  const goBack = () => {
-    if (props.backToPath) {
-      router.push({ path: props.backToPath });
-
-      return;
-    }
-
-    if (window.history.length > 1) {
-      router.back();
-
-      return;
-    }
-
-    router.push({ path: Routes.Home });
-  };
-
-  const goHome = () => {
-    if (isAuthenticated) {
-      router.push({ path: Routes.Home });
-    } else {
-      router.push({ path: Routes.Login });
-    }
-  };
 </script>
 
 <template>
@@ -68,7 +25,7 @@
     <div class="top-row">
       <div
         class="nav-title"
-        @click="goHome"
+        @click="emit('home')"
       >
         <img
           src="/mypisnicka-icon.svg"
@@ -81,34 +38,15 @@
         MyPísnička
       </div>
       <div class="nav-actions">
-        <AppOptions />
-        <UserOptions />
+        <slot name="actions" />
       </div>
     </div>
 
     <div
-      v-if="showContextRow"
+      v-if="hasPageTitle"
       class="context-row"
     >
-      <div class="context-left">
-        <Button
-          v-if="props.showBack"
-          class="back-button"
-          label="Zpět"
-          :icon="{ component: ArrowLeft, position: 'prepend' }"
-          color-variation="secondary"
-          style-variation="text"
-          type="button"
-          aria-label="Zpět"
-          @click="goBack"
-        />
-      </div>
-
-      <PageHeader
-        class="context-header"
-        :title="props.pageTitle"
-        :tagline="props.pageSubtitle"
-      />
+      <h1 class="page-title">{{ props.pageTitle }}</h1>
     </div>
   </header>
 </template>
@@ -151,52 +89,18 @@
     min-height: 52px;
     display: flex;
     align-items: center;
-    position: relative;
+    justify-content: center;
     padding: 0 var(--space-md);
     background-color: color-mix(in srgb, var(--bg-primary) 96%, var(--bg-secondary));
   }
 
-  .context-left {
+  .page-title {
     min-width: 0;
-    flex-shrink: 0;
-  }
-
-  .back-button {
-    min-height: 44px;
-    padding: 8px 10px;
-    justify-self: start;
-  }
-
-  .context-header {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: calc(100% - 200px);
-    overflow: hidden;
-    margin-bottom: 0;
-    pointer-events: none;
-  }
-
-  .context-header :deep(.header) {
-    margin: 0;
-    text-align: center;
-  }
-
-  .context-header :deep(.title) {
     margin: 0;
     font-size: 1rem;
     font-weight: 650;
     line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .context-header :deep(.tagline) {
-    margin-top: 2px;
-    margin-bottom: 0;
-    font-size: 0.78rem;
-    line-height: 1.2;
+    color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -209,20 +113,6 @@
   }
 
   @media (max-width: 600px) {
-    .back-button :deep(span) {
-      display: none;
-    }
-
-    .back-button {
-      border: 1.5px solid color-mix(in srgb, var(--accent) 45%, var(--bg-tertiary));
-      border-radius: var(--radius-sm);
-      padding: 8px;
-    }
-
-    .context-header {
-      max-width: calc(100% - 120px);
-    }
-
     .logo {
       width: 25px;
       height: 25px;

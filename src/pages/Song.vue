@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { usePageNavigation } from '../composables/usePageNavigation';
   import { Field } from '@ark-ui/vue';
   import { Combobox, useListCollection } from '@ark-ui/vue/combobox';
   import { useFilter } from '@ark-ui/vue/locale';
@@ -13,7 +14,6 @@
   import SongTextEditor from '../components/song/SongTextEditor.vue';
   import ChordLayoutRenderer from '../components/song/ChordLayoutRenderer.vue';
   import SongControls from '../components/song/SongControls.vue';
-  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useAuth } from '../composables/useAuth';
   import { useSongDetail } from '../composables/useSongDetail';
   import { SECTIONS_DICTIONARY, type SectionTypes } from '../lib/sections/sectionsDictionary';
@@ -315,18 +315,12 @@
 
     return song.value?.title ?? 'Píseň';
   });
-  const pageSubtitle = computed(() => {
-    if (isEditorMode.value) {
-      const draftArtist = songArtist.value.trim();
-      return draftArtist.length > 0
-        ? draftArtist
-        : isCreateMode.value
-          ? 'Vytvořit píseň'
-          : 'Upravit metadata a text';
-    }
 
-    return song.value?.artist;
-  });
+  usePageNavigation(() => ({
+    pageTitle: pageTitle.value,
+    fadeAway: !isEditorMode.value && isAutoScrollNavigationActive.value,
+  }));
+
   const trimmedTitle = computed(() => songTitle.value.trim());
   const trimmedArtist = computed(() => songArtist.value.trim());
   const isTitleValid = computed(() => trimmedTitle.value.length >= 1);
@@ -813,13 +807,6 @@
 </script>
 
 <template>
-  <TopNavigation
-    :page-title="pageTitle"
-    :page-subtitle="pageSubtitle"
-    :fade-away="!isEditorMode && isAutoScrollNavigationActive"
-    :back-to-path="isCreateMode ? Routes.SongLibrary : undefined"
-  />
-
   <main
     ref="songPageRef"
     class="song-page"

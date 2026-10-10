@@ -1,12 +1,12 @@
 <script setup lang="ts">
   import { Music, Users, Info } from 'lucide-vue-next';
   import { onMounted, ref } from 'vue';
-  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useRouter } from 'vue-router';
   import { hasUnseenTimelineUpdates } from '../lib/timeline/timeline';
   import Routes from '../router/Routes';
 
   const router = useRouter();
+
   const showInfoBadge = ref(false);
 
   const goToSessionListPage = () => router.push({ path: Routes.SessionList });
@@ -23,11 +23,6 @@
 </script>
 
 <template>
-  <TopNavigation
-    page-title=""
-    :show-back="false"
-  />
-
   <div
     class="container"
     data-testid="home-view"

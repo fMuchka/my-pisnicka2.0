@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/vue';
 import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
 import SessionList from '../SessionList.vue';
+import { pageNavigation } from '../../composables/usePageNavigation';
 
 type MockRef<T> = { __v_isRef: true; value: T };
 
@@ -17,18 +18,6 @@ const fetchAllUserSessions = vi.hoisted(() => vi.fn());
 const deleteClosedHostedSessions = vi.hoisted(() => vi.fn());
 const mockUser = vi.hoisted(() => mockRef({ uid: 'host-123', displayName: 'Test Host' }));
 const routerPush = vi.hoisted(() => vi.fn());
-
-vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
-  default: defineComponent({
-    name: 'TopNavigation',
-    props: {
-      pageTitle: { type: String, default: '' },
-    },
-    setup(props) {
-      return () => h('div', { 'data-testid': 'top-navigation' }, props.pageTitle);
-    },
-  }),
-}));
 
 vi.mock('../../components/core/LoadingSpinner.vue', () => ({
   default: defineComponent({
@@ -136,7 +125,7 @@ describe('SessionList', () => {
     render(SessionList);
 
     expect(screen.getByTestId('session-list-view')).toBeInTheDocument();
-    expect(screen.getByTestId('top-navigation')).toHaveTextContent('Seznam Relací');
+    expect(pageNavigation.value.pageTitle).toBe('Seznam Relací');
     expect(screen.getByRole('button', { name: 'Vytvořit novou relaci' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Připojit se k relaci' })).toBeInTheDocument();
   });

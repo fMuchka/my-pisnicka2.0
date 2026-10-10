@@ -5,6 +5,7 @@ import '@testing-library/jest-dom';
 import SongPage from '../Song.vue';
 import type { Song } from '../../lib/song';
 import Routes from '../../router/Routes';
+import { pageNavigation } from '../../composables/usePageNavigation';
 
 type MutableRef<T> = { value: T };
 type MockRef<T> = { __v_isRef: true; value: T };
@@ -83,13 +84,6 @@ vi.mock('../../lib/song', () => ({
   fetchSongCatalogEntryBySourceSongId: songLibMocks.fetchSongCatalogEntryBySourceSongId,
   fetchAllSongCategories: songLibMocks.fetchAllSongCategories,
   resolveSongCategoryIds: songLibMocks.resolveSongCategoryIds,
-}));
-
-vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
-  default: {
-    props: ['pageTitle', 'pageSubtitle', 'showBack', 'backToPath', 'fadeAway'],
-    template: '<header role="banner"><h1>{{ pageTitle }}</h1><p>{{ pageSubtitle }}</p></header>',
-  },
 }));
 
 vi.mock('../../stores/session', () => ({
@@ -230,8 +224,7 @@ describe('Song Page', () => {
 
     render(SongPage);
 
-    expect(screen.getByText('Song title')).toBeInTheDocument();
-    expect(screen.getByText('Artist name')).toBeInTheDocument();
+    expect(pageNavigation.value.pageTitle).toBe('Song title');
     expect(screen.getByText('Úvod')).toBeInTheDocument();
     expect(screen.getByText('Sloka')).toBeInTheDocument();
     expect(screen.getByTestId('song-quick-info')).toHaveTextContent('2|G|0');

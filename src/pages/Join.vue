@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import Button from '../components/core/button/Button.vue';
   import PinCodeInput from '../components/core/PinCodeInput.vue';
+  import PageHeader from '../components/PageHeader.vue';
   import { ref, computed } from 'vue';
   import {
     createSessionRouterQuery,
@@ -14,7 +15,6 @@
   import { useRouter } from 'vue-router';
   import Routes from '../router/Routes';
   import { useSessionStore } from '../stores/session';
-  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
 
   // UI Text
   const TITLE = 'Připojit se k partě';
@@ -77,14 +77,14 @@
 </script>
 
 <template>
-  <TopNavigation
-    :page-title="TITLE"
-    :page-subtitle="TAG_LINE"
-  />
   <div
     class="container"
     data-testid="join-view"
   >
+    <PageHeader
+      :title="TITLE"
+      :tagline="TAG_LINE"
+    />
     <PinCodeInput
       v-model="pin"
       title="Zadej 4-místný PIN"

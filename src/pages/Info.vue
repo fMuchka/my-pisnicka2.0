@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { usePageNavigation } from '../composables/usePageNavigation';
   import { Tabs } from '@ark-ui/vue/tabs';
   import { History, Route, Info as InfoIcon } from 'lucide-vue-next';
   import { onMounted, ref } from 'vue';
@@ -6,13 +7,13 @@
     getLastVisitedTimelineTime,
     markLatestTimelineAsVisited,
   } from '../lib/timeline/timeline';
-  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import InfoHistory from '../components/info/InfoHistory.vue';
   import InfoRoadmap from '../components/info/InfoRoadmap.vue';
   import InfoGeneral from '../components/info/InfoGeneral.vue';
 
   const TITLE = 'Informace';
-  const TAG_LINE = 'Silmarillion MyPísničky';
+
+  usePageNavigation({ pageTitle: TITLE });
 
   const activeTab = ref('timeline');
   // Read before onMounted overwrites it, so Historie can still tell what is new.
@@ -28,12 +29,6 @@
 </script>
 
 <template>
-  <TopNavigation
-    :page-title="TITLE"
-    :page-subtitle="TAG_LINE"
-    :show-back="true"
-  />
-
   <section class="container">
     <Tabs.Root
       v-model="activeTab"

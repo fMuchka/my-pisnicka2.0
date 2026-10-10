@@ -1,10 +1,9 @@
 <script setup lang="ts">
+  import { usePageNavigation } from '../composables/usePageNavigation';
   import { computed, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
-  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import SongList from '../components/song-list/SongList.vue';
   import SessionControls from '../components/session/SessionControls.vue';
-  import { useAuth } from '../composables/useAuth';
   import { stringToPin } from '../lib/pin';
   import {
     getSessionErrorMessage,
@@ -12,13 +11,10 @@
     type SessionErrorCode,
     type SessionRouterQuery,
   } from '../lib/session';
-  import Routes from '../router/Routes';
   import { useSessionStore } from '../stores/session';
 
   const TITLE = 'Relace';
-  const TAG_LINE = 'Spolu teď a tady';
 
-  const { isAuthenticated } = useAuth();
   const sessionStore = useSessionStore();
   const errorCode = ref<SessionErrorCode | undefined>(undefined);
   const songListSearch = ref('');
@@ -49,7 +45,8 @@
   });
 
   const errorMessage = computed(() => getSessionErrorMessage(errorCode.value));
-  const sessionBackToPath = computed(() => (isAuthenticated.value ? undefined : Routes.Join));
+
+  usePageNavigation({ pageTitle: TITLE });
 
   watch(
     querySessionDetails,
@@ -105,12 +102,6 @@
 </script>
 
 <template>
-  <TopNavigation
-    :page-title="TITLE"
-    :page-subtitle="TAG_LINE"
-    :back-to-path="sessionBackToPath"
-  />
-
   <div
     class="container"
     data-testid="session-view"

@@ -1,21 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { defineComponent, h } from 'vue';
 import Info from '../Info.vue';
 import { getLatestTimelineTime } from '../../lib/timeline/timeline';
 
 const TIMELINE_VISITED_STORAGE_KEY = 'my-pisnicka:timeline-latest-visited-time';
-
-vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
-  default: defineComponent({
-    name: 'TopNavigation',
-    setup() {
-      return () => h('div', { 'data-testid': 'top-navigation' });
-    },
-  }),
-}));
 
 describe('Info Page', () => {
   beforeEach(() => {

@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
 import SongLibrary from '../SongLibrary.vue';
 import Routes from '../../router/Routes';
+import { pageNavigation } from '../../composables/usePageNavigation';
 
 const router = vi.hoisted(() => ({
   push: vi.fn(),
@@ -11,18 +12,6 @@ const router = vi.hoisted(() => ({
 
 vi.mock('vue-router', () => ({
   useRouter: () => router,
-}));
-
-vi.mock('../../components/top-navigation/TopNavigation.vue', () => ({
-  default: defineComponent({
-    name: 'TopNavigation',
-    props: {
-      pageTitle: { type: String, default: '' },
-    },
-    setup(props) {
-      return () => h('div', { 'data-testid': 'top-navigation' }, props.pageTitle);
-    },
-  }),
 }));
 
 vi.mock('../../components/song-list/SongList.vue', () => ({
@@ -39,7 +28,7 @@ describe('SongLibrary', () => {
     render(SongLibrary);
 
     expect(screen.getByTestId('song-library-view')).toBeInTheDocument();
-    expect(screen.getByTestId('top-navigation')).toHaveTextContent('Knihovna');
+    expect(pageNavigation.value.pageTitle).toBe('Knihovna');
     expect(screen.getByTestId('song-list')).toBeInTheDocument();
   });
 

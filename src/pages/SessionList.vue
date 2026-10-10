@@ -1,11 +1,11 @@
 <script setup lang="ts">
+  import { usePageNavigation } from '../composables/usePageNavigation';
   import { computed, onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
   import { ArrowUpDown, ArrowDown, ArrowUp, Plus, Search, Trash2, UserPlus } from 'lucide-vue-next';
   import Button from '../components/core/button/Button.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import DeleteClosedSessionsDialog from '../components/dialogs/delete-closed-sessions/DeleteClosedSessionsDialog.vue';
-  import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import LoadingSpinner from '../components/core/LoadingSpinner.vue';
   import ErrorMessage from '../components/core/ErrorMessage.vue';
   import {
@@ -20,7 +20,8 @@
   import Routes from '../router/Routes';
 
   const TITLE = 'Seznam Relací';
-  const TAG_LINE = 'Vzpomínky nemizí';
+
+  usePageNavigation({ pageTitle: TITLE });
 
   type SortField = 'name' | 'createdAt' | 'pin';
   type SortDir = 'asc' | 'desc';
@@ -180,11 +181,6 @@
 </script>
 
 <template>
-  <TopNavigation
-    :page-title="TITLE"
-    :page-subtitle="TAG_LINE"
-  />
-
   <div
     class="container"
     data-testid="session-list-view"
