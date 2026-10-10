@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { Bell, ChevronDown, ExternalLink, Flag, Plus, TrendingUp, Wrench } from 'lucide-vue-next';
-  import IconBackdrop from '../core/icon-backdrop/IconBackdrop.vue';
+  import IconBackdrop from '../../core/icon-backdrop/IconBackdrop.vue';
   import { computed } from 'vue';
   import {
     formatChangeCount,
@@ -9,7 +9,7 @@
     groupChangesByType,
     summarizeChanges,
     type ChangeType,
-  } from '../../lib/timeline/timeline';
+  } from '../../../lib/timeline/timeline';
 
   const props = defineProps<{
     lastVisited: string | null;

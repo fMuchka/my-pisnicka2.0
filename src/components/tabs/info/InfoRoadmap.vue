@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import { ArrowRight, Check, ChevronDown, List, Music, Sparkles, Users } from 'lucide-vue-next';
-  import IconBackdrop from '../core/icon-backdrop/IconBackdrop.vue';
-  import { getRecentNewChanges } from '../../lib/timeline/timeline';
+  import IconBackdrop from '../../core/icon-backdrop/IconBackdrop.vue';
+  import { getRecentNewChanges } from '../../../lib/timeline/timeline';
   import {
     groupFeaturesByArea,
     type FeatureArea,
-  } from '../../lib/upcoming-features/upcomingFeatures';
+  } from '../../../lib/upcoming-features/upcomingFeatures';
 
   const emit = defineEmits<{
     showHistory: [];

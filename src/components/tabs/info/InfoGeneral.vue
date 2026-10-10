@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ArrowDown, ChevronDown, ExternalLink, History, Music, Users } from 'lucide-vue-next';
-  import IconBackdrop from '../core/icon-backdrop/IconBackdrop.vue';
-  import { getTimelineEntries } from '../../lib/timeline/timeline';
+  import IconBackdrop from '../../core/icon-backdrop/IconBackdrop.vue';
+  import { getTimelineEntries } from '../../../lib/timeline/timeline';
 
   const emit = defineEmits<{
     showHistory: [];

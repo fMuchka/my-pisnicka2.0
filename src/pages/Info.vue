@@ -7,9 +7,9 @@
     getLastVisitedTimelineTime,
     markLatestTimelineAsVisited,
   } from '../lib/timeline/timeline';
-  import InfoHistory from '../components/info/InfoHistory.vue';
-  import InfoRoadmap from '../components/info/InfoRoadmap.vue';
-  import InfoGeneral from '../components/info/InfoGeneral.vue';
+  import InfoHistory from '../components/tabs/info/InfoHistory.vue';
+  import InfoRoadmap from '../components/tabs/info/InfoRoadmap.vue';
+  import InfoGeneral from '../components/tabs/info/InfoGeneral.vue';
 
   const TITLE = 'Informace';
 
