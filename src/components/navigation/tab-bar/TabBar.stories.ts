@@ -32,7 +32,7 @@ const mainPage: TabBarPage = {
 };
 
 const meta = {
-  title: 'Core/TabBar',
+  title: 'Navigation/TabBar',
   component: TabBar,
   tags: ['autodocs'],
   argTypes: {
