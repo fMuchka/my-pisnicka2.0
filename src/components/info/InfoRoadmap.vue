@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { ArrowRight, Check, ChevronDown, List, Music, Sparkles, Users } from 'lucide-vue-next';
+  import IconBackdrop from '../core/icon-backdrop/IconBackdrop.vue';
   import { getRecentNewChanges } from '../../lib/timeline/timeline';
   import {
     groupFeaturesByArea,
@@ -51,15 +52,12 @@
         >
           <details v-if="feature.details">
             <summary class="feature-row">
-              <span
-                class="icon-backdrop"
-                aria-hidden="true"
-              >
+              <IconBackdrop aria-hidden="true">
                 <component
                   :is="group.area ? AREA_ICONS[group.area] : Sparkles"
                   class="icon-sm"
                 />
-              </span>
+              </IconBackdrop>
               <span class="feature-heading">
                 <span class="feature-title">{{ feature.title }}</span>
                 <span
@@ -80,15 +78,12 @@
             v-else
             class="feature-row"
           >
-            <span
-              class="icon-backdrop"
-              aria-hidden="true"
-            >
+            <IconBackdrop aria-hidden="true">
               <component
                 :is="group.area ? AREA_ICONS[group.area] : Sparkles"
                 class="icon-sm"
               />
-            </span>
+            </IconBackdrop>
             <span class="feature-heading">
               <span class="feature-title">{{ feature.title }}</span>
               <span
@@ -156,11 +151,11 @@
 
   .intro-title {
     font-size: 1.2rem;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .intro-text {
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .area {
@@ -176,7 +171,7 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .eyebrow-icon {
@@ -191,9 +186,9 @@
   }
 
   .feature {
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-primary);
-    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface-secondary);
     overflow: hidden;
   }
 
@@ -230,7 +225,7 @@
 
   .feature-title {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .status {
@@ -238,23 +233,11 @@
     align-items: center;
     padding: 2px 8px;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border-primary));
-    background: color-mix(in srgb, var(--accent) 14%, var(--bg-primary));
+    border: 1px solid color-mix(in srgb, var(--brand) 45%, var(--border));
+    background: color-mix(in srgb, var(--brand) 14%, var(--surface));
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .icon-backdrop {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    color: var(--accent);
+    color: var(--ink);
   }
 
   .icon-sm {
@@ -271,7 +254,7 @@
     flex-shrink: 0;
     width: 1.25rem;
     height: 1.25rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
     transition: transform var(--transition-fast);
   }
 
@@ -282,14 +265,14 @@
   .feature-details {
     padding: 0 14px 14px calc(14px + 32px + var(--space-sm));
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .done {
     display: grid;
     gap: var(--space-sm);
     padding: var(--space-md);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     border: 1px dashed var(--text-disabled);
   }
 
@@ -304,7 +287,7 @@
     align-items: flex-start;
     gap: 10px;
     font-size: 0.9rem;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .done-check {
@@ -316,14 +299,14 @@
     height: 20px;
     margin-top: 1px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    color: var(--accent);
+    background: color-mix(in srgb, var(--brand) 14%, transparent);
+    color: var(--brand);
   }
 
   .done-date {
     display: block;
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .link-button {
@@ -338,7 +321,7 @@
     font: inherit;
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--ink);
     text-decoration: underline;
     text-underline-offset: 3px;
     cursor: pointer;
@@ -352,6 +335,6 @@
   .outro {
     text-align: center;
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 </style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { ArrowDown, ChevronDown, ExternalLink, History, Music, Users } from 'lucide-vue-next';
+  import IconBackdrop from '../core/icon-backdrop/IconBackdrop.vue';
   import { getTimelineEntries } from '../../lib/timeline/timeline';
 
   const emit = defineEmits<{
@@ -88,15 +89,12 @@
           :key="feature.title"
           class="feature"
         >
-          <span
-            class="icon-backdrop"
-            aria-hidden="true"
-          >
+          <IconBackdrop aria-hidden="true">
             <component
               :is="feature.icon"
               class="icon-sm"
             />
-          </span>
+          </IconBackdrop>
           <span>
             <strong class="feature-title">{{ feature.title }}</strong>
             <span class="feature-text">{{ feature.text }}</span>
@@ -159,9 +157,9 @@
     display: grid;
     gap: var(--space-sm);
     padding: var(--space-lg);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-primary);
-    background: color-mix(in srgb, var(--accent) 8%, var(--bg-secondary));
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--brand) 8%, var(--surface-secondary));
   }
 
   .hero-brand {
@@ -177,16 +175,16 @@
 
   .hero-title {
     font-size: 1.3rem;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .hero-version {
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .hero-text {
-    color: var(--text-primary);
+    color: var(--ink);
     line-height: 1.5;
   }
 
@@ -203,15 +201,15 @@
     min-height: 32px;
     padding: 0 10px;
     border-radius: 999px;
-    border: 1px solid var(--border-primary);
+    border: 1px solid var(--border);
     font: inherit;
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .meta-pill--link {
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    background: var(--surface);
+    color: var(--ink);
     font-weight: 500;
     cursor: pointer;
   }
@@ -231,7 +229,7 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .features {
@@ -246,33 +244,21 @@
     align-items: flex-start;
     gap: var(--space-sm);
     padding: 14px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-primary);
-    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface-secondary);
   }
 
   .feature-title {
     display: block;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .feature-text {
     display: block;
     margin-top: 2px;
     font-size: 0.85rem;
-    color: var(--text-secondary);
-  }
-
-  .icon-backdrop {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    color: var(--accent);
+    color: var(--ink-muted);
   }
 
   .icon-sm {
@@ -289,13 +275,13 @@
     font-size: 1.2rem;
     font-weight: 600;
     line-height: 1.4;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .faq {
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-primary);
-    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface-secondary);
   }
 
   .faq-question {
@@ -305,7 +291,7 @@
     min-height: 52px;
     padding: var(--space-sm) 14px;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--ink);
     list-style: none;
     cursor: pointer;
   }
@@ -324,7 +310,7 @@
     margin-left: auto;
     width: 1.25rem;
     height: 1.25rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
     transition: transform var(--transition-fast);
   }
 
@@ -335,7 +321,7 @@
   .faq-answer {
     padding: 0 14px 14px;
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .v1-link {
@@ -345,9 +331,9 @@
     gap: var(--space-sm);
     min-height: 52px;
     padding: var(--space-sm) 14px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-primary);
-    color: var(--text-primary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    color: var(--ink);
     text-decoration: none;
   }
 
@@ -365,6 +351,6 @@
   .v1-meta {
     font-size: 0.8rem;
     font-weight: 400;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 </style>

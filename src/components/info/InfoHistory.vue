@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { Bell, ChevronDown, ExternalLink, Flag, Plus, TrendingUp, Wrench } from 'lucide-vue-next';
+  import IconBackdrop from '../core/icon-backdrop/IconBackdrop.vue';
   import { computed } from 'vue';
   import {
     formatChangeCount,
@@ -40,12 +41,9 @@
       v-if="unseenCount > 0"
       class="unseen-banner"
     >
-      <span
-        class="icon-backdrop"
-        aria-hidden="true"
-      >
+      <IconBackdrop aria-hidden="true">
         <Bell class="icon-sm" />
-      </span>
+      </IconBackdrop>
       <span class="unseen-text">
         <strong>{{ formatChangeCount(unseenCount) }} od tvé poslední návštěvy</strong>
         <span>Nové věci mají štítek Nové. Klepni na změnu pro detail.</span>
@@ -159,12 +157,9 @@
           v-else
           class="milestone"
         >
-          <span
-            class="icon-backdrop"
-            aria-hidden="true"
-          >
+          <IconBackdrop aria-hidden="true">
             <Flag class="icon-sm" />
-          </span>
+          </IconBackdrop>
           <div class="milestone-content">
             <span class="release-date">{{ entry.label }} · Milník</span>
             <h3 class="release-title">{{ entry.title }}</h3>
@@ -200,33 +195,21 @@
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--accent) 10%, var(--bg-secondary));
-    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-primary));
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--brand) 10%, var(--surface-secondary));
+    border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--border));
   }
 
   .unseen-text {
     display: grid;
     gap: 2px;
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .unseen-text strong {
     font-size: 0.9rem;
-    color: var(--text-primary);
-  }
-
-  .icon-backdrop {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    color: var(--accent);
+    color: var(--ink);
   }
 
   .icon-sm {
@@ -255,7 +238,7 @@
     bottom: 14px;
     width: 2px;
     border-radius: 2px;
-    background: var(--border-primary);
+    background: var(--border);
   }
 
   .timeline-item {
@@ -269,25 +252,25 @@
     width: 12px;
     height: 12px;
     border-radius: 999px;
-    background: var(--bg-primary);
+    background: var(--surface);
     border: 2px solid var(--text-disabled);
   }
 
   .timeline-dot--latest {
-    background: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+    background: var(--brand);
+    border-color: var(--brand);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 22%, transparent);
   }
 
   .timeline-dot--milestone {
-    background: color-mix(in srgb, var(--accent) 14%, var(--bg-primary));
-    border-color: var(--accent);
+    background: color-mix(in srgb, var(--brand) 14%, var(--surface));
+    border-color: var(--brand);
   }
 
   .release {
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-primary);
-    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface-secondary);
     overflow: hidden;
   }
 
@@ -326,25 +309,24 @@
     gap: var(--space-sm);
     font-size: 0.8rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .release-title {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .release-meta {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .badge-new {
-    border-radius: 999px;
-    /* Plain --accent under white text drops below 4.5:1 in dark theme. */
-    background: color-mix(in srgb, var(--accent) 85%, black);
-    color: #ffffff;
+    border-radius: var(--radius-full);
+    background: var(--brand-fill);
+    color: var(--on-brand);
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -357,7 +339,7 @@
     flex-shrink: 0;
     width: 1.25rem;
     height: 1.25rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
     transition: transform var(--transition-fast);
   }
 
@@ -378,7 +360,7 @@
     display: grid;
     gap: var(--space-xs);
     padding: var(--space-xs) var(--space-md) var(--space-sm);
-    border-top: 1px solid var(--border-primary);
+    border-top: 1px solid var(--border);
   }
 
   .group-title {
@@ -390,7 +372,7 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .group-icon {
@@ -399,7 +381,7 @@
   }
 
   .group-title--new .group-icon {
-    color: var(--accent);
+    color: var(--brand);
   }
 
   .changes {
@@ -420,7 +402,7 @@
     padding: 11px 0;
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .change-row--plain {
@@ -436,15 +418,15 @@
   }
 
   .bullet--new {
-    background: var(--accent);
+    background: var(--brand);
   }
 
   .change-details {
     margin: 0 0 var(--space-sm) 22px;
     padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    background: var(--bg-primary);
-    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--ink-muted);
     font-size: 0.85rem;
     line-height: 1.45;
   }
@@ -453,7 +435,7 @@
     display: flex;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     border: 1px dashed var(--text-disabled);
   }
 
@@ -465,7 +447,7 @@
 
   .milestone-text {
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
   }
 
   .milestone-link {
@@ -476,7 +458,7 @@
     min-height: 32px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--ink);
     text-underline-offset: 3px;
   }
 </style>

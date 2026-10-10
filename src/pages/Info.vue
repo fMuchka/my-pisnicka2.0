@@ -111,8 +111,8 @@
     gap: var(--space-xs);
     padding: var(--space-xs);
     border-radius: 999px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    background: var(--surface-secondary);
+    border: 1px solid var(--border);
     isolation: isolate;
   }
 
@@ -124,8 +124,8 @@
     top: var(--space-xs);
     left: var(--left);
     border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 18%, var(--bg-primary));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 50%, var(--border-primary));
+    background: color-mix(in srgb, var(--brand) 18%, var(--surface));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 50%, var(--border));
     transition-property: left, width;
     transition-duration: var(--transition-normal);
     transition-timing-function: ease-out;
@@ -141,18 +141,18 @@
     padding: 0 var(--space-xs);
     border: none;
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--ink-muted);
     border-radius: 999px;
     font-size: 0.9rem;
     font-weight: 600;
-    font-family: var(--font-body);
+    font-family: var(--font-sans);
     white-space: nowrap;
     cursor: pointer;
     transition: color var(--transition-fast);
   }
 
   .tabs-trigger[data-selected] {
-    color: var(--text-primary);
+    color: var(--ink);
   }
 
   .tabs-trigger:focus-visible {
