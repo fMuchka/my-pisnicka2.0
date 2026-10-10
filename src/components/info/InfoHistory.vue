@@ -113,7 +113,6 @@
                   aria-hidden="true"
                 />
                 <span>{{ group.label }}</span>
-                <span class="group-count">{{ group.changes.length }}</span>
               </h3>
 
               <ul class="changes">
@@ -401,11 +400,6 @@
 
   .group-title--new .group-icon {
     color: var(--accent);
-  }
-
-  .group-count {
-    margin-left: auto;
-    letter-spacing: 0;
   }
 
   .changes {
