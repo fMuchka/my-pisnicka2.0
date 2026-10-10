@@ -1,15 +1,26 @@
 <script setup lang="ts">
   import { Tabs } from '@ark-ui/vue/tabs';
   import { History, Route, Info as InfoIcon } from 'lucide-vue-next';
-  import { onMounted } from 'vue';
-  import { getTimelineEvents, markLatestTimelineAsVisited } from '../lib/timeline/timeline';
-  import { getUpcomingFeatures } from '../lib/upcoming-features/upcomingFeatures';
+  import { onMounted, ref } from 'vue';
+  import {
+    getLastVisitedTimelineTime,
+    markLatestTimelineAsVisited,
+  } from '../lib/timeline/timeline';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
+  import InfoHistory from '../components/info/InfoHistory.vue';
+  import InfoRoadmap from '../components/info/InfoRoadmap.vue';
+  import InfoGeneral from '../components/info/InfoGeneral.vue';
 
   const TITLE = 'Informace';
   const TAG_LINE = 'Silmarillion MyPísničky';
-  const timelineEvents = getTimelineEvents();
-  const upcomingFeatures = getUpcomingFeatures();
+
+  const activeTab = ref('timeline');
+  // Read before onMounted overwrites it, so Historie can still tell what is new.
+  const lastVisited = getLastVisitedTimelineTime();
+
+  function showHistory() {
+    activeTab.value = 'timeline';
+  }
 
   onMounted(() => {
     markLatestTimelineAsVisited();
@@ -25,8 +36,8 @@
 
   <section class="container">
     <Tabs.Root
+      v-model="activeTab"
       class="info-tabs"
-      default-value="timeline"
       lazy-mount
       unmount-on-exit
       aria-label="Navigace informační stránky"
@@ -60,120 +71,21 @@
         class="tabs-content"
         value="timeline"
       >
-        <article class="panel-card">
-          <h2 class="panel-title">Historie</h2>
-          <p class="panel-description">
-            Přehled důležitých milníků od prvních nápadů až po aktuální stav aplikace.
-          </p>
-          <ul class="event-list">
-            <li
-              v-for="event in timelineEvents"
-              :key="`${event.time}-${event.text}`"
-              class="event-item"
-            >
-              <span
-                class="event-dot"
-                aria-hidden="true"
-              ></span>
-
-              <div>
-                <strong>{{ event.time }}</strong>
-
-                <ul>
-                  <li
-                    v-for="(item, itemIndex) in event.text"
-                    :key="`${event.time}-${event.text}-${itemIndex}`"
-                  >
-                    <span>{{ item }}</span>
-                  </li>
-                </ul>
-              </div>
-            </li>
-          </ul>
-        </article>
+        <InfoHistory :last-visited="lastVisited" />
       </Tabs.Content>
 
       <Tabs.Content
         class="tabs-content"
         value="roadmap"
       >
-        <article class="panel-card">
-          <h2 class="panel-title">Plány</h2>
-          <p class="panel-description">Na čem plánuji pracovat.</p>
-          <ul class="event-list">
-            <li
-              v-for="feature in upcomingFeatures"
-              :key="feature.text"
-              class="event-item"
-            >
-              <span
-                class="event-dot"
-                aria-hidden="true"
-              ></span>
-              <div>
-                <strong>{{ feature.text }}</strong>
-              </div>
-            </li>
-          </ul>
-        </article>
+        <InfoRoadmap @show-history="showHistory" />
       </Tabs.Content>
 
       <Tabs.Content
         class="tabs-content"
         value="general-info"
       >
-        <article class="panel-card">
-          <h2 class="panel-title">Obecné info</h2>
-          <p class="panel-description">
-            MyPísnička je nástroj pro kytaristy a skupiny, které chtějí jednoduše trénovat, sdílet
-            písně a hrát spolu v reálném čase.
-          </p>
-          <ul class="event-list">
-            <li class="event-item">
-              <span
-                class="event-dot"
-                aria-hidden="true"
-              ></span>
-              <div>
-                <strong>Co aplikace umí</strong>
-                <p>Zobrazení akordů, automatické scrollování textu a týmové relace.</p>
-              </div>
-            </li>
-            <li class="event-item">
-              <span
-                class="event-dot"
-                aria-hidden="true"
-              ></span>
-              <div>
-                <strong>Hlavní cíl</strong>
-                <p>Podpořit společné hraní bez složitého nastavování, bez reklam a bez bariér.</p>
-              </div>
-            </li>
-            <li class="event-item">
-              <span
-                class="event-dot"
-                aria-hidden="true"
-              ></span>
-              <div>
-                <strong>Vytvoření účtu</strong>
-                <p>Účet pro nové členy může vytvořit pouze <b>FM</b>. Všichni účet mít nemusí.</p>
-              </div>
-            </li>
-            <li class="event-item">
-              <span
-                class="event-dot"
-                aria-hidden="true"
-              ></span>
-              <div>
-                <strong>Vytváření písní</strong>
-                <p>
-                  Autor stránek nebere odpovědnost za tvorbu písní. Každý, kdo přidá píseň, za ni
-                  bere odpovědnost.
-                </p>
-              </div>
-            </li>
-          </ul>
-        </article>
+        <InfoGeneral @show-history="showHistory" />
       </Tabs.Content>
     </Tabs.Root>
   </section>
@@ -181,7 +93,7 @@
 
 <style lang="css" scoped>
   .container {
-    max-width: 980px;
+    max-width: 760px;
     margin: 0 auto;
     width: 100%;
     padding: var(--space-xl) var(--space-md);
@@ -198,8 +110,8 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-xs);
     padding: var(--space-xs);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--bg-secondary) 80%, var(--bg-primary));
+    border-radius: 999px;
+    background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
     isolation: isolate;
   }
@@ -211,8 +123,9 @@
     width: var(--width);
     top: var(--space-xs);
     left: var(--left);
-    border-radius: calc(var(--radius-md) - 4px);
-    background: color-mix(in srgb, var(--accent) 12%, var(--bg-primary));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-primary));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 50%, var(--border-primary));
     transition-property: left, width;
     transition-duration: var(--transition-normal);
     transition-timing-function: ease-out;
@@ -222,20 +135,20 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-sm);
+    gap: 6px;
     width: 100%;
     min-height: 44px;
+    padding: 0 var(--space-xs);
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    border-radius: calc(var(--radius-md) - 4px);
-    font-size: 0.95rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
     font-weight: 600;
     font-family: var(--font-body);
+    white-space: nowrap;
     cursor: pointer;
-    transition:
-      color var(--transition-fast),
-      background-color var(--transition-fast);
+    transition: color var(--transition-fast);
   }
 
   .tabs-trigger[data-selected] {
@@ -248,8 +161,8 @@
   }
 
   .tabs-icon {
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 1rem;
+    height: 1rem;
     flex-shrink: 0;
   }
 
@@ -257,81 +170,19 @@
     outline: none;
   }
 
-  .panel-card {
-    padding: var(--space-lg);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-primary);
-    background: color-mix(in srgb, var(--bg-secondary) 65%, var(--bg-primary));
-    box-shadow: var(--shadow-soft);
-  }
-
-  .panel-title {
-    font-size: 1.2rem;
-    color: var(--text-primary);
-    margin-bottom: var(--space-sm);
-  }
-
-  .panel-description {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-md);
-  }
-
-  .event-list {
-    list-style: none;
-    display: grid;
-    gap: var(--space-md);
-  }
-
-  .event-item {
-    display: grid;
-    grid-template-columns: 12px 1fr;
-    gap: var(--space-sm);
-    align-items: start;
-  }
-
-  .event-item strong {
-    display: inline-block;
-    margin-bottom: 2px;
-    color: var(--text-primary);
-  }
-
-  .event-item p {
-    color: var(--text-secondary);
-  }
-
-  .event-dot {
-    width: 10px;
-    height: 10px;
-    margin-top: 0.45rem;
-    border-radius: 999px;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
-  }
-
   @media (max-width: 720px) {
     .container {
-      padding: var(--space-lg) var(--space-md);
-    }
-
-    .tabs-list {
-      grid-template-columns: 1fr;
-    }
-
-    .tabs-indicator {
-      width: calc(100% - var(--space-xs) * 2);
-      height: var(--height);
-      top: var(--top);
-      left: var(--space-xs);
-      transition-property: top, height;
+      padding: var(--space-md);
     }
 
     .tabs-trigger {
-      justify-content: flex-start;
-      padding-inline: var(--space-md);
+      font-size: 0.82rem;
     }
+  }
 
-    .panel-card {
-      padding: var(--space-md);
+  @media (max-width: 380px) {
+    .tabs-icon {
+      display: none;
     }
   }
 </style>

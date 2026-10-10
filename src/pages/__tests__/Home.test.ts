@@ -57,7 +57,7 @@ describe('Home Page', () => {
     const infoButton = screen.getByRole('button', { name: /informace/i });
     await user.click(infoButton);
     expect(router.push).toHaveBeenCalledWith({ path: Routes.Info });
-    expect(localStorage.getItem(TIMELINE_VISITED_STORAGE_KEY)).toBe(getLatestTimelineTime());
+    expect(localStorage.getItem(TIMELINE_VISITED_STORAGE_KEY)).toBeNull();
   });
 
   it('shows info badge when timeline has unseen changes', async () => {

@@ -1,7 +1,27 @@
 [
-  "Rozčlenění písní podle obtížnosti.",
-  "Vizualizace odehraných písní v Relaci + možnost odfiltrování.",
-  "Hlasování v Relaci o následující písni.",
-  "Tvorba vlastních seznamů písní.",
-  "Uložení vlastní preference o transpozici."
+  {
+    "title": "Hlasování o další písni",
+    "area": "relace",
+    "details": "Členové relace si odhlasují, co se zahraje dál."
+  },
+  {
+    "title": "Odehrané písně v relaci",
+    "area": "relace",
+    "details": "Uvidíš, co už se v relaci hrálo, a půjde to z výběru odfiltrovat."
+  },
+  {
+    "title": "Obtížnost písní",
+    "area": "pisne",
+    "details": "Písně se rozčlení podle obtížnosti, ať jde vybírat podle toho, na co máš."
+  },
+  {
+    "title": "Zapamatovaná transpozice",
+    "area": "pisne",
+    "details": "Píseň si zapamatuje transpozici, kterou si pro ni nastavíš."
+  },
+  {
+    "title": "Vlastní seznamy písní",
+    "area": "seznamy",
+    "details": "Poskládej si vlastní seznam písní, třeba na konkrétní akci."
+  }
 ]

@@ -3,7 +3,7 @@
   import { onMounted, ref } from 'vue';
   import TopNavigation from '../components/top-navigation/TopNavigation.vue';
   import { useRouter } from 'vue-router';
-  import { hasUnseenTimelineUpdates, markLatestTimelineAsVisited } from '../lib/timeline/timeline';
+  import { hasUnseenTimelineUpdates } from '../lib/timeline/timeline';
   import Routes from '../router/Routes';
 
   const router = useRouter();
@@ -11,8 +11,8 @@
 
   const goToSessionListPage = () => router.push({ path: Routes.SessionList });
   const goToSongLibraryPage = () => router.push({ path: Routes.SongLibrary });
+  // Info.vue marks the timeline as visited itself; doing it here would hide its "new" highlights.
   const goToInfoPage = () => {
-    markLatestTimelineAsVisited();
     showInfoBadge.value = false;
     return router.push({ path: Routes.Info });
   };
