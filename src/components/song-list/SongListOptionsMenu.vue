@@ -4,7 +4,7 @@
   import { useFilter } from '@ark-ui/vue/locale';
   import { Menu } from '@ark-ui/vue/menu';
   import { RefreshCw, Settings, ChevronDown, Check } from 'lucide-vue-next';
-  import Button from '../core/button/Button.vue';
+  import Button from '../_core/button/Button.vue';
   import type { SongCategory } from '../../lib/song';
 
   type ViewMode = 'flat' | 'tree';

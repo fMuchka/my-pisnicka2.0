@@ -3,7 +3,7 @@
   import { Field, PasswordInput } from '@ark-ui/vue';
   import { EyeIcon, EyeOffIcon } from 'lucide-vue-next';
   import { computed, ref, watch } from 'vue';
-  import Button from '../../core/button/Button.vue';
+  import Button from '../../_core/button/Button.vue';
   import { updateCurrentUserPassword } from '../../../lib/authService';
 
   interface Props {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ArrowRight, Check, ChevronDown, List, Music, Sparkles, Users } from 'lucide-vue-next';
-  import IconBackdrop from '../../core/icon-backdrop/IconBackdrop.vue';
+  import IconBackdrop from '../../_core/icon-backdrop/IconBackdrop.vue';
   import { getRecentNewChanges } from '../../../lib/timeline/timeline';
   import {
     groupFeaturesByArea,

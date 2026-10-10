@@ -3,11 +3,11 @@
   import { computed, onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
   import { ArrowUpDown, ArrowDown, ArrowUp, Plus, Search, Trash2, UserPlus } from 'lucide-vue-next';
-  import Button from '../components/core/button/Button.vue';
+  import Button from '../components/_core/button/Button.vue';
   import CreateSessionDialog from '../components/dialogs/create-session/CreateSessionDialog.vue';
   import DeleteClosedSessionsDialog from '../components/dialogs/delete-closed-sessions/DeleteClosedSessionsDialog.vue';
-  import LoadingSpinner from '../components/core/LoadingSpinner.vue';
-  import ErrorMessage from '../components/core/ErrorMessage.vue';
+  import LoadingSpinner from '../components/_core/LoadingSpinner.vue';
+  import ErrorMessage from '../components/_core/ErrorMessage.vue';
   import {
     createSessionRouterQuery,
     deleteClosedHostedSessions,

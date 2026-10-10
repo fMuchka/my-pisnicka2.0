@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { LucideIcon } from '../../core/types';
+  import type { LucideIcon } from '../../_core/types';
   import { computed } from 'vue';
   import { RouterLink } from 'vue-router';
   export type TabBarPage = {

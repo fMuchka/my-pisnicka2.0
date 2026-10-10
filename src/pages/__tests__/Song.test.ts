@@ -99,14 +99,14 @@ vi.mock('../../components/PageHeader.vue', () => ({
   },
 }));
 
-vi.mock('../../components/core/LoadingSpinner.vue', () => ({
+vi.mock('../../components/_core/LoadingSpinner.vue', () => ({
   default: {
     props: ['label'],
     template: '<div>{{ label }}</div>',
   },
 }));
 
-vi.mock('../../components/core/ErrorMessage.vue', () => ({
+vi.mock('../../components/_core/ErrorMessage.vue', () => ({
   default: {
     props: ['message'],
     template: '<div>{{ message }}</div>',

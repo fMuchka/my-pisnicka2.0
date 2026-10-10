@@ -19,7 +19,7 @@ const deleteClosedHostedSessions = vi.hoisted(() => vi.fn());
 const mockUser = vi.hoisted(() => mockRef({ uid: 'host-123', displayName: 'Test Host' }));
 const routerPush = vi.hoisted(() => vi.fn());
 
-vi.mock('../../components/core/LoadingSpinner.vue', () => ({
+vi.mock('../../components/_core/LoadingSpinner.vue', () => ({
   default: defineComponent({
     name: 'LoadingSpinner',
     setup() {
@@ -28,7 +28,7 @@ vi.mock('../../components/core/LoadingSpinner.vue', () => ({
   }),
 }));
 
-vi.mock('../../components/core/ErrorMessage.vue', () => ({
+vi.mock('../../components/_core/ErrorMessage.vue', () => ({
   default: defineComponent({
     name: 'ErrorMessage',
     props: {
