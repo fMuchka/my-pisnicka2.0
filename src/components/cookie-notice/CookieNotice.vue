@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { h, onMounted, ref, type FunctionalComponent } from 'vue';
-  import Drawer from '../drawer/Drawer.vue';
+  import Drawer from '../core/drawer/Drawer.vue';
   import CookieNoticeBody from './CookieNoticeBody.vue';
 
   const COOKIE_NOTICE_STORAGE_KEY = 'my-pisnicka:cookie-notice-consent';

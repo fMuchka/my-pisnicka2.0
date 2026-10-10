@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { Cookie } from 'lucide-vue-next';
-  import IconBackdrop from '../icon-backdrop/IconBackdrop.vue';
+  import IconBackdrop from '../core/icon-backdrop/IconBackdrop.vue';
 
   const emit = defineEmits<{ accept: [] }>();
 

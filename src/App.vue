@@ -2,7 +2,7 @@
   import './styles/global.css';
   import { computed } from 'vue';
   import { useRoute } from 'vue-router';
-  import CookieNotice from './components/core/cookie-notice/CookieNotice.vue';
+  import CookieNotice from './components/cookie-notice/CookieNotice.vue';
   import Navigation from './components/navigation/Navigation.vue';
   import { useTheme } from './composables/useTheme';
   import Routes from './router/Routes';
