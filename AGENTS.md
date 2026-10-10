@@ -54,7 +54,6 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 - **Design tokens**: CSS custom properties live in [src/styles/global.css](src/styles/global.css) (light theme in `:root`, dark theme in `[data-theme='dark']`), imported by `App.vue`. Kept separate from the app shell so base components can render correctly outside of it (e.g. in Storybook).
 - **Storybook**: Base/core components get a co-located `*.stories.ts` next to the component (e.g. `Button.vue` + `Button.stories.ts`), not a separate `stories/` folder. `.storybook/preview.ts` imports `global.css` directly and includes a light/dark toolbar toggle (`@storybook/addon-themes`, toggling `data-theme` on `<html>` the same way `useTheme()` does).
 - **Icons**: `lucide-vue-next` for SVG icons
-- **Folder duplication**: Both `src/components/top-navigation` and `src/components/TopNavigation` exist (legacy cleanup pending)
 
 ### 5. Testing Patterns
 

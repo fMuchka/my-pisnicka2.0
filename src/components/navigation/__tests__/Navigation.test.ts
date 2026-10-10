@@ -20,7 +20,7 @@ vi.mock('../../../composables/useAuth', () => ({
 }));
 
 // The real TopNavigation imports /mypisnicka-icon.svg from public/, which Vitest can't resolve on Windows.
-vi.mock('../../top-navigation/TopNavigation.vue', () => ({
+vi.mock('../top-navigation/TopNavigation.vue', () => ({
   default: defineComponent({
     props: { pageTitle: { type: String, default: undefined }, fadeAway: Boolean },
     emits: ['home'],
@@ -35,11 +35,11 @@ vi.mock('../../top-navigation/TopNavigation.vue', () => ({
   }),
 }));
 
-vi.mock('../../top-navigation/options/AppOptions.vue', () => ({
+vi.mock('../top-navigation/options/AppOptions.vue', () => ({
   default: defineComponent({ setup: () => () => h('div', { 'data-testid': 'app-options' }) }),
 }));
 
-vi.mock('../../top-navigation/options/UserOptions.vue', () => ({
+vi.mock('../top-navigation/options/UserOptions.vue', () => ({
   default: defineComponent({ setup: () => () => h('div', { 'data-testid': 'user-options' }) }),
 }));
 

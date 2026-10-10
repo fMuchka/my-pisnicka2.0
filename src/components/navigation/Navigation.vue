@@ -4,9 +4,9 @@
   import { computed, onBeforeUnmount, useTemplateRef, watchEffect } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import TabBar, { type TabBarPage } from '../core/tab-bar/TabBar.vue';
-  import TopNavigation from '../top-navigation/TopNavigation.vue';
-  import AppOptions from '../top-navigation/options/AppOptions.vue';
-  import UserOptions from '../top-navigation/options/UserOptions.vue';
+  import TopNavigation from './top-navigation/TopNavigation.vue';
+  import AppOptions from './top-navigation/options/AppOptions.vue';
+  import UserOptions from './top-navigation/options/UserOptions.vue';
   import { useAuth } from '../../composables/useAuth';
   import { useDeviceViewType } from '../../composables/useDeviceViewType';
   import { pageNavigation } from '../../composables/usePageNavigation';

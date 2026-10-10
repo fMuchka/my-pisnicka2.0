@@ -4,9 +4,9 @@
   import { Slider } from '@ark-ui/vue/slider';
   import { Moon, Palette, Settings, Sun } from 'lucide-vue-next';
   import { computed, ref, watch, type Component } from 'vue';
-  import Button from '../../core/button/Button.vue';
-  import { getContrastTextColor, useTheme, type Theme } from '../../../composables/useTheme';
-  import type { Instrument } from '../../../lib/chords/chords.database';
+  import Button from '../../../core/button/Button.vue';
+  import { getContrastTextColor, useTheme, type Theme } from '../../../../composables/useTheme';
+  import type { Instrument } from '../../../../lib/chords/chords.database';
 
   type ThemeOption = {
     value: Theme;

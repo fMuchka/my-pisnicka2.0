@@ -1,15 +1,15 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
-  import Button from '../../core/button/Button.vue';
+  import Button from '../../../core/button/Button.vue';
   import { User, LogOut, Key } from 'lucide-vue-next';
   import { Menu } from '@ark-ui/vue/menu';
-  import LoginDialog from '../../dialogs/login/LoginDialog.vue';
-  import ChangePasswordDialog from '../../dialogs/change-password/ChangePasswordDialog.vue';
+  import LoginDialog from '../../../dialogs/login/LoginDialog.vue';
+  import ChangePasswordDialog from '../../../dialogs/change-password/ChangePasswordDialog.vue';
 
-  import { useAuth } from '../../../composables/useAuth';
+  import { useAuth } from '../../../../composables/useAuth';
   import { useRouter } from 'vue-router';
-  import Routes from '../../../router/Routes';
-  import type { ButtonIcon } from '../../core/button/types.ts';
+  import Routes from '../../../../router/Routes';
+  import type { ButtonIcon } from '../../../core/button/types.ts';
 
   type MenuItem = {
     label: string;
