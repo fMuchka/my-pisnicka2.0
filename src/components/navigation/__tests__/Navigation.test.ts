@@ -73,8 +73,24 @@ describe('Navigation', () => {
     await renderNavigation(Routes.Info, { pageTitle: 'Informace' });
 
     expect(screen.getByText('Informace')).toBeInTheDocument();
-    expect(screen.getByTestId('app-options')).toBeInTheDocument();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    expect(screen.getByTestId('app-options')).not.toBeVisible();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
+
+    await vi.waitFor(() => expect(screen.getByTestId('app-options')).toBeVisible());
+    expect(screen.getByTestId('user-options')).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Info' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('shows options but no page links in the desktop menu for guests', async () => {
+    auth.isGuest = true;
+    await renderNavigation(Routes.Session);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
+
+    await vi.waitFor(() => expect(screen.getByTestId('app-options')).toBeVisible());
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('sends unauthenticated users to Login when the logo is clicked', async () => {

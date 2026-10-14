@@ -3,6 +3,7 @@
   import { useElementSize } from '@vueuse/core';
   import { computed, onBeforeUnmount, useTemplateRef, watchEffect } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
+  import SideMenu from './side-menu/SideMenu.vue';
   import TabBar, { type TabBarPage } from './tab-bar/TabBar.vue';
   import TopNavigation from './top-navigation/TopNavigation.vue';
   import AppOptions from './top-navigation/options/AppOptions.vue';
@@ -39,13 +40,14 @@
     id: 'music',
   };
   const tabPages = [home, sessions, info];
+  const menuPages = [home, songs, sessions, info];
 
   const router = useRouter();
   const route = useRoute();
   const { isAuthenticated, isGuest } = useAuth();
   const { isMobile } = useDeviceViewType();
 
-  // Tabs lead to host-only pages; guests (PIN / session link) would just bounce to Login.
+  // Tabs and menu links lead to host-only pages; guests (PIN / session link) would just bounce to Login.
   const showTabBar = computed(() => isMobile.value && !isGuest.value);
 
   const currentPageId = computed(() => {
@@ -99,8 +101,15 @@
     @home="goHome"
   >
     <template #actions>
-      <AppOptions />
-      <UserOptions />
+      <SideMenu
+        :pages="isGuest ? [] : menuPages"
+        :current-page-id="currentPageId"
+      >
+        <template #actions>
+          <UserOptions />
+          <AppOptions />
+        </template>
+      </SideMenu>
     </template>
   </TopNavigation>
 </template>
