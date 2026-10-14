@@ -68,8 +68,14 @@
     return [...tabPages, songs].find((p) => p.link === route.path)?.id ?? '';
   });
 
+  // Guests have no Home page; the logo takes them back to the session they joined instead.
   const goHome = () => {
-    router.push({ path: isAuthenticated.value ? Routes.Home : Routes.Login });
+    if (isAuthenticated.value && !isGuest.value) {
+      router.push(Routes.Home);
+      return;
+    }
+
+    router.push(sessionStore.activeSessionRoute ?? Routes.Login);
   };
 
   const openSettings = (closeMenu?: () => void) => {

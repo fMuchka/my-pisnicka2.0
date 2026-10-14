@@ -10,7 +10,10 @@ import Routes from '../../../router/Routes';
 
 const view = vi.hoisted(() => ({ isMobile: false }));
 const auth = vi.hoisted(() => ({ isAuthenticated: true, isGuest: false }));
-const session = vi.hoisted(() => ({ hasActiveSession: false }));
+const session = vi.hoisted(() => ({
+  hasActiveSession: false,
+  activeSessionRoute: null as { path: string; query: Record<string, string> } | null,
+}));
 
 vi.mock('../../../composables/useDeviceViewType', () => ({
   useDeviceViewType: () => ({ isMobile: ref(view.isMobile), isDesktop: ref(!view.isMobile) }),
@@ -69,6 +72,7 @@ describe('Navigation', () => {
     auth.isAuthenticated = true;
     auth.isGuest = false;
     session.hasActiveSession = false;
+    session.activeSessionRoute = null;
   });
 
   it('renders the full top navigation on desktop', async () => {
@@ -118,6 +122,31 @@ describe('Navigation', () => {
     await userEvent.click(screen.getByText('MyPísnička'));
 
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(Routes.Login));
+  });
+
+  it('sends PIN guests back to their session when the logo is clicked', async () => {
+    auth.isAuthenticated = false;
+    auth.isGuest = true;
+    session.hasActiveSession = true;
+    session.activeSessionRoute = {
+      path: Routes.Session,
+      query: { sessionId: 's1', hostId: 'h1', pin: '1234' },
+    };
+    const { router } = await renderNavigation(Routes.Settings);
+
+    await userEvent.click(screen.getByText('MyPísnička'));
+
+    await vi.waitFor(() =>
+      expect(router.currentRoute.value.fullPath).toBe('/session?sessionId=s1&hostId=h1&pin=1234')
+    );
+  });
+
+  it('sends hosts Home when the logo is clicked', async () => {
+    const { router } = await renderNavigation(Routes.Info);
+
+    await userEvent.click(screen.getByText('MyPísnička'));
+
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(Routes.Home));
   });
 
   it('renders logo row and tab bar on mobile, without title or options', async () => {
