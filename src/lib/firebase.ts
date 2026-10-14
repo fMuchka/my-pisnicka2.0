@@ -129,7 +129,7 @@ if (USE_FIREBASE_EMULATOR && !emulatorsConnected) {
   }
 
   try {
-    connectAuthEmulator(auth, `http://${authHost}:${authPort}`);
+    connectAuthEmulator(auth, `http://${authHost}:${authPort}`, { disableWarnings: true });
   } catch (error) {
     console.warn('Failed to connect Auth emulator:', error);
   }
