@@ -163,6 +163,40 @@
   --section-outro-border: #a36067;
 }
 
+/* Red is the hand-tuned default above; the other presets derive their brand tokens.
+   :root[...] outranks [data-theme='dark'], so these win in both themes. */
+:root[data-color]:not([data-color='red']) {
+  --brand: var(--preset-vivid);
+  --brand-fill: var(--preset-fill);
+  --brand-light: color-mix(in srgb, var(--preset-vivid) 80%, white);
+  --brand-soft: color-mix(in srgb, var(--preset-vivid) 14%, transparent);
+}
+
+:root[data-color='orange'] {
+  --preset-vivid: var(--preset-orange-vivid);
+  --preset-fill: var(--preset-orange-fill);
+}
+
+:root[data-color='green'] {
+  --preset-vivid: var(--preset-green-vivid);
+  --preset-fill: var(--preset-green-fill);
+}
+
+:root[data-color='teal'] {
+  --preset-vivid: var(--preset-teal-vivid);
+  --preset-fill: var(--preset-teal-fill);
+}
+
+:root[data-color='blue'] {
+  --preset-vivid: var(--preset-blue-vivid);
+  --preset-fill: var(--preset-blue-fill);
+}
+
+:root[data-color='purple'] {
+  --preset-vivid: var(--preset-purple-vivid);
+  --preset-fill: var(--preset-purple-fill);
+}
+
 * {
   margin: 0;
   padding: 0;

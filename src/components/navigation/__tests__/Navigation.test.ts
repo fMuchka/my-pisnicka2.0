@@ -35,10 +35,6 @@ vi.mock('../top-navigation/TopNavigation.vue', () => ({
   }),
 }));
 
-vi.mock('../top-navigation/options/AppOptions.vue', () => ({
-  default: defineComponent({ setup: () => () => h('div', { 'data-testid': 'app-options' }) }),
-}));
-
 vi.mock('../top-navigation/options/UserOptions.vue', () => ({
   default: defineComponent({ setup: () => () => h('div', { 'data-testid': 'user-options' }) }),
 }));
@@ -74,13 +70,29 @@ describe('Navigation', () => {
 
     expect(screen.getByText('Informace')).toBeInTheDocument();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
-    expect(screen.getByTestId('app-options')).not.toBeVisible();
+    expect(screen.getByRole('button', { name: 'Nastavení', hidden: true })).not.toBeVisible();
 
     await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
 
-    await vi.waitFor(() => expect(screen.getByTestId('app-options')).toBeVisible());
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Nastavení' })).toBeVisible());
     expect(screen.getByTestId('user-options')).toBeVisible();
     expect(screen.getByRole('link', { name: 'Info' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('opens the settings page from the desktop menu settings button', async () => {
+    const { router } = await renderNavigation(Routes.Home);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Nastavení' }));
+
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(Routes.Settings));
+  });
+
+  it('shows a settings tab on mobile', async () => {
+    view.isMobile = true;
+    await renderNavigation(Routes.Settings);
+
+    expect(screen.getByRole('link', { name: 'Nastavení' })).toHaveAttribute('aria-current', 'page');
   });
 
   it('shows options but no page links in the desktop menu for guests', async () => {
@@ -89,7 +101,7 @@ describe('Navigation', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
 
-    await vi.waitFor(() => expect(screen.getByTestId('app-options')).toBeVisible());
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Nastavení' })).toBeVisible());
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
@@ -108,7 +120,7 @@ describe('Navigation', () => {
 
     expect(screen.getByRole('navigation')).toBeInTheDocument();
     expect(screen.queryByText('Informace')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('app-options')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nastavení' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Info' })).toHaveAttribute('aria-current', 'page');
   });
 

@@ -3,29 +3,29 @@ import type { Instrument } from '../lib/chords/chords.database';
 
 export type Theme = 'light' | 'dark';
 
+export const COLOR_PRESETS = ['red', 'orange', 'green', 'teal', 'blue', 'purple'] as const;
+export type ColorPreset = (typeof COLOR_PRESETS)[number];
+
 const THEME_STORAGE_KEY = 'my-pisnicka:theme';
 const INSTRUMENT_STORAGE_KEY = 'my-pisnicka:instrument';
-const ACCENT_STORAGE_KEY = 'my-pisnicka:accent-color';
+const COLOR_PRESET_STORAGE_KEY = 'my-pisnicka:color-preset';
 const CHORD_STORAGE_KEY = 'my-pisnicka:chord-color';
 const LYRICS_FONT_SIZE_STORAGE_KEY = 'my-pisnicka:lyrics-font-size';
 const CHORD_FONT_SIZE_STORAGE_KEY = 'my-pisnicka:chord-font-size';
 const DEFAULT_THEME: Theme = 'light';
 const DEFAULT_INSTRUMENT: Instrument = 'guitar';
+const DEFAULT_COLOR_PRESET: ColorPreset = 'red';
 const MIN_FONT_SIZE = 12;
 const MAX_FONT_SIZE = 28;
 const DEFAULT_LYRICS_FONT_SIZE = 18;
 const DEFAULT_CHORD_FONT_SIZE = 16;
-const DEFAULT_ACCENT_BY_THEME: Record<Theme, string> = {
-  light: '#dc2626',
-  dark: '#ef4444',
-};
 const DEFAULT_CHORD_BY_THEME: Record<Theme, string> = {
   light: '#292524',
   dark: '#e7e5e4',
 };
 const theme = ref<Theme>('light');
 const preferredInstrument = ref<Instrument>(DEFAULT_INSTRUMENT);
-const accentColor = ref('#dc2626');
+const colorPreset = ref<ColorPreset>(DEFAULT_COLOR_PRESET);
 const chordColor = ref('#292524');
 const lyricsFontSize = ref(DEFAULT_LYRICS_FONT_SIZE);
 const chordFontSize = ref(DEFAULT_CHORD_FONT_SIZE);
@@ -34,6 +34,8 @@ let isInitialized = false;
 const isTheme = (value: string | null): value is Theme => value === 'light' || value === 'dark';
 const isInstrument = (value: string | null): value is Instrument =>
   value === 'guitar' || value === 'ukulele';
+const isColorPreset = (value: string | null): value is ColorPreset =>
+  COLOR_PRESETS.some((preset) => preset === value);
 const isHexColor = (value: string | null): value is string =>
   value != null && /^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/.test(value);
 const isValidFontSize = (value: unknown): value is number =>
@@ -95,14 +97,20 @@ const applyTheme = (nextTheme: Theme) => {
   document.documentElement.setAttribute('data-theme', nextTheme);
 };
 
-const readThemeToken = (token: '--brand' | '--text-chord'): string => {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return token === '--brand'
-      ? DEFAULT_ACCENT_BY_THEME[DEFAULT_THEME]
-      : DEFAULT_CHORD_BY_THEME[DEFAULT_THEME];
+const applyColorPreset = (nextPreset: ColorPreset) => {
+  if (typeof document === 'undefined') {
+    return;
   }
 
-  return getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+  document.documentElement.setAttribute('data-color', nextPreset);
+};
+
+const readChordToken = (): string => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return DEFAULT_CHORD_BY_THEME[DEFAULT_THEME];
+  }
+
+  return getComputedStyle(document.documentElement).getPropertyValue('--text-chord').trim();
 };
 
 const readFontSizeToken = (
@@ -126,9 +134,10 @@ const applyCustomColors = () => {
 
   const chordContrastColor = getContrastTextColor(chordColor.value);
 
-  document.documentElement.style.setProperty('--accent', accentColor.value);
-  document.documentElement.style.setProperty('--accent-light', accentColor.value);
-  document.documentElement.style.setProperty('--color-primary', accentColor.value);
+  // Older components still read these instead of --brand; point them at the chosen preset.
+  document.documentElement.style.setProperty('--accent', 'var(--brand)');
+  document.documentElement.style.setProperty('--accent-light', 'var(--brand)');
+  document.documentElement.style.setProperty('--color-primary', 'var(--brand)');
   document.documentElement.style.setProperty('--song-chord-inline-bg', chordColor.value);
   document.documentElement.style.setProperty('--song-chord-inline-color', chordContrastColor);
   document.documentElement.style.setProperty('--chord-icon-contrast', chordContrastColor);
@@ -145,7 +154,7 @@ const initializeTheme = () => {
   theme.value = initialTheme;
   applyTheme(initialTheme);
 
-  const storedAccent = localStorage.getItem(ACCENT_STORAGE_KEY);
+  const storedPreset = localStorage.getItem(COLOR_PRESET_STORAGE_KEY);
   const storedChord = localStorage.getItem(CHORD_STORAGE_KEY);
   const storedInstrument = localStorage.getItem(INSTRUMENT_STORAGE_KEY);
   const storedLyricsSize = Number.parseFloat(
@@ -155,8 +164,9 @@ const initializeTheme = () => {
     localStorage.getItem(CHORD_FONT_SIZE_STORAGE_KEY) ?? ''
   );
 
-  accentColor.value = isHexColor(storedAccent) ? storedAccent : readThemeToken('--brand');
-  chordColor.value = isHexColor(storedChord) ? storedChord : readThemeToken('--text-chord');
+  colorPreset.value = isColorPreset(storedPreset) ? storedPreset : DEFAULT_COLOR_PRESET;
+  applyColorPreset(colorPreset.value);
+  chordColor.value = isHexColor(storedChord) ? storedChord : readChordToken();
   preferredInstrument.value = isInstrument(storedInstrument)
     ? storedInstrument
     : DEFAULT_INSTRUMENT;
@@ -184,16 +194,12 @@ export const useTheme = () => {
     }
   };
 
-  const setAccentColor = (nextColor: string) => {
-    if (!isHexColor(nextColor)) {
-      return;
-    }
-
-    accentColor.value = nextColor;
-    applyCustomColors();
+  const setColorPreset = (nextPreset: ColorPreset) => {
+    colorPreset.value = nextPreset;
+    applyColorPreset(nextPreset);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(ACCENT_STORAGE_KEY, nextColor);
+      localStorage.setItem(COLOR_PRESET_STORAGE_KEY, nextPreset);
     }
   };
 
@@ -245,7 +251,8 @@ export const useTheme = () => {
   };
 
   const resetToDefaults = () => {
-    accentColor.value = DEFAULT_ACCENT_BY_THEME[DEFAULT_THEME];
+    colorPreset.value = DEFAULT_COLOR_PRESET;
+    applyColorPreset(DEFAULT_COLOR_PRESET);
     chordColor.value = DEFAULT_CHORD_BY_THEME[DEFAULT_THEME];
     preferredInstrument.value = DEFAULT_INSTRUMENT;
     lyricsFontSize.value = DEFAULT_LYRICS_FONT_SIZE;
@@ -256,7 +263,7 @@ export const useTheme = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(THEME_STORAGE_KEY, DEFAULT_THEME);
       localStorage.setItem(INSTRUMENT_STORAGE_KEY, DEFAULT_INSTRUMENT);
-      localStorage.removeItem(ACCENT_STORAGE_KEY);
+      localStorage.removeItem(COLOR_PRESET_STORAGE_KEY);
       localStorage.removeItem(CHORD_STORAGE_KEY);
       localStorage.removeItem(LYRICS_FONT_SIZE_STORAGE_KEY);
       localStorage.removeItem(CHORD_FONT_SIZE_STORAGE_KEY);
@@ -266,13 +273,13 @@ export const useTheme = () => {
   return {
     theme,
     preferredInstrument,
-    accentColor,
+    colorPreset,
     chordColor,
     lyricsFontSize,
     chordFontSize,
     setTheme,
     setPreferredInstrument,
-    setAccentColor,
+    setColorPreset,
     setChordColor,
     setLyricsFontSize,
     setChordFontSize,

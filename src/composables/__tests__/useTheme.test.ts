@@ -120,6 +120,31 @@ describe('useTheme', () => {
     expect(state.preferredInstrument.value).toBe('ukulele');
   });
 
+  it('defaults to the red color preset and persists manual changes', async () => {
+    const { useTheme } = await loadUseThemeModule();
+
+    const state = useTheme();
+
+    expect(state.colorPreset.value).toBe('red');
+    expect(document.documentElement.getAttribute('data-color')).toBe('red');
+
+    state.setColorPreset('teal');
+
+    expect(state.colorPreset.value).toBe('teal');
+    expect(document.documentElement.getAttribute('data-color')).toBe('teal');
+    expect(localStorage.getItem('my-pisnicka:color-preset')).toBe('teal');
+  });
+
+  it('reads a persisted color preset and ignores unknown ones', async () => {
+    localStorage.setItem('my-pisnicka:color-preset', 'blue');
+    const first = await loadUseThemeModule();
+    expect(first.useTheme().colorPreset.value).toBe('blue');
+
+    localStorage.setItem('my-pisnicka:color-preset', 'magenta');
+    const second = await loadUseThemeModule();
+    expect(second.useTheme().colorPreset.value).toBe('red');
+  });
+
   it('resetToDefaults clears persisted size preferences and restores default tokens', async () => {
     const { useTheme } = await loadUseThemeModule();
 

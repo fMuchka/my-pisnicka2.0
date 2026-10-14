@@ -32,7 +32,10 @@
           <!-- Kept for screen readers: Content is aria-labelledby the title. -->
           <Drawer.Title class="visually-hidden">Menu</Drawer.Title>
           <div class="actions">
-            <slot name="actions" />
+            <slot
+              name="actions"
+              :close="() => (open = false)"
+            />
           </div>
 
           <nav class="links">

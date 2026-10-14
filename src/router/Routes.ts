@@ -8,6 +8,7 @@ enum Routes {
   Session = '/session',
   SessionList = '/sessionList',
   Info = '/info',
+  Settings = '/settings',
 }
 
 export default Routes;

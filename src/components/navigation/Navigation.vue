@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import { HomeIcon, Info, Music, Users } from 'lucide-vue-next';
+  import { HomeIcon, Info, Music, Settings, Users } from 'lucide-vue-next';
   import { useElementSize } from '@vueuse/core';
   import { computed, onBeforeUnmount, useTemplateRef, watchEffect } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
+  import Button from '../_core/button/Button.vue';
   import SideMenu from './side-menu/SideMenu.vue';
   import TabBar, { type TabBarPage } from './tab-bar/TabBar.vue';
   import TopNavigation from './top-navigation/TopNavigation.vue';
-  import AppOptions from './top-navigation/options/AppOptions.vue';
   import UserOptions from './top-navigation/options/UserOptions.vue';
   import { useAuth } from '../../composables/useAuth';
   import { useDeviceViewType } from '../../composables/useDeviceViewType';
@@ -39,8 +39,14 @@
     link: Routes.SongLibrary,
     id: 'music',
   };
-  const tabPages = [home, sessions, info];
-  const menuPages = [home, songs, sessions, info];
+  const settings: TabBarPage = {
+    icon: { component: Settings },
+    label: 'Nastavení',
+    link: Routes.Settings,
+    id: 'settings',
+  };
+  const tabPages = [home, sessions, info, settings];
+  const menuPages = [home, songs, sessions, info, settings];
 
   const router = useRouter();
   const route = useRoute();
@@ -59,6 +65,11 @@
 
   const goHome = () => {
     router.push({ path: isAuthenticated.value ? Routes.Home : Routes.Login });
+  };
+
+  const openSettings = (closeMenu: () => void) => {
+    closeMenu();
+    router.push(Routes.Settings);
   };
 
   // The tab bar is fixed, so reserve its height at the bottom of the page or it covers the content.
@@ -105,9 +116,14 @@
         :pages="isGuest ? [] : menuPages"
         :current-page-id="currentPageId"
       >
-        <template #actions>
+        <template #actions="{ close }">
           <UserOptions />
-          <AppOptions />
+          <Button
+            :icon="{ component: Settings, position: 'prepend' }"
+            style-variation="text"
+            aria-label="Nastavení"
+            @click="openSettings(close)"
+          />
         </template>
       </SideMenu>
     </template>
