@@ -55,8 +55,13 @@ router.beforeEach(async (to) => {
   }
 
   // Guests who joined with a valid PIN can still pick theme and color.
-  if (to.path === Routes.Settings && useSessionStore().hasActiveSession) {
-    return true;
+  if (to.path === Routes.Settings) {
+    const sessionStore = useSessionStore();
+    await sessionStore.whenValidated();
+
+    if (sessionStore.hasActiveSession) {
+      return true;
+    }
   }
 
   await waitForAuthReady();

@@ -59,6 +59,8 @@
         return;
       }
 
+      // A session restored after reload may be stale until the store has rechecked it.
+      await sessionStore.whenValidated();
       const detailsFromStore = sessionStore.sessionDetails;
 
       if (

@@ -5,8 +5,6 @@
   import { useAuth } from '../composables/useAuth';
   import { usePageNavigation } from '../composables/usePageNavigation';
   import { useTheme, type ColorPreset, type Theme } from '../composables/useTheme';
-  import type { SessionRouterQuery } from '../lib/session';
-  import Routes from '../router/Routes';
   import { useSessionStore } from '../stores/session';
 
   type ThemeOption = {
@@ -27,21 +25,7 @@
   const sessionStore = useSessionStore();
 
   // Guests have no tab bar or menu links, so give them a way back to their session.
-  const sessionLink = computed(() => {
-    const details = sessionStore.sessionDetails;
-
-    if (!isGuest.value || !sessionStore.hasActiveSession || details == null) {
-      return null;
-    }
-
-    const query: SessionRouterQuery = {
-      sessionId: details.id,
-      hostId: details.hostId,
-      pin: details.pin,
-    };
-
-    return { path: Routes.Session, query };
-  });
+  const sessionLink = computed(() => (isGuest.value ? sessionStore.activeSessionRoute : null));
 
   const themeOptions: ThemeOption[] = [
     { value: 'dark', label: 'Tmavý', description: 'Pro hraní za tmy' },
