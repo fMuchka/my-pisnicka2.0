@@ -12,6 +12,11 @@ export const useSessionStore = defineStore('session', () => {
     return sessionDetails.value !== null;
   });
 
+  // Set only after the PIN/link was checked against Firestore (Join or Session page).
+  const hasActiveSession = computed(() => {
+    return sessionDetails.value !== null && sessionDetails.value.isActive !== false;
+  });
+
   const setSessionFromModel = (session: Session) => {
     sessionDetails.value = {
       id: session.id,
@@ -34,6 +39,7 @@ export const useSessionStore = defineStore('session', () => {
   return {
     sessionDetails,
     hasSession,
+    hasActiveSession,
     setSessionFromModel,
     setSessionDetails,
     clearSession,

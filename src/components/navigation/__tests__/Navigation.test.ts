@@ -10,6 +10,7 @@ import Routes from '../../../router/Routes';
 
 const view = vi.hoisted(() => ({ isMobile: false }));
 const auth = vi.hoisted(() => ({ isAuthenticated: true, isGuest: false }));
+const session = vi.hoisted(() => ({ hasActiveSession: false }));
 
 vi.mock('../../../composables/useDeviceViewType', () => ({
   useDeviceViewType: () => ({ isMobile: ref(view.isMobile), isDesktop: ref(!view.isMobile) }),
@@ -17,6 +18,10 @@ vi.mock('../../../composables/useDeviceViewType', () => ({
 
 vi.mock('../../../composables/useAuth', () => ({
   useAuth: () => ({ isAuthenticated: ref(auth.isAuthenticated), isGuest: ref(auth.isGuest) }),
+}));
+
+vi.mock('../../../stores/session', () => ({
+  useSessionStore: () => ({ ...session }),
 }));
 
 // The real TopNavigation imports /mypisnicka-icon.svg from public/, which Vitest can't resolve on Windows.
@@ -63,6 +68,7 @@ describe('Navigation', () => {
     view.isMobile = false;
     auth.isAuthenticated = true;
     auth.isGuest = false;
+    session.hasActiveSession = false;
   });
 
   it('renders the full top navigation on desktop', async () => {
@@ -138,5 +144,37 @@ describe('Navigation', () => {
 
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     expect(screen.getByText('MyPísnička')).toBeInTheDocument();
+  });
+
+  it('gives PIN guests a settings button on mobile', async () => {
+    view.isMobile = true;
+    auth.isAuthenticated = false;
+    auth.isGuest = true;
+    session.hasActiveSession = true;
+    const { router } = await renderNavigation(Routes.Session);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Nastavení' }));
+
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(Routes.Settings));
+  });
+
+  it('hides the settings button from guests without a session', async () => {
+    auth.isAuthenticated = false;
+    auth.isGuest = true;
+
+    view.isMobile = true;
+    await renderNavigation(Routes.Session);
+    expect(screen.queryByRole('button', { name: 'Nastavení' })).not.toBeInTheDocument();
+  });
+
+  it('hides the desktop settings button from guests without a session', async () => {
+    auth.isAuthenticated = false;
+    auth.isGuest = true;
+    await renderNavigation(Routes.Session);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
+
+    await vi.waitFor(() => expect(screen.getByTestId('user-options')).toBeVisible());
+    expect(screen.queryByRole('button', { name: 'Nastavení' })).not.toBeInTheDocument();
   });
 });

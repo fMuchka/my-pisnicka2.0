@@ -1,7 +1,13 @@
 <script setup lang="ts">
-  import { Check } from 'lucide-vue-next';
+  import { Check, ChevronLeft } from 'lucide-vue-next';
+  import { computed } from 'vue';
+  import { RouterLink } from 'vue-router';
+  import { useAuth } from '../composables/useAuth';
   import { usePageNavigation } from '../composables/usePageNavigation';
   import { useTheme, type ColorPreset, type Theme } from '../composables/useTheme';
+  import type { SessionRouterQuery } from '../lib/session';
+  import Routes from '../router/Routes';
+  import { useSessionStore } from '../stores/session';
 
   type ThemeOption = {
     value: Theme;
@@ -17,6 +23,25 @@
   usePageNavigation({ pageTitle: 'Nastavení' });
 
   const { theme, setTheme, colorPreset, setColorPreset } = useTheme();
+  const { isGuest } = useAuth();
+  const sessionStore = useSessionStore();
+
+  // Guests have no tab bar or menu links, so give them a way back to their session.
+  const sessionLink = computed(() => {
+    const details = sessionStore.sessionDetails;
+
+    if (!isGuest.value || !sessionStore.hasActiveSession || details == null) {
+      return null;
+    }
+
+    const query: SessionRouterQuery = {
+      sessionId: details.id,
+      hostId: details.hostId,
+      pin: details.pin,
+    };
+
+    return { path: Routes.Session, query };
+  });
 
   const themeOptions: ThemeOption[] = [
     { value: 'dark', label: 'Tmavý', description: 'Pro hraní za tmy' },
@@ -35,6 +60,18 @@
 
 <template>
   <section class="container">
+    <RouterLink
+      v-if="sessionLink"
+      :to="sessionLink"
+      class="back-link"
+    >
+      <ChevronLeft
+        class="back-icon"
+        aria-hidden="true"
+      />
+      Zpět do relace
+    </RouterLink>
+
     <p class="intro">Motiv a barva se dají kombinovat libovolně — 2 motivy × 6 barev.</p>
 
     <section
@@ -113,6 +150,34 @@
     display: flex;
     flex-direction: column;
     gap: 28px;
+  }
+
+  .back-link {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-height: 44px;
+    margin: calc(-1 * var(--space-sm)) 0;
+    color: var(--ink-muted);
+    font: var(--text-label);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .back-link:hover {
+    color: var(--ink);
+  }
+
+  .back-link:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--radius-md);
+  }
+
+  .back-icon {
+    width: 20px;
+    height: 20px;
   }
 
   .intro {

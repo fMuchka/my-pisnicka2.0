@@ -12,6 +12,7 @@
   import { useDeviceViewType } from '../../composables/useDeviceViewType';
   import { pageNavigation } from '../../composables/usePageNavigation';
   import Routes from '../../router/Routes';
+  import { useSessionStore } from '../../stores/session';
 
   const fadeAway = computed(() => pageNavigation.value.fadeAway ?? false);
 
@@ -52,9 +53,13 @@
   const route = useRoute();
   const { isAuthenticated, isGuest } = useAuth();
   const { isMobile } = useDeviceViewType();
+  const sessionStore = useSessionStore();
 
   // Tabs and menu links lead to host-only pages; guests (PIN / session link) would just bounce to Login.
   const showTabBar = computed(() => isMobile.value && !isGuest.value);
+
+  // Mirrors the router guard, so the button never leads to a Login bounce.
+  const canOpenSettings = computed(() => isAuthenticated.value || sessionStore.hasActiveSession);
 
   const currentPageId = computed(() => {
     if (route.path.startsWith('/song/')) return songs.id;
@@ -67,8 +72,8 @@
     router.push({ path: isAuthenticated.value ? Routes.Home : Routes.Login });
   };
 
-  const openSettings = (closeMenu: () => void) => {
-    closeMenu();
+  const openSettings = (closeMenu?: () => void) => {
+    closeMenu?.();
     router.push(Routes.Settings);
   };
 
@@ -91,7 +96,20 @@
     <TopNavigation
       :fade-away="fadeAway"
       @home="goHome"
-    />
+    >
+      <!-- Guests have no tab bar, so this is their only way to Settings on mobile. -->
+      <template
+        v-if="!showTabBar && canOpenSettings"
+        #actions
+      >
+        <Button
+          :icon="{ component: Settings, position: 'prepend' }"
+          style-variation="text"
+          aria-label="Nastavení"
+          @click="openSettings()"
+        />
+      </template>
+    </TopNavigation>
     <div
       v-if="showTabBar"
       ref="tabBarDock"
@@ -119,6 +137,7 @@
         <template #actions="{ close }">
           <UserOptions />
           <Button
+            v-if="canOpenSettings"
             :icon="{ component: Settings, position: 'prepend' }"
             style-variation="text"
             aria-label="Nastavení"

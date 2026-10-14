@@ -1,17 +1,41 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { createPinia, setActivePinia, type Pinia } from 'pinia';
+import { ref } from 'vue';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import Settings from '../Settings.vue';
+import { useSessionStore } from '../../stores/session';
+
+const auth = vi.hoisted(() => ({ isGuest: false }));
+
+vi.mock('../../composables/useAuth', () => ({
+  useAuth: () => ({ isGuest: ref(auth.isGuest) }),
+}));
+
+let pinia: Pinia;
+
+const renderSettings = () => {
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [{ path: '/:pathMatch(.*)*', component: { render: () => null } }],
+  });
+
+  return render(Settings, { global: { plugins: [router, pinia] } });
+};
 
 describe('Settings Page', () => {
   beforeEach(() => {
     localStorage.clear();
+    auth.isGuest = false;
+    pinia = createPinia();
+    setActivePinia(pinia);
   });
 
   it('switches the theme when a theme card is clicked', async () => {
     const user = userEvent.setup();
-    render(Settings);
+    renderSettings();
 
     await user.click(screen.getByRole('button', { name: /tmavý/i }));
 
@@ -25,7 +49,7 @@ describe('Settings Page', () => {
 
   it('switches the color preset when a swatch is clicked', async () => {
     const user = userEvent.setup();
-    render(Settings);
+    renderSettings();
 
     await user.click(screen.getByRole('button', { name: 'Les' }));
 
@@ -35,5 +59,23 @@ describe('Settings Page', () => {
       'aria-pressed',
       'false'
     );
+  });
+
+  it('links guests back to their session', () => {
+    auth.isGuest = true;
+    useSessionStore().setSessionDetails({ id: 's1', hostId: 'h1', pin: '1234', isActive: true });
+    renderSettings();
+
+    expect(screen.getByRole('link', { name: /zpět do relace/i })).toHaveAttribute(
+      'href',
+      '/session?sessionId=s1&hostId=h1&pin=1234'
+    );
+  });
+
+  it('shows no session link to hosts', () => {
+    useSessionStore().setSessionDetails({ id: 's1', hostId: 'h1', pin: '1234', isActive: true });
+    renderSettings();
+
+    expect(screen.queryByRole('link', { name: /zpět do relace/i })).not.toBeInTheDocument();
   });
 });

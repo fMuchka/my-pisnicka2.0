@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Routes from './Routes';
 import { useAuth } from '../composables/useAuth';
+import { useSessionStore } from '../stores/session';
 
 /**
  * Router Configuration
@@ -29,6 +30,7 @@ export const router = createRouter({
  *
  * Enforces auth requirements on route transitions:
  * - Join, Session and Song detail pages: public (no auth required)
+ * - Settings: also open to guests holding an active session from a valid PIN
  * - Other pages: require authentication, redirect to Login if not authenticated
  *
  * IMPORTANT: useAuth() is called INSIDE beforeEach to ensure fresh auth state
@@ -49,6 +51,11 @@ router.beforeEach(async (to) => {
   }
 
   if (to.path === Routes.Login) {
+    return true;
+  }
+
+  // Guests who joined with a valid PIN can still pick theme and color.
+  if (to.path === Routes.Settings && useSessionStore().hasActiveSession) {
     return true;
   }
 
