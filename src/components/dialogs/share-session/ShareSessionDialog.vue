@@ -3,7 +3,7 @@
   import { Dialog } from '@ark-ui/vue/dialog';
   import { SegmentGroup } from '@ark-ui/vue/segment-group';
   import Button from '../../_core/button/Button.vue';
-  import PinCodeInput from '../../_core/PinCodeInput.vue';
+  import PinCodeInput from '../../_core/pin-code-input/PinCodeInput.vue';
   import QrCode from '../../_core/QrCode.vue';
   import type { PIN } from '../../../lib/pin';
 

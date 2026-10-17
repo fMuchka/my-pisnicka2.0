@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import { defineComponent, h } from 'vue';
 import Join from '../Join.vue';
 
-vi.mock('../../components/_core/PinCodeInput.vue', () => ({
+vi.mock('../../components/_core/pin-code-input/PinCodeInput.vue', () => ({
   default: defineComponent({
     props: {
       modelValue: {
