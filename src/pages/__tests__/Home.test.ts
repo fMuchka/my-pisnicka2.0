@@ -14,6 +14,11 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: router.push }),
 }));
 
+vi.mock('../../composables/useAuth', async () => {
+  const { ref } = await import('vue');
+  return { useAuth: () => ({ user: ref({ email: 'tom@example.com' }) }) };
+});
+
 describe('Home Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,6 +43,16 @@ describe('Home Page', () => {
 
     await user.click(screen.getByRole('button', { name: /relace/i }));
     expect(router.push).toHaveBeenCalledWith({ path: Routes.SessionList });
+
+    await user.click(screen.getByRole('button', { name: /nastavení/i }));
+    expect(router.push).toHaveBeenCalledWith({ path: Routes.Settings });
+  });
+
+  it('greets the user', () => {
+    render(Home);
+
+    expect(screen.getByText(/vítej zpět/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'tom' })).toBeInTheDocument();
   });
 
   it('navigates to info page from info nav item', async () => {

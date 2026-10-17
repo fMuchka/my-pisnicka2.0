@@ -1,20 +1,46 @@
 <script setup lang="ts">
-  import { Music, Users, Info } from 'lucide-vue-next';
-  import { onMounted, ref } from 'vue';
+  import { Music, Users, Info, Settings, type LucideIcon } from 'lucide-vue-next';
+  import { computed, onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
+  import IconBackdrop from '../components/_core/icon-backdrop/IconBackdrop.vue';
+  import { useAuth } from '../composables/useAuth';
   import { hasUnseenTimelineUpdates } from '../lib/timeline/timeline';
   import Routes from '../router/Routes';
 
+  type HomeTile = {
+    label: string;
+    meta: string;
+    icon: LucideIcon;
+    route: Routes;
+    showBadge?: boolean;
+  };
+
   const router = useRouter();
+  const auth = useAuth();
 
   const showInfoBadge = ref(false);
 
-  const goToSessionListPage = () => router.push({ path: Routes.SessionList });
-  const goToSongLibraryPage = () => router.push({ path: Routes.SongLibrary });
+  const userName = computed(() => auth.user.value?.email?.trim().split('@')[0] || 'Melon');
+
+  const tiles = computed<HomeTile[]>(() => [
+    { label: 'Písně', meta: 'Procvičování', icon: Music, route: Routes.SongLibrary },
+    { label: 'Relace', meta: 'Společné hraní', icon: Users, route: Routes.SessionList },
+    {
+      label: 'Informace',
+      meta: 'Co bylo, je a bude',
+      icon: Info,
+      route: Routes.Info,
+      showBadge: showInfoBadge.value,
+    },
+    { label: 'Nastavení', meta: 'Vzhled a motiv', icon: Settings, route: Routes.Settings },
+  ]);
+
   // Info.vue marks the timeline as visited itself; doing it here would hide its "new" highlights.
-  const goToInfoPage = () => {
-    showInfoBadge.value = false;
-    return router.push({ path: Routes.Info });
+  const openTile = (tile: HomeTile) => {
+    if (tile.route === Routes.Info) {
+      showInfoBadge.value = false;
+    }
+    return router.push({ path: tile.route });
   };
 
   onMounted(() => {
@@ -27,156 +53,152 @@
     class="container"
     data-testid="home-view"
   >
+    <header class="greeting">
+      <p class="greeting-eyebrow">Vítej zpět</p>
+      <h1 class="greeting-name">{{ userName }}</h1>
+    </header>
+
     <nav
       class="home-nav"
       aria-label="Home navigation"
     >
       <button
+        v-for="tile in tiles"
+        :key="tile.route"
         type="button"
-        class="nav-item"
-        @click="goToSongLibraryPage"
+        class="tile"
+        @click="openTile(tile)"
       >
-        <span class="nav-item-content">
-          <Music class="nav-item-icon" />
-          <span class="nav-item-label">Písně</span>
+        <span
+          v-if="tile.showBadge"
+          class="tile-badge"
+        >
+          Nové
         </span>
-        <span class="nav-item-meta">Procvičování</span>
-      </button>
-
-      <button
-        type="button"
-        class="nav-item"
-        @click="goToSessionListPage"
-      >
-        <span class="nav-item-content">
-          <Users class="nav-item-icon" />
-          <span class="nav-item-label">Relace</span>
+        <IconBackdrop
+          shape="rounded"
+          size="lg"
+          aria-hidden="true"
+        >
+          <component
+            :is="tile.icon"
+            class="tile-icon"
+          />
+        </IconBackdrop>
+        <span class="tile-text">
+          <span class="tile-label">{{ tile.label }}</span>
+          <span class="tile-meta">{{ tile.meta }}</span>
         </span>
-        <span class="nav-item-meta">Společné hraní</span>
-      </button>
-
-      <button
-        type="button"
-        class="nav-item"
-        @click="goToInfoPage()"
-      >
-        <span class="nav-item-content">
-          <Info class="nav-item-icon" />
-          <span class="nav-item-label-wrap">
-            <span class="nav-item-label">Informace</span>
-            <span
-              v-if="showInfoBadge"
-              class="nav-item-badge"
-            >
-              Nové
-            </span>
-          </span>
-        </span>
-        <span class="nav-item-meta">Co bylo, je a bude</span>
       </button>
     </nav>
   </div>
 </template>
 
 <style scoped>
-  /* Main container */
   .container {
     max-width: 800px;
     margin: 0 auto;
     width: 100%;
-    font-family: var(--font-body);
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    padding: var(--space-xl) var(--space-md);
+    box-sizing: border-box;
+    font-family: var(--font-sans);
+    color: var(--ink);
+    padding: var(--space-lg) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .greeting-eyebrow {
+    margin: 0;
+    font: var(--text-caption);
+    color: var(--ink-muted);
+  }
+
+  .greeting-name {
+    margin: 2px 0 0;
+    font: var(--text-display);
   }
 
   .home-nav {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-md);
   }
 
-  .nav-item {
-    align-items: center;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    cursor: pointer;
+  .tile {
+    position: relative;
     display: flex;
-    font-family: var(--font-body);
-    font-size: 1.15rem;
-    font-weight: 600;
-    justify-content: space-between;
-    min-height: 84px;
-    padding: var(--space-lg) var(--space-md);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    min-height: 152px;
+    box-sizing: border-box;
+    padding: 18px;
+    background-color: var(--surface-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--ink);
+    font-family: var(--font-sans);
     text-align: left;
+    cursor: pointer;
     transition:
       background-color 0.2s ease,
       border-color 0.2s ease;
-    width: 100%;
   }
 
-  .nav-item:hover,
-  .nav-item:focus-visible {
-    background-color: var(--bg-tertiary);
-    border-color: var(--accent-primary);
+  .tile:hover,
+  .tile:focus-visible {
+    background-color: var(--surface-selected);
+    border-color: var(--brand);
     outline: none;
   }
 
-  .nav-item-content {
-    align-items: center;
-    display: inline-flex;
-    gap: var(--space-sm);
+  .tile-icon {
+    width: 22px;
+    height: 22px;
   }
 
-  .nav-item-icon {
-    flex-shrink: 0;
-    height: 1.45rem;
-    width: 1.45rem;
+  .tile-text {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
-  .nav-item-label {
-    line-height: 1.2;
+  .tile-label {
+    font: var(--text-title-compact);
   }
 
-  .nav-item-label-wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+  .tile-meta {
+    font: var(--text-caption);
+    color: var(--ink-muted);
   }
 
-  .nav-item-disabled {
-    color: var(--text-muted);
-    cursor: not-allowed;
-  }
-
-  .nav-item-meta {
-    font-size: 0.95rem;
-    font-weight: 500;
-  }
-
-  .nav-item-badge {
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 16%, var(--bg-primary));
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--bg-primary));
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    line-height: 1;
-    padding: 0.28rem 0.52rem;
+  /* Solid fill on purpose: the soft-tint pill's brand text fell under 4.5:1 in both themes. */
+  .tile-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 4.5px 8px;
+    border-radius: var(--radius-full);
+    background: var(--brand-fill);
+    color: var(--on-brand);
+    font: var(--text-badge-text);
     text-transform: uppercase;
   }
 
-  /* Responsive */
   @media (min-width: 768px) {
     .container {
       padding: var(--space-2xl) var(--space-xl);
     }
 
-    .nav-item {
-      min-height: 92px;
-      padding: var(--space-lg) var(--space-xl);
+    .greeting-name {
+      font: var(--text-heading);
+    }
+
+    .tile {
+      min-height: 180px;
+      padding: var(--space-lg);
     }
   }
 </style>
