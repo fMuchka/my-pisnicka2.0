@@ -27,22 +27,6 @@ vi.mock('../../../stores/session', () => ({
   useSessionStore: () => ({ ...session }),
 }));
 
-// The real TopNavigation imports /mypisnicka-icon.svg from public/, which Vitest can't resolve on Windows.
-vi.mock('../top-navigation/TopNavigation.vue', () => ({
-  default: defineComponent({
-    props: { pageTitle: { type: String, default: undefined }, fadeAway: Boolean },
-    emits: ['home'],
-    setup(props, { emit, slots }) {
-      return () =>
-        h('header', [
-          h('button', { onClick: () => emit('home') }, 'MyPísnička'),
-          props.pageTitle ? h('h1', props.pageTitle) : null,
-          slots.actions?.(),
-        ]);
-    },
-  }),
-}));
-
 vi.mock('../top-navigation/options/UserOptions.vue', () => ({
   default: defineComponent({ setup: () => () => h('div', { 'data-testid': 'user-options' }) }),
 }));

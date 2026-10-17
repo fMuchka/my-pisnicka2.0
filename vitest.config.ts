@@ -1,10 +1,18 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, mergeConfig } from 'vitest/config';
 import viteConfig from './vite.config.ts';
+
+const publicDir = fileURLToPath(new URL('./public', import.meta.url));
 
 export default defineConfig(() =>
   mergeConfig(
     viteConfig,
     defineConfig({
+      resolve: {
+        // Templates turn src="/x.svg" into an import of a public/ file; on Windows Vitest
+        // resolves that root path to file:///x.svg and crashes, so point it at public/.
+        alias: [{ find: /^\/([^/]+\.(?:svg|png))$/, replacement: `${publicDir}/$1` }],
+      },
       test: {
         globals: true,
         environment: 'jsdom',
