@@ -28,10 +28,10 @@ test.describe('Login flow', () => {
     await dismissCookieConsent(page);
 
     await page.getByLabel('Uživatel').fill(TEST_CREDENTIALS.email);
-    await page.getByLabel('Heslo').fill('wrong');
+    await page.getByLabel('Heslo', { exact: true }).fill('wrong');
     await page.getByRole('button', { name: /přihlásit se/i }).click();
 
-    await expect(page.getByLabel(/špatné údaje/i).first()).toBeVisible();
+    await expect(page.getByText(/špatné údaje/i).first()).toBeVisible();
   });
 
   test('logout clears the session and redirects back to login', async ({ page }) => {

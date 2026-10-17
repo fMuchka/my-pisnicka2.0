@@ -23,7 +23,7 @@ export async function login(
   await dismissCookieConsent(page);
 
   await page.getByLabel('Uživatel').fill(email);
-  await page.getByLabel('Heslo').fill(password);
+  await page.getByLabel('Heslo', { exact: true }).fill(password);
   await page.getByRole('button', { name: /přihlásit se/i }).click();
 
   await page.waitForURL(redirectTo);

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-  import { Field, PasswordInput } from '@ark-ui/vue';
-  import { EyeIcon, EyeOffIcon } from 'lucide-vue-next';
-  import { ref } from 'vue';
+  import { computed, ref } from 'vue';
   import Button from './_core/button/Button.vue';
+  import Input from './_core/input/Input.vue';
   import { loginWithEmailPassword } from '../lib/authService';
 
   const emit = defineEmits<{ login: [] }>();
@@ -21,6 +20,13 @@
 
   const user = ref('');
   const password = ref('');
+
+  const userError = computed(() =>
+    validationChecks.value.credentials ? 'Špatné údaje' : 'Nesprávný formát'
+  );
+  const passwordError = computed(() =>
+    validationChecks.value.credentials ? 'Špatné údaje' : 'Heslo je prázdné'
+  );
 
   const validateUser = (value: string): boolean => {
     const trimmedValue = value.trim();
@@ -51,7 +57,7 @@
     if (validationChecks.value.user === false && validationChecks.value.password === false) {
       // extra try catch due to tests
       try {
-        await loginWithEmailPassword(user.value, password.value);
+        await loginWithEmailPassword(user.value.trim(), password.value);
         validationChecks.value.credentials = false;
         emit('login');
       } catch (_err) {
@@ -67,49 +73,24 @@
     class="login-form"
     @submit.prevent="handleConfirmClick"
   >
-    <Field.Root
-      class="form-group"
+    <Input
+      v-model="user"
+      label="Uživatel"
+      placeholder="Tom Bombadil"
+      autocomplete="username"
       :invalid="validationChecks.user || validationChecks.credentials"
-    >
-      <Field.Label class="form-label">Uživatel</Field.Label>
-      <Field.Input
-        v-model.trim="user"
-        placeholder="Tom Bombadil"
-        class="form-input"
-      />
-      <Field.ErrorText
-        class="error"
-        :aria-label="validationChecks.credentials ? 'Špatné údaje' : 'Nesprávný formát'"
-        >{{ validationChecks.credentials ? 'Špatné údaje' : 'Nesprávný formát' }}</Field.ErrorText
-      >
-    </Field.Root>
+      :error-text="userError"
+    />
 
-    <Field.Root :invalid="validationChecks.password || validationChecks.credentials">
-      <PasswordInput.Root class="form-group">
-        <PasswordInput.Label class="form-label">Heslo</PasswordInput.Label>
-        <PasswordInput.Control class="password-control">
-          <PasswordInput.Input
-            :value="password"
-            placeholder="*****"
-            class="form-input"
-            @input="password = ($event.target as HTMLInputElement)?.value"
-          />
-          <PasswordInput.VisibilityTrigger class="password-visibility">
-            <PasswordInput.Indicator>
-              <EyeIcon />
-              <template #fallback>
-                <EyeOffIcon />
-              </template>
-            </PasswordInput.Indicator>
-          </PasswordInput.VisibilityTrigger>
-        </PasswordInput.Control>
-      </PasswordInput.Root>
-      <Field.ErrorText
-        class="error"
-        :aria-label="validationChecks.credentials ? 'Špatné údaje' : 'Heslo je prázdné'"
-        >{{ validationChecks.credentials ? 'Špatné údaje' : 'Heslo je prázdné' }}</Field.ErrorText
-      >
-    </Field.Root>
+    <Input
+      v-model="password"
+      label="Heslo"
+      type="password"
+      placeholder="•••••"
+      autocomplete="current-password"
+      :invalid="validationChecks.password || validationChecks.credentials"
+      :error-text="passwordError"
+    />
 
     <Button
       label="Přihlásit se"
@@ -120,78 +101,9 @@
 </template>
 
 <style scoped>
-  /* Form */
   .login-form {
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  .form-label {
-    font-size: 14px;
-    color: var(--ink-muted);
-    font-weight: 500;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 16px;
-    font-family: var(--font-sans);
-    color: var(--ink);
-    background-color: var(--surface-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    transition: border-color 150ms ease;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border: 2px solid var(--brand);
-    padding: 11px 15px; /* Adjust for thicker border */
-  }
-
-  .form-input::placeholder {
-    color: var(--text-disabled);
-  }
-
-  /* Error state */
-  .form-input-error {
-    border-color: var(--danger);
-  }
-
-  .error {
-    color: var(--danger);
-  }
-
-  .password-control {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  .password-control .form-input {
-    padding-right: 44px; /* room for icon */
-  }
-
-  .password-visibility {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
-    border: none;
-    background: transparent;
-    color: var(--ink-muted);
-    cursor: pointer;
   }
 </style>
