@@ -56,8 +56,8 @@
     grid-auto-columns: 1fr;
     grid-auto-flow: column;
     align-items: end;
-    padding: var(--space-md) var(--space-sm);
-    padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+    padding: var(--space-sm);
+    padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
     background: var(--surface-raised);
     border-top: 1px solid var(--border);
   }
@@ -66,8 +66,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-xs);
-    font: var(--text-label);
+    gap: 2px;
+    font: var(--text-item-meta-compact);
     font-weight: 600;
     color: var(--ink-muted);
     text-decoration: none;
@@ -93,17 +93,17 @@
   }
 
   .tab-icon {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
   }
 
   .tab-main-circle {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 72px;
-    height: 72px;
-    margin-top: -48px;
+    width: 52px;
+    height: 52px;
+    margin-top: -28px;
     border-radius: var(--radius-full);
     background: var(--brand);
     color: var(--surface);
@@ -113,7 +113,7 @@
 
   .tab--active .tab-main-circle {
     box-shadow:
-      0 0 0 6px var(--brand-soft),
+      0 0 0 4px var(--brand-soft),
       var(--shadow-accent);
   }
 </style>
