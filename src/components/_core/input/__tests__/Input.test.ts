@@ -90,7 +90,7 @@ describe('Input', () => {
     });
 
     expect(screen.queryByText('Jméno je volné')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Uživatel')).not.toHaveClass('input--success');
+    expect(screen.getByLabelText('Uživatel')).not.toHaveClass('field-input--success');
   });
 
   it('disables the input', () => {

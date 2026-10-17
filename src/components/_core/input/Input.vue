@@ -2,6 +2,7 @@
   import { Field } from '@ark-ui/vue/field';
   import { Eye, EyeOff } from 'lucide-vue-next';
   import { computed, ref } from 'vue';
+  import FieldMessages from '../field/FieldMessages.vue';
   import type { InputIcon, InputType } from './types';
 
   // Attributes like name, autocomplete or aria-label belong on the <input>, not the wrapper.
@@ -41,14 +42,12 @@
   const inputType = computed(() =>
     isPassword.value && isPasswordVisible.value ? 'text' : props.type
   );
-  // Invalid wins so a field never shows red and green at once.
   const isSuccess = computed(() => props.success && !props.invalid);
-  const helper = computed(() => (isSuccess.value && props.successText) || props.helperText);
 </script>
 
 <template>
   <Field.Root
-    class="input-field"
+    class="field"
     :invalid="props.invalid"
     :disabled="props.disabled"
     :read-only="props.readOnly"
@@ -56,13 +55,13 @@
   >
     <Field.Label
       v-if="props.label"
-      class="input-label"
+      class="field-label"
     >
       {{ props.label }}
-      <Field.RequiredIndicator class="input-required">*</Field.RequiredIndicator>
+      <Field.RequiredIndicator class="field-required">*</Field.RequiredIndicator>
     </Field.Label>
 
-    <div class="input-control">
+    <div class="field-control">
       <component
         :is="props.prependIcon"
         v-if="props.prependIcon"
@@ -75,9 +74,9 @@
         :type="inputType"
         :placeholder="props.placeholder"
         :class="[
-          'input',
+          'field-input',
           {
-            'input--success': isSuccess,
+            'field-input--success': isSuccess,
             'input--with-prepend': props.prependIcon,
             'input--with-append': isPassword,
           },
@@ -103,85 +102,19 @@
       </button>
     </div>
 
-    <Field.ErrorText
-      v-if="props.errorText"
-      class="input-message input-message--error"
-    >
-      {{ props.errorText }}
-    </Field.ErrorText>
-    <Field.HelperText
-      v-if="helper && !(props.invalid && props.errorText)"
-      :class="['input-message', { 'input-message--success': isSuccess && props.successText }]"
-    >
-      {{ helper }}
-    </Field.HelperText>
+    <FieldMessages
+      :helper-text="props.helperText"
+      :error-text="props.errorText"
+      :success-text="props.successText"
+      :invalid="props.invalid"
+      :success="props.success"
+    />
   </Field.Root>
 </template>
 
+<style scoped src="../field/field.css"></style>
+
 <style scoped>
-  .input-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-    width: 100%;
-  }
-
-  .input-label {
-    font: var(--text-label);
-    color: var(--ink);
-  }
-
-  .input-required {
-    color: var(--danger);
-    margin-left: 2px;
-  }
-
-  .input-control {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  .input {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 48px;
-    padding: 12px 16px;
-    font: var(--text-body);
-    color: var(--ink);
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    transition: border-color 150ms ease;
-  }
-
-  .input::placeholder {
-    color: var(--ink-muted);
-  }
-
-  .input:focus {
-    outline: none;
-    border-color: var(--brand);
-  }
-
-  .input--success {
-    border-color: var(--success);
-  }
-
-  .input[data-invalid] {
-    border-color: var(--danger);
-  }
-
-  .input:disabled {
-    border-color: var(--border-soft);
-    color: var(--text-disabled);
-    cursor: not-allowed;
-  }
-
-  .input:disabled::placeholder {
-    color: var(--text-disabled);
-  }
-
   .input--with-prepend {
     padding-left: 40px;
   }
@@ -191,8 +124,8 @@
   }
 
   /* Native search clear buttons clash with our own styling and differ per browser. */
-  .input[type='search']::-webkit-search-cancel-button,
-  .input[type='search']::-webkit-search-decoration {
+  .field-input[type='search']::-webkit-search-cancel-button,
+  .field-input[type='search']::-webkit-search-decoration {
     appearance: none;
   }
 
@@ -235,18 +168,5 @@
   .input-visibility svg {
     width: 20px;
     height: 20px;
-  }
-
-  .input-message {
-    font: var(--text-caption);
-    color: var(--ink-muted);
-  }
-
-  .input-message--error {
-    color: var(--danger);
-  }
-
-  .input-message--success {
-    color: var(--success);
   }
 </style>
