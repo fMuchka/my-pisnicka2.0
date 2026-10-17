@@ -125,10 +125,10 @@
   .user-options-menu {
     margin-top: var(--space-xs);
     width: 200px;
-    background: var(--bg-primary);
-    border: 1px solid var(--bg-tertiary);
-    border-radius: var(--radius-md);
-    box-shadow: 0 10px 22px color-mix(in srgb, var(--text-primary) 12%, transparent);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-popover);
     padding: var(--space-xs);
     z-index: 20;
   }
@@ -136,16 +136,16 @@
   .user-menu-button {
     width: 100%;
     justify-content: space-between;
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    color: var(--ink);
   }
 
   .user-menu-button:hover {
-    background: var(--bg-secondary);
+    background: var(--surface-secondary);
   }
 
   .user-menu-button:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--brand);
     outline-offset: 1px;
   }
 

@@ -55,8 +55,8 @@
 
 <style scoped>
   .top-nav {
-    background-color: var(--bg-primary);
-    border-bottom: 1px solid var(--bg-tertiary);
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border-soft);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -87,13 +87,13 @@
   }
 
   .context-row {
-    border-top: 1px solid color-mix(in srgb, var(--bg-tertiary) 60%, transparent);
+    border-top: 1px solid var(--border-soft);
     min-height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 var(--space-md);
-    background-color: color-mix(in srgb, var(--bg-primary) 96%, var(--bg-secondary));
+    background-color: color-mix(in srgb, var(--surface) 96%, var(--surface-secondary));
   }
 
   .page-title {
@@ -102,7 +102,7 @@
     font-size: 1rem;
     font-weight: 650;
     line-height: 1.2;
-    color: var(--text-primary);
+    color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
