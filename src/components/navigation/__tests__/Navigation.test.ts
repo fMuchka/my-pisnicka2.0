@@ -64,20 +64,20 @@ describe('Navigation', () => {
 
     expect(screen.getByText('Informace')).toBeInTheDocument();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Nastavení', hidden: true })).not.toBeVisible();
+    expect(screen.getByTestId('user-options')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Nastavení' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
 
-    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Nastavení' })).toBeVisible());
-    expect(screen.getByTestId('user-options')).toBeVisible();
+    await vi.waitFor(() => expect(screen.getByRole('link', { name: 'Info' })).toBeVisible());
     expect(screen.getByRole('link', { name: 'Info' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('opens the settings page from the desktop menu settings button', async () => {
+  it('opens the settings page from the desktop menu settings link', async () => {
     const { router } = await renderNavigation(Routes.Home);
 
     await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Nastavení' }));
+    await userEvent.click(await screen.findByRole('link', { name: 'Nastavení' }));
 
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(Routes.Settings));
   });
@@ -89,14 +89,16 @@ describe('Navigation', () => {
     expect(screen.getByRole('link', { name: 'Nastavení' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('shows options but no page links in the desktop menu for guests', async () => {
+  it('gives desktop guests a settings button instead of the menu', async () => {
     auth.isGuest = true;
-    await renderNavigation(Routes.Session);
+    const { router } = await renderNavigation(Routes.Session);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
-
-    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Nastavení' })).toBeVisible());
+    expect(screen.queryByRole('button', { name: 'Otevřít menu' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Nastavení' }));
+
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(Routes.Settings));
   });
 
   it('sends unauthenticated users to Login when the logo is clicked', async () => {
@@ -133,12 +135,14 @@ describe('Navigation', () => {
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(Routes.Home));
   });
 
-  it('renders logo row and tab bar on mobile, without title or options', async () => {
+  it('renders logo row, user options and tab bar on mobile, without title or menu', async () => {
     view.isMobile = true;
     await renderNavigation(Routes.Info, { pageTitle: 'Informace' });
 
     expect(screen.getByRole('navigation')).toBeInTheDocument();
+    expect(screen.getByTestId('user-options')).toBeInTheDocument();
     expect(screen.queryByText('Informace')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Otevřít menu' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Nastavení' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Info' })).toHaveAttribute('aria-current', 'page');
   });
@@ -185,9 +189,7 @@ describe('Navigation', () => {
     auth.isGuest = true;
     await renderNavigation(Routes.Session);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Otevřít menu' }));
-
-    await vi.waitFor(() => expect(screen.getByTestId('user-options')).toBeVisible());
     expect(screen.queryByRole('button', { name: 'Nastavení' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Otevřít menu' })).not.toBeInTheDocument();
   });
 });

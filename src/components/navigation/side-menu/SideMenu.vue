@@ -31,12 +31,6 @@
         <Drawer.Content class="content">
           <!-- Kept for screen readers: Content is aria-labelledby the title. -->
           <Drawer.Title class="visually-hidden">Menu</Drawer.Title>
-          <div class="actions">
-            <slot
-              name="actions"
-              :close="() => (open = false)"
-            />
-          </div>
 
           <nav class="links">
             <RouterLink
@@ -115,14 +109,6 @@
 
   .content[data-state='closed'] {
     animation: slide-out var(--transition-normal);
-  }
-
-  .actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: var(--space-md);
-    border-bottom: 1px solid var(--border);
   }
 
   .visually-hidden {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue';
+  import UserOptions from './options/UserOptions.vue';
 
   const props = withDefaults(
     defineProps<{
@@ -38,6 +39,7 @@
         MyPísnička
       </div>
       <div class="nav-actions">
+        <UserOptions />
         <slot name="actions" />
       </div>
     </div>

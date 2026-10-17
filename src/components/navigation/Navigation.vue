@@ -7,7 +7,6 @@
   import SideMenu from './side-menu/SideMenu.vue';
   import TabBar, { type TabBarPage } from './tab-bar/TabBar.vue';
   import TopNavigation from './top-navigation/TopNavigation.vue';
-  import UserOptions from './top-navigation/options/UserOptions.vue';
   import { useAuth } from '../../composables/useAuth';
   import { useDeviceViewType } from '../../composables/useDeviceViewType';
   import { pageNavigation } from '../../composables/usePageNavigation';
@@ -78,10 +77,7 @@
     router.push(sessionStore.activeSessionRoute ?? Routes.Login);
   };
 
-  const openSettings = (closeMenu?: () => void) => {
-    closeMenu?.();
-    router.push(Routes.Settings);
-  };
+  const openSettings = () => router.push(Routes.Settings);
 
   // The tab bar is fixed, so reserve its height at the bottom of the page or it covers the content.
   const tabBarDock = useTemplateRef<HTMLElement>('tabBarDock');
@@ -98,61 +94,39 @@
 </script>
 
 <template>
-  <template v-if="isMobile">
-    <TopNavigation
-      :fade-away="fadeAway"
-      @home="goHome"
-    >
-      <!-- Guests have no tab bar, so this is their only way to Settings on mobile. -->
-      <template
-        v-if="!showTabBar && canOpenSettings"
-        #actions
-      >
-        <Button
-          :icon="{ component: Settings, position: 'prepend' }"
-          style-variation="text"
-          aria-label="Nastavení"
-          @click="openSettings()"
-        />
-      </template>
-    </TopNavigation>
-    <div
-      v-if="showTabBar"
-      ref="tabBarDock"
-      class="tab-bar-dock"
-    >
-      <TabBar
-        :pages="tabPages"
-        :main-page="songs"
-        :current-page-id="currentPageId"
-      />
-    </div>
-  </template>
-
   <TopNavigation
-    v-else
-    :page-title="pageNavigation.pageTitle"
+    :page-title="isMobile ? undefined : pageNavigation.pageTitle"
     :fade-away="fadeAway"
     @home="goHome"
   >
     <template #actions>
+      <!-- Guests get neither the tab bar nor menu links (both lead to host-only pages), so Settings is all they need. -->
+      <Button
+        v-if="isGuest && canOpenSettings"
+        :icon="{ component: Settings, position: 'prepend' }"
+        style-variation="text"
+        aria-label="Nastavení"
+        @click="openSettings"
+      />
       <SideMenu
-        :pages="isGuest ? [] : menuPages"
+        v-else-if="!isGuest && !isMobile"
+        :pages="menuPages"
         :current-page-id="currentPageId"
-      >
-        <template #actions="{ close }">
-          <UserOptions />
-          <Button
-            v-if="canOpenSettings"
-            :icon="{ component: Settings, position: 'prepend' }"
-            style-variation="text"
-            aria-label="Nastavení"
-            @click="openSettings(close)"
-          />
-        </template>
-      </SideMenu>
+      />
     </template>
   </TopNavigation>
+
+  <div
+    v-if="showTabBar"
+    ref="tabBarDock"
+    class="tab-bar-dock"
+  >
+    <TabBar
+      :pages="tabPages"
+      :main-page="songs"
+      :current-page-id="currentPageId"
+    />
+  </div>
 </template>
 
 <style scoped>
