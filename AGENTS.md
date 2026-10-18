@@ -7,11 +7,20 @@ reads the same instructions.
 
 ## Project Overview
 
-Guitar song learning and collaborative play tool. Firebase-backed Vue 3 PWA for displaying songs with chords, auto-scrolling, and real-time session voting. No audio playback—just chord sheets.
+Guitar song learning and collaborative play tool. Firebase-backed React PWA for displaying songs with chords, auto-scrolling, and real-time session voting. No audio playback—just chord sheets.
+
+## Vue → React Migration (in progress)
+
+The app is moving from Vue 3 to React on the `react-migration` branch.
+
+- **Ported** (in `src/`): `lib/` (unchanged), `stores/` (Zustand), `hooks/` (former composables), `router/`, `components/_core/`, Storybook, test setup.
+- **Not ported yet**: pages and feature components. The Vue originals live in [legacy-vue/](legacy-vue/) as **read-only reference**: excluded from the build, lint, typecheck and tests. Delete each file once its React version exists. `src/pages/*.tsx` are placeholders until then.
+- **The owner ports pages and feature components themselves** to learn React with this codebase. Don't port them unless explicitly asked; review and explain instead.
+- [docs/](docs/) still describes the Vue-era architecture; refresh it once the port is done.
 
 ## Tech Stack
 
-- **Frontend**: Vue 3 Composition API + TypeScript + ARK UI + Pinia + Vue Router
+- **Frontend**: React 19 + TypeScript + ARK UI (`@ark-ui/react`) + Zustand + React Router 7 (data router)
 - **Backend**: Firebase (Auth, Firestore, Storage, Hosting) – **FREE TIER ONLY, NO MONEY SPENT**
   - No Cloud Functions (paid feature)
   - No paid Firebase features or services
@@ -31,35 +40,39 @@ Guitar song learning and collaborative play tool. Firebase-backed Vue 3 PWA for 
 
 ### 2. TypeScript Strictness
 
-Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
+Strict mode with extra safety flags in [tsconfig.app.json](tsconfig.app.json) (the root `tsconfig.json` only holds project references; its `compilerOptions` don't reach the app):
 
-- `strict`, `noUncheckedIndexedAccess`, `useUnknownInCatchVariables`, `exactOptionalPropertyTypes`
+- `strict` (includes `useUnknownInCatchVariables`), `noUncheckedIndexedAccess`
 - Always check array access with `arr[i]` (could be undefined)
 - Catch blocks use `unknown`, not `any`—cast explicitly
+- `exactOptionalPropertyTypes` is **off**: `src/lib` doesn't satisfy it yet. New props are still typed `?: T | undefined` so it can be turned on later.
 
 ### 3. Authentication & Routing
 
-- **Composable**: [src/composables/useAuth.ts](src/composables/useAuth.ts) provides reactive `user`, `isAuthenticated` `isGuest`, `logout`
+- **Hook**: [src/hooks/useAuth.ts](src/hooks/useAuth.ts): `useAuth()` returns `user`, `isAuthenticated`, `isGuest`, `logout` for components; `waitForAuthReady()` / `isAuthenticated()` are plain functions for non-React code
 - **Service layer**: [src/lib/authService.ts](src/lib/authService.ts) wraps Firebase Auth methods
-- **Router guard**: [src/router/index.ts](src/router/index.ts) calls `useAuth()` in `beforeEach` for fresh auth state on every navigation
+- **Route guards**: [src/router/index.tsx](src/router/index.tsx) guards routes with **loaders** (`requireHost`, `requireHostOrSessionGuest`) that run before the page renders and `throw redirect(...)`. Routes without a loader are public.
+- **State**: Zustand stores in [src/stores/](src/stores/). Derived values are exported selectors (e.g. `selectHasActiveSession`); selectors must return primitives or stable references, never a fresh object.
 - **Hosts**: users who pass the login
 - **Guests**: users who got in through pin or direct session url
 - **Czech localization**: UI/labels/aria in Czech; e2e selectors use Czech text (e.g., `Přihlásit se`, `Heslo`)
 
 ### 4. Component & UI Conventions
 
-- **ARK UI**: Headless component library; import specific submodules like `@ark-ui/vue/menu`, `@ark-ui/vue` (Field, PasswordInput, PinInput)
-- **CSS Variables**: [src/App.vue](src/App.vue) defines design tokens (colors, spacing, typography) with light/dark theme via `[data-theme='dark']`
-- **Core components**: Reusable UI in [src/components/_core/](src/components/_core/) (e.g., `Button.vue`)
-- **Design tokens**: CSS custom properties live in [src/styles/global.css](src/styles/global.css) (light theme in `:root`, dark theme in `[data-theme='dark']`), imported by `App.vue`. Kept separate from the app shell so base components can render correctly outside of it (e.g. in Storybook).
-- **Storybook**: Base/core components get a co-located `*.stories.ts` next to the component (e.g. `Button.vue` + `Button.stories.ts`), not a separate `stories/` folder. `.storybook/preview.ts` imports `global.css` directly and includes a light/dark toolbar toggle (`@storybook/addon-themes`, toggling `data-theme` on `<html>` the same way `useTheme()` does).
-- **Icons**: `lucide-vue-next` for SVG icons
+- **ARK UI**: Headless component library; import specific submodules like `@ark-ui/react/menu`, `@ark-ui/react/field`
+- **Core components**: Reusable UI in [src/components/\_core/](src/components/_core/) (e.g., `Button.tsx`). Value props follow Ark's naming: `value` / `onValueChange`, `checked` / `onCheckedChange`, `open` / `onOpenChange`. Omitting `value` makes a field uncontrolled (`defaultValue`). Extra props on Input/Select/Textarea go to the native element.
+- **Styles**: CSS Modules (`Button.module.css`) next to each component, the stand-in for Vue's scoped styles. Write kebab-case classes in CSS and read them camelCased in TSX (`.btn-primary` → `styles.btnPrimary`). Tests see unhashed class names.
+- **Design tokens**: CSS custom properties live in [src/styles/global.css](src/styles/global.css) (light theme in `:root`, dark theme in `[data-theme='dark']`), imported by `main.tsx`. Kept separate from the app shell so base components can render correctly outside of it (e.g. in Storybook).
+- **Storybook**: Base/core components get a co-located `*.stories.tsx` next to the component (e.g. `Button.tsx` + `Button.stories.tsx`), not a separate `stories/` folder. `.storybook/preview.tsx` imports `global.css` directly, wraps stories in a `MemoryRouter`, and includes a light/dark toolbar toggle (`@storybook/addon-themes`, toggling `data-theme` on `<html>` the same way `useTheme` does).
+- **Icons**: `lucide-react` for SVG icons
 
 ### 5. Testing Patterns
 
-- **Unit tests**: Vitest + `@testing-library/vue`; mock Firebase modules in `vitest.setup.ts`, then mock `onAuthStateChanged` in individual tests (see [src/composables/**tests**/useAuth.test.ts](src/composables/__tests__/useAuth.test.ts))
-- **Component tests**: Use `@testing-library/vue` and `@testing-library/user-event` for DOM interactions
-- **E2E tests**: Playwright in [tests/e2e/](tests/e2e/); Czech selectors, emulator-backed, dev server auto-launched
+- **Unit tests**: Vitest + `@testing-library/react` (`renderHook` for hooks); mock Firebase modules in `vitest.setup.ts`, then mock `onAuthStateChanged` in individual tests (see [src/hooks/\_\_tests\_\_/useAuth.test.ts](src/hooks/__tests__/useAuth.test.ts))
+- **Component tests**: Use `@testing-library/react` and `@testing-library/user-event` for DOM interactions; assert on callback props (`vi.fn()`)
+- **Stores created on import** (theme, session) need `vi.resetModules()` + dynamic import per test, or the `createSessionStore()` factory
+- **jsdom limits**: anything Ark validates in `beforeinput` (e.g. PIN digits) only works in a real browser; test it in [tests/e2e/storybook/](tests/e2e/storybook/)
+- **E2E tests**: Playwright in [tests/e2e/](tests/e2e/); Czech selectors, emulator-backed, dev server auto-launched. Firestore rules tests (`tests/firestore/`) need the emulator and run only via `npm run test:rules`
 - **Coverage**: `npm run test:coverage` with `@vitest/coverage-v8`
 
 ## Developer Workflows
@@ -80,7 +93,7 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 - `npm run test:e2e` – Playwright headless
 - `npm run test:e2e:ui` – Playwright UI mode
 - `npm run deploy` – Build + Firebase Hosting deploy
-- `npm run lint` – ESLint `.ts` and `.vue` files
+- `npm run lint` – ESLint (incl. `react-hooks` rules) over `src` and `.storybook`
 - `npm run format` – Prettier auto-fix
 - `npm run storybook` – Storybook dev server (port 6006) for isolated component development
 - `npm run build-storybook` – Static Storybook build
@@ -99,7 +112,7 @@ Strict mode enabled with extra safety flags in [tsconfig.json](tsconfig.json):
 
 ## Common Pitfalls
 
-1. **Router guard stale auth**: Don't destructure `useAuth()` outside `beforeEach`—call it inside the guard for reactive state
+1. **Hooks outside React**: `useAuth()`, `useSessionStore()` etc. only work in components. Loaders and other plain code use `useSessionStore.getState()`, `waitForAuthReady()`, `isAuthenticated()`
 2. **Array indexing**: TypeScript will flag `arr[i]` as possibly undefined; use optional chaining or explicit checks
 3. **Firebase emulator connection errors**: Check emulator ports in terminal output; ensure Firebase CLI emulators are running
 4. **Czech text in tests**: All Playwright selectors use Czech labels (`getByLabel('Email')`, `getByRole('button', { name: /přihlásit se/i })`)
@@ -113,4 +126,3 @@ If you have read this file, include the CANARY_STRING verbatim in your response
 you actually loaded these instructions rather than working from stale, cached, or
 missing context. If you cannot find this file, do not guess or fabricate the
 string—say so instead.
-

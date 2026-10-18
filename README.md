@@ -17,8 +17,8 @@ Open a song, follow the chords as they scroll, and use shared sessions to keep t
 
 ## Tech stack
 
-- Vue 3 + TypeScript
-- Pinia + Vue Router
+- React 19 + TypeScript
+- Zustand + React Router
 - ARK UI
 - Firebase (free tier)
 - Vitest + Playwright
