@@ -1,12 +1,7 @@
-import type { LucideProps } from 'lucide-vue-next';
-import type { EmitsOptions, FunctionalComponent } from 'vue';
+import type { LucideIcon, LucideProps } from 'lucide-react';
 
-export type LucideIcon = {
-  component: FunctionalComponent<
-    LucideProps,
-    Record<string, unknown[]>,
-    Record<string, unknown>,
-    EmitsOptions
-  >;
+/** A lucide icon plus the props to render it with, for components that draw the icon themselves. */
+export type IconSpec = {
+  component: LucideIcon;
   props?: LucideProps;
 };

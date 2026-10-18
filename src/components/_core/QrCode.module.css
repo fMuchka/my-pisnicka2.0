@@ -1,0 +1,32 @@
+.qr-code {
+  display: inline-flex;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-qr);
+  color: var(--text-qr);
+}
+
+.qr-frame {
+  fill: currentColor;
+}
+
+.qr-pattern {
+  fill: inherit;
+}
+
+.qr-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28%;
+  height: 28%;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-qr);
+}
+
+.qr-overlay-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

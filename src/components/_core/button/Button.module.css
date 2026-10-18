@@ -1,0 +1,127 @@
+.btn {
+  padding: 0 var(--space-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font: var(--text-button);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 48px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--brand-fill);
+  color: var(--on-brand);
+  border: 2px solid var(--brand-fill);
+}
+
+.btn-primary:hover {
+  background: var(--brand-light);
+  border-color: var(--brand-light);
+  box-shadow: var(--shadow-accent);
+}
+
+.btn-primary:disabled {
+  background: var(--surface-secondary);
+  color: var(--text-disabled);
+  border-color: var(--surface-secondary);
+}
+
+.btn-primary:disabled:hover {
+  background: var(--surface-secondary);
+  border-color: var(--surface-secondary);
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:disabled {
+  background: transparent;
+  color: var(--text-disabled);
+  border-color: var(--border);
+}
+
+.btn-secondary:disabled:hover {
+  background: transparent;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-secondary);
+}
+
+.btn-filled.btn-secondary {
+  background: var(--surface-secondary);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.btn-filled.btn-secondary:disabled {
+  background: var(--surface-secondary);
+  color: var(--text-disabled);
+  border-color: var(--border);
+}
+
+.btn-outlined {
+  background: transparent;
+  color: var(--brand);
+  border: 2px solid var(--brand);
+}
+
+.btn-outlined:disabled {
+  background: transparent;
+  color: var(--text-disabled);
+  border-color: var(--border);
+}
+
+.btn-outlined:disabled:hover {
+  background: transparent;
+}
+
+.btn-outlined.btn-secondary {
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.btn-outlined:hover {
+  background: var(--surface-secondary);
+}
+
+.btn-text {
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid transparent;
+  padding: 0 var(--space-xs);
+}
+
+.btn-text:disabled {
+  background: transparent;
+  color: var(--text-disabled);
+}
+
+.btn-text:disabled:hover {
+  background: transparent;
+}
+
+.btn-text.btn-secondary {
+  color: var(--ink);
+}
+
+.btn-text:hover {
+  background: var(--surface-secondary);
+}

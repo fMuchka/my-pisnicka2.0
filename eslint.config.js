@@ -1,27 +1,30 @@
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
-import storybook from "eslint-plugin-storybook";
+import storybook from 'eslint-plugin-storybook';
 
 import js from '@eslint/js';
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
-import vue from 'eslint-plugin-vue';
-import vueParser from 'vue-eslint-parser';
+import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 
 export default [
+  {
+    // Unported Vue code, kept only as a reference while pages and features move to React.
+    ignores: ['legacy-vue/**', 'dist/**', 'dev-dist/**', 'coverage/**', 'storybook-static/**'],
+  },
   js.configs.recommended,
-  ...vue.configs['flat/recommended'],
+  reactHooks.configs.flat.recommended,
   prettierConfig,
   {
-    files: ['**/*.{js,mjs,cjs,ts,vue}'],
+    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     languageOptions: {
-      parser: vueParser,
+      parser: typescriptParser,
       parserOptions: {
-        parser: typescriptParser,
         ecmaVersion: 'latest',
         sourceType: 'module',
+        ecmaFeatures: { jsx: true },
       },
       globals: {
         ...globals.browser,
@@ -30,11 +33,12 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescript,
-      vue,
       prettier,
     },
     rules: {
       ...typescript.configs.recommended.rules,
+      // TypeScript already reports undefined names, and no-undef doesn't understand type-only globals.
+      'no-undef': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
@@ -44,25 +48,7 @@ export default [
         },
       ],
       'prettier/prettier': 'warn',
-      'vue/multi-word-component-names': 'off',
-      // 'vue/html-indent': ['warn', 2],
-      // 'vue/script-indent': ['warn', 2, { baseIndent: 1 }],
     },
   },
-  {
-    files: ['**/*.vue'],
-    rules: {
-      // Override indent rule for .vue files to avoid conflicts with vue/script-indent
-      indent: 'off',
-    },
-  },
-  {
-    // v-html is used in SongTextEditor to render chord highlights.
-    // Content is HTML-escaped before chord <mark> spans are injected, so XSS is not a risk here.
-    files: ['**/SongTextEditor.vue'],
-    rules: {
-      'vue/no-v-html': 'off',
-    },
-  },
-  ...storybook.configs["flat/recommended"]
+  ...storybook.configs['flat/recommended'],
 ];

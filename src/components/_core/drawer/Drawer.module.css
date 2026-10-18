@@ -1,0 +1,129 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-backdrop);
+  z-index: 999;
+}
+
+.backdrop[data-state='open'] {
+  animation: drawer-fade-in var(--transition-normal) ease-out;
+}
+
+.backdrop[data-state='closed'] {
+  animation: drawer-fade-out var(--transition-fast) ease-in;
+}
+
+.positioner {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.positioner[hidden] {
+  display: none;
+}
+
+.content {
+  pointer-events: auto;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  max-height: min(85vh, 720px);
+  overflow-y: auto;
+  background: var(--surface-raised);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-panel);
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  position: relative;
+}
+
+.content[hidden] {
+  display: none;
+}
+
+.content[data-state='open'] {
+  animation: drawer-fade-in var(--transition-normal) ease-out;
+}
+
+.content[data-state='closed'] {
+  animation: drawer-fade-out var(--transition-fast) ease-in;
+}
+
+.content--card {
+  border-top: 1px solid var(--border);
+  box-shadow: var(--shadow-raised);
+}
+
+.grabber {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-xs) 0;
+  cursor: grab;
+}
+
+.grabberIndicator {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--border);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-right: 40px;
+  font: var(--text-title-compact);
+  color: var(--ink);
+}
+
+.closeTrigger {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.closeTrigger:hover {
+  background: var(--surface-secondary);
+}
+
+.closeTrigger:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@keyframes drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
+import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  css: {
+    modules: { localsConvention: 'camelCaseOnly' },
+  },
   plugins: [
-    vue(),
+    react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['ios/*.png', 'android/*.png', 'windows11/*.png', 'icons.json'],

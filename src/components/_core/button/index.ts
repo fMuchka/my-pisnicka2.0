@@ -1,2 +1,2 @@
 export * from './types';
-export * from './Button.vue';
+export { default as Button } from './Button';

@@ -1,2 +1,2 @@
 export * from './types';
-export * from './Drawer.vue';
+export { default as Drawer } from './Drawer';

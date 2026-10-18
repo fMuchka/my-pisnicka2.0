@@ -1,5 +1,4 @@
-import { computed, ref, watch } from 'vue';
-import { defineStore } from 'pinia';
+import { create } from 'zustand';
 import { getSessionStatus, type Session, type SessionRouterQuery } from '../lib/session';
 import Routes from '../router/Routes';
 
@@ -38,12 +37,69 @@ const writeStoredSession = (details: SessionStoreDetails | null) => {
   }
 };
 
-export const useSessionStore = defineStore('session', () => {
+export type SessionState = {
+  sessionDetails: SessionStoreDetails | null;
+  /** Resolves once a session restored from storage has been rechecked against Firestore. */
+  whenValidated: () => Promise<void>;
+  setSessionFromModel: (session: Session) => void;
+  setSessionDetails: (details: SessionStoreDetails) => void;
+  clearSession: () => void;
+};
+
+export const selectHasSession = (state: SessionState) => state.sessionDetails !== null;
+
+// Set only after the PIN/link was checked against Firestore (Join or Session page).
+export const selectHasActiveSession = (state: SessionState) =>
+  state.sessionDetails !== null && state.sessionDetails.isActive !== false;
+
+// A string rather than a location object: Zustand selectors must return stable values.
+export const selectActiveSessionRoute = (state: SessionState): string | null => {
+  const details = state.sessionDetails;
+
+  if (!selectHasActiveSession(state) || details == null) {
+    return null;
+  }
+
+  const query: SessionRouterQuery = {
+    sessionId: details.id,
+    hostId: details.hostId,
+    pin: details.pin,
+  };
+
+  return `${Routes.Session}?${new URLSearchParams(query).toString()}`;
+};
+
+/** Exported for tests, which need a fresh store per case; the app uses `useSessionStore`. */
+export const createSessionStore = () => {
   // Kept in sessionStorage so a reload doesn't kick a PIN guest out of guest-allowed pages.
   const restoredSession = readStoredSession();
-  const sessionDetails = ref<SessionStoreDetails | null>(restoredSession);
 
-  watch(sessionDetails, writeStoredSession, { deep: true });
+  const store = create<SessionState>()((set) => ({
+    sessionDetails: restoredSession,
+    whenValidated: () => validation,
+
+    setSessionFromModel: (session) =>
+      set({
+        sessionDetails: {
+          id: session.id,
+          hostId: session.hostId,
+          pin: session.pin,
+          name: session.name,
+          hostDisplayName: session.hostDisplayName,
+          isActive: session.isActive,
+        },
+      }),
+
+    setSessionDetails: (details) => set({ sessionDetails: { ...details } }),
+
+    clearSession: () => set({ sessionDetails: null }),
+  }));
+
+  store.subscribe((state, previous) => {
+    if (state.sessionDetails !== previous.sessionDetails) {
+      writeStoredSession(state.sessionDetails);
+    }
+  });
 
   // The host may have closed the session since it was saved, so recheck it once per app load.
   const revalidateRestoredSession = async (restored: SessionStoreDetails) => {
@@ -56,8 +112,8 @@ export const useSessionStore = defineStore('session', () => {
       status.ok && status.session?.id === restored.id && status.session.hostId === restored.hostId;
 
     // Leave it alone if the user joined another session while the check was running.
-    if (!isSameSession && sessionDetails.value?.id === restored.id) {
-      sessionDetails.value = null;
+    if (!isSameSession && store.getState().sessionDetails?.id === restored.id) {
+      store.getState().clearSession();
     }
   };
 
@@ -65,61 +121,7 @@ export const useSessionStore = defineStore('session', () => {
     ? revalidateRestoredSession(restoredSession)
     : Promise.resolve();
 
-  /** Resolves once a session restored from storage has been rechecked against Firestore. */
-  const whenValidated = () => validation;
+  return store;
+};
 
-  const hasSession = computed(() => {
-    return sessionDetails.value !== null;
-  });
-
-  // Set only after the PIN/link was checked against Firestore (Join or Session page).
-  const hasActiveSession = computed(() => {
-    return sessionDetails.value !== null && sessionDetails.value.isActive !== false;
-  });
-
-  const activeSessionRoute = computed(() => {
-    const details = sessionDetails.value;
-
-    if (!hasActiveSession.value || details == null) {
-      return null;
-    }
-
-    const query: SessionRouterQuery = {
-      sessionId: details.id,
-      hostId: details.hostId,
-      pin: details.pin,
-    };
-
-    return { path: Routes.Session, query };
-  });
-
-  const setSessionFromModel = (session: Session) => {
-    sessionDetails.value = {
-      id: session.id,
-      hostId: session.hostId,
-      pin: session.pin,
-      name: session.name,
-      hostDisplayName: session.hostDisplayName,
-      isActive: session.isActive,
-    };
-  };
-
-  const setSessionDetails = (details: SessionStoreDetails) => {
-    sessionDetails.value = { ...details };
-  };
-
-  const clearSession = () => {
-    sessionDetails.value = null;
-  };
-
-  return {
-    sessionDetails,
-    hasSession,
-    hasActiveSession,
-    activeSessionRoute,
-    whenValidated,
-    setSessionFromModel,
-    setSessionDetails,
-    clearSession,
-  };
-});
+export const useSessionStore = createSessionStore();

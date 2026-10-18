@@ -1,3 +1,3 @@
-import type { LucideIcon } from '../types';
+import type { IconSpec } from '../types';
 
-export type DrawerTitleIcon = LucideIcon;
+export type DrawerTitleIcon = IconSpec;

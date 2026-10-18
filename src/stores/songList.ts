@@ -1,88 +1,78 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { create } from 'zustand';
 
 type ViewMode = 'flat' | 'tree';
 type SourceMode = 'songs' | 'playlists';
 type SongsMode = 'mine' | 'search';
 
-export const songListStore = defineStore('songList', () => {
-  const viewMode = ref<ViewMode>('tree');
-  const sourceMode = ref<SourceMode>('songs');
-  const songsMode = ref<SongsMode>('search');
-  const isTreeViewExpanded = ref<boolean>(false);
-  const searchQuery = ref<string>('');
-  const selectedChordFilters = ref<string[]>([]);
-  const selectedCategoryFilters = ref<string[]>([]);
+type SongListState = {
+  viewMode: ViewMode;
+  sourceMode: SourceMode;
+  songsMode: SongsMode;
+  isTreeViewExpanded: boolean;
+  searchQuery: string;
+  selectedChordFilters: string[];
+  selectedCategoryFilters: string[];
+  expandedTreeViewValues: string[];
+  setViewMode: (viewMode: ViewMode) => void;
+  setSourceMode: (sourceMode: SourceMode) => void;
+  setSongsMode: (songsMode: SongsMode) => void;
+  setSearchQuery: (searchQuery: string) => void;
+  setExpandedTreeViewValues: (values: string[]) => void;
+  expandTreeView: () => void;
+  collapseTreeView: () => void;
+  toggleChordFilter: (chord: string, normalize: (value: string) => string) => void;
+  clearChordFilters: () => void;
+  toggleCategoryFilter: (categoryId: string) => void;
+  clearCategoryFilters: () => void;
+  setCategoryFilters: (categoryIds: string[]) => void;
+  setChordFilters: (chords: string[]) => void;
+};
 
-  const expandedTreeViewValues = ref<string[]>([]);
+export const useSongListStore = create<SongListState>()((set) => ({
+  viewMode: 'tree',
+  sourceMode: 'songs',
+  songsMode: 'search',
+  isTreeViewExpanded: false,
+  searchQuery: '',
+  selectedChordFilters: [],
+  selectedCategoryFilters: [],
+  expandedTreeViewValues: [],
 
-  function expandTreeView() {
-    isTreeViewExpanded.value = true;
-  }
+  setViewMode: (viewMode) => set({ viewMode }),
+  setSourceMode: (sourceMode) => set({ sourceMode }),
+  setSongsMode: (songsMode) => set({ songsMode }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setExpandedTreeViewValues: (values) => set({ expandedTreeViewValues: [...values] }),
 
-  function collapseTreeView() {
-    isTreeViewExpanded.value = false;
-  }
+  expandTreeView: () => set({ isTreeViewExpanded: true }),
+  collapseTreeView: () => set({ isTreeViewExpanded: false }),
 
-  function toggleChordFilter(chord: string, normalize: (value: string) => string) {
-    const normalizedChord = normalize(chord);
-    const selectedIndex = selectedChordFilters.value.findIndex(
-      (selectedChord) => normalize(selectedChord) === normalizedChord
-    );
+  toggleChordFilter: (chord, normalize) =>
+    set((state) => {
+      const normalizedChord = normalize(chord);
+      const isSelected = state.selectedChordFilters.some(
+        (selectedChord) => normalize(selectedChord) === normalizedChord
+      );
 
-    if (selectedIndex >= 0) {
-      selectedChordFilters.value.splice(selectedIndex, 1);
-      return;
-    }
+      return {
+        selectedChordFilters: isSelected
+          ? state.selectedChordFilters.filter(
+              (selectedChord) => normalize(selectedChord) !== normalizedChord
+            )
+          : [...state.selectedChordFilters, chord],
+      };
+    }),
 
-    selectedChordFilters.value.push(chord);
-  }
+  clearChordFilters: () => set({ selectedChordFilters: [] }),
 
-  function clearChordFilters() {
-    selectedChordFilters.value = [];
-  }
+  toggleCategoryFilter: (categoryId) =>
+    set((state) => ({
+      selectedCategoryFilters: state.selectedCategoryFilters.includes(categoryId)
+        ? state.selectedCategoryFilters.filter((selected) => selected !== categoryId)
+        : [...state.selectedCategoryFilters, categoryId],
+    })),
 
-  function toggleCategoryFilter(categoryId: string) {
-    const selectedIndex = selectedCategoryFilters.value.findIndex(
-      (selectedCategoryId) => selectedCategoryId === categoryId
-    );
-
-    if (selectedIndex >= 0) {
-      selectedCategoryFilters.value.splice(selectedIndex, 1);
-      return;
-    }
-
-    selectedCategoryFilters.value.push(categoryId);
-  }
-
-  function clearCategoryFilters() {
-    selectedCategoryFilters.value = [];
-  }
-
-  function setCategoryFilters(categoryIds: string[]) {
-    selectedCategoryFilters.value = [...categoryIds];
-  }
-
-  function setChordFilters(chords: string[]) {
-    selectedChordFilters.value = [...chords];
-  }
-
-  return {
-    viewMode,
-    sourceMode,
-    songsMode,
-    isTreeViewExpanded,
-    searchQuery,
-    selectedChordFilters,
-    selectedCategoryFilters,
-    expandedTreeViewValues,
-    expandTreeView,
-    collapseTreeView,
-    toggleChordFilter,
-    clearChordFilters,
-    toggleCategoryFilter,
-    clearCategoryFilters,
-    setCategoryFilters,
-    setChordFilters,
-  };
-});
+  clearCategoryFilters: () => set({ selectedCategoryFilters: [] }),
+  setCategoryFilters: (categoryIds) => set({ selectedCategoryFilters: [...categoryIds] }),
+  setChordFilters: (chords) => set({ selectedChordFilters: [...chords] }),
+}));

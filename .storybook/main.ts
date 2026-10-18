@@ -1,4 +1,4 @@
-import type { StorybookConfig } from '@storybook/vue3-vite';
+import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
@@ -8,7 +8,7 @@ const config: StorybookConfig = {
     '@storybook/addon-onboarding',
     '@storybook/addon-themes',
   ],
-  framework: '@storybook/vue3-vite',
+  framework: '@storybook/react-vite',
   async viteFinal(viteConfig) {
     // vite-plugin-pwa (from the root vite.config.ts, which Storybook reuses)
     // tries to precache Storybook's own multi-MB JS bundles and fails the

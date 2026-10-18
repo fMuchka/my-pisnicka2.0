@@ -1,0 +1,22 @@
+.select {
+  appearance: none;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.select--placeholder {
+  color: var(--ink-muted);
+}
+
+.select-chevron {
+  position: absolute;
+  right: 14px;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.select:disabled + .select-chevron {
+  color: var(--text-disabled);
+}

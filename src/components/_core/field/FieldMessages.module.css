@@ -1,0 +1,28 @@
+.field-messages {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.field-messages:empty {
+  display: none;
+}
+
+.field-message {
+  font: var(--text-caption);
+  color: var(--ink-muted);
+}
+
+.field-message--error {
+  color: var(--danger);
+}
+
+.field-message--success {
+  color: var(--success);
+}
+
+.field-counter {
+  margin-left: auto;
+  font: var(--text-caption);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
