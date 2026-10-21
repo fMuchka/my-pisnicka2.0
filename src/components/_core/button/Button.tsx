@@ -4,10 +4,10 @@ import styles from './Button.module.css';
 import type { ButtonIcon, ButtonRoleVariation, ButtonStyleVariation } from './types';
 
 type ButtonProps = ComponentProps<'button'> & {
-  label?: string | undefined;
-  colorVariation?: ButtonRoleVariation | undefined;
-  styleVariation?: ButtonStyleVariation | undefined;
-  icon?: ButtonIcon | undefined;
+  label?: string;
+  colorVariation?: ButtonRoleVariation;
+  styleVariation?: ButtonStyleVariation;
+  icon?: ButtonIcon;
 };
 
 const colorClass: Record<ButtonRoleVariation, string | undefined> = {
