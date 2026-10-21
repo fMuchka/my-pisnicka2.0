@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { cx } from '../cx';
 import styles from './IconBackdrop.module.css';
 import type { IconBackdropShape, IconBackdropSize } from './types';
+import type { VariantClassMap } from '../types';
 
 type IconBackdropProps = {
   shape?: IconBackdropShape | undefined;
@@ -9,12 +10,12 @@ type IconBackdropProps = {
   children: ReactNode;
 };
 
-const shapeClass: Record<IconBackdropShape, string | undefined> = {
+const shapeClass: VariantClassMap<IconBackdropShape> = {
   circle: styles.iconBackdropCircle,
   rounded: styles.iconBackdropRounded,
 };
 
-const sizeClass: Record<IconBackdropSize, string | undefined> = {
+const sizeClass: VariantClassMap<IconBackdropSize> = {
   md: styles.iconBackdropMd,
   lg: styles.iconBackdropLg,
 };

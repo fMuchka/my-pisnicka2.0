@@ -2,6 +2,7 @@ import type { ComponentProps } from 'react';
 import { cx } from '../cx';
 import styles from './Button.module.css';
 import type { ButtonIcon, ButtonRoleVariation, ButtonStyleVariation } from './types';
+import type { VariantClassMap } from '../types';
 
 type ButtonProps = ComponentProps<'button'> & {
   label?: string;
@@ -10,12 +11,12 @@ type ButtonProps = ComponentProps<'button'> & {
   icon?: ButtonIcon;
 };
 
-const colorClass: Record<ButtonRoleVariation, string | undefined> = {
+const colorClass: VariantClassMap<ButtonRoleVariation> = {
   primary: styles.btnPrimary,
   secondary: styles.btnSecondary,
 };
 
-const styleClass: Record<ButtonStyleVariation, string | undefined> = {
+const styleClass: VariantClassMap<ButtonStyleVariation> = {
   filled: styles.btnFilled,
   outlined: styles.btnOutlined,
   text: styles.btnText,
