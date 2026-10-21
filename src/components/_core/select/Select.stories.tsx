@@ -52,7 +52,7 @@ export const WithPlaceholder: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     label: 'Kategorie',
     defaultValue: '',
@@ -63,7 +63,7 @@ export const Error: Story = {
   },
 };
 
-export const Disabled: Story = {
+export const DisabledState: Story = {
   args: {
     label: 'Jazyk zpěvníku',
     options: [{ value: 'cs', label: 'Čeština' }],

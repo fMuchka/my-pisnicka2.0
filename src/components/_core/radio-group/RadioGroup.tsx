@@ -4,12 +4,12 @@ import type { RadioOption } from './types';
 
 type RadioGroupProps = {
   options: RadioOption[];
-  value?: string | undefined;
-  defaultValue?: string | undefined;
-  onValueChange?: ((value: string) => void) | undefined;
-  label?: string | undefined;
-  disabled?: boolean | undefined;
-  name?: string | undefined;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  label?: string;
+  disabled?: boolean;
+  name?: string;
 };
 
 export default function RadioGroup({
@@ -20,7 +20,7 @@ export default function RadioGroup({
   label,
   disabled,
   name,
-}: RadioGroupProps) {
+}: Readonly<RadioGroupProps>) {
   return (
     <ArkRadioGroup.Root
       value={value}

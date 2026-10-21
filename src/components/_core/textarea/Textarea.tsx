@@ -11,17 +11,17 @@ type TextareaProps = Omit<
   ComponentProps<'textarea'>,
   'value' | 'defaultValue' | 'onChange' | 'disabled' | 'readOnly' | 'required' | 'maxLength'
 > & {
-  value?: string | undefined;
-  defaultValue?: string | undefined;
-  onValueChange?: ((value: string) => void) | undefined;
-  label?: string | undefined;
-  helperText?: string | undefined;
-  errorText?: string | undefined;
-  invalid?: boolean | undefined;
-  disabled?: boolean | undefined;
-  readOnly?: boolean | undefined;
-  required?: boolean | undefined;
-  maxLength?: number | undefined;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  label?: string;
+  helperText?: string;
+  errorText?: string;
+  invalid?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  required?: boolean;
+  maxLength?: number;
 };
 
 export default function Textarea({
@@ -39,7 +39,7 @@ export default function Textarea({
   maxLength,
   className,
   ...textareaProps
-}: TextareaProps) {
+}: Readonly<TextareaProps>) {
   const [value, setValue] = useControllableState(valueProp, defaultValue, onValueChange);
   const counter = maxLength == null ? undefined : `${value.length} / ${maxLength}`;
 

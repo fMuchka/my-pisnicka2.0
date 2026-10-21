@@ -13,7 +13,7 @@ export default function QrCode({
   size = 224,
   overlaySrc = '/android/android-launchericon-192-192.png',
   overlayAlt = 'MyPísnička',
-}: QrCodeProps) {
+}: Readonly<QrCodeProps>) {
   return (
     <ArkQrCode.Root
       className={styles.qrCode}

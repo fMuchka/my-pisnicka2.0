@@ -3,12 +3,12 @@ import { cx } from '../cx';
 import styles from './FieldMessages.module.css';
 
 type FieldMessagesProps = {
-  helperText?: string | undefined;
-  errorText?: string | undefined;
-  successText?: string | undefined;
-  invalid?: boolean | undefined;
-  success?: boolean | undefined;
-  counter?: string | undefined;
+  helperText?: string;
+  errorText?: string;
+  successText?: string;
+  invalid?: boolean;
+  success?: boolean;
+  counter?: string;
 };
 
 // Must render inside a Field.Root: Ark links these texts to the control via aria-describedby.
@@ -19,7 +19,7 @@ export default function FieldMessages({
   invalid,
   success,
   counter,
-}: FieldMessagesProps) {
+}: Readonly<FieldMessagesProps>) {
   // Invalid wins so a field never shows red and green at once.
   const isSuccess = success && !invalid;
   const helper = (isSuccess && successText) || helperText;

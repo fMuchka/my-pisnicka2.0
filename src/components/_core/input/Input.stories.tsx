@@ -45,7 +45,7 @@ export const WithHelper: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     label: 'E-mail',
     type: 'email',
@@ -55,7 +55,7 @@ export const Error: Story = {
   },
 };
 
-export const Success: Story = {
+export const SuccessState: Story = {
   args: {
     defaultValue: 'Tom Bombadil',
     success: true,
@@ -63,7 +63,7 @@ export const Success: Story = {
   },
 };
 
-export const Disabled: Story = {
+export const DisabledState: Story = {
   args: {
     defaultValue: 'Nelze upravit',
     disabled: true,

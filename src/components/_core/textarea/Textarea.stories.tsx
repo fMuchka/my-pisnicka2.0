@@ -39,7 +39,7 @@ export const WithCounter: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     label: 'Důvod nahlášení',
     placeholder: 'Popiš, co je u písně špatně…',
@@ -48,7 +48,7 @@ export const Error: Story = {
   },
 };
 
-export const Disabled: Story = {
+export const DisabledState: Story = {
   args: {
     defaultValue: 'Tuto poznámku přidal administrátor.',
     disabled: true,

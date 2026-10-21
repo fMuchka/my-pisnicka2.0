@@ -2,10 +2,10 @@ import { AlertCircle } from 'lucide-react';
 import styles from './ErrorMessage.module.css';
 
 type ErrorMessageProps = {
-  message?: string | undefined;
+  message?: string;
 };
 
-export default function ErrorMessage({ message }: ErrorMessageProps) {
+export default function ErrorMessage({ message }: Readonly<ErrorMessageProps>) {
   return (
     <div
       className={styles.errorContainer}

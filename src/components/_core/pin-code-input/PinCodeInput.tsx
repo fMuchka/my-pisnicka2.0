@@ -5,12 +5,12 @@ import styles from './PinCodeInput.module.css';
 
 type PinCodeInputProps = {
   value: PIN;
-  onValueChange?: ((value: PIN) => void) | undefined;
-  readOnly?: boolean | undefined;
-  title?: string | undefined;
-  description?: string | undefined;
-  showLabel?: boolean | undefined;
-  ariaLabelPrefix?: string | undefined;
+  onValueChange?: (value: PIN) => void;
+  readOnly?: boolean;
+  title?: string;
+  description?: string;
+  showLabel?: boolean;
+  ariaLabelPrefix?: string;
 };
 
 export default function PinCodeInput({
@@ -21,7 +21,7 @@ export default function PinCodeInput({
   description = 'Pomocí PINu tě spojíme s otevřenou partou.',
   showLabel = true,
   ariaLabelPrefix = 'pin číslice',
-}: PinCodeInputProps) {
+}: Readonly<PinCodeInputProps>) {
   // React's ids contain characters jsdom's selector engine fails to match once escaped,
   // so typing in tests crashes inside Ark.
   const ids = { root: `pin-input-${useId().replace(/[^\w-]/g, '')}` };
@@ -46,7 +46,7 @@ export default function PinCodeInput({
       <PinInput.Control className={styles.pinControl}>
         {value.map((_, i) => (
           <PinInput.Input
-            key={i}
+            key={i} // NOSONAR: fixed-length positional slots, never reordered
             className={styles.pinInput}
             index={i}
             placeholder=""

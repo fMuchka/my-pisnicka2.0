@@ -14,16 +14,16 @@ type SelectProps = Omit<
   'value' | 'defaultValue' | 'onChange' | 'disabled' | 'required' | 'children'
 > & {
   options: SelectOption[];
-  value?: string | undefined;
-  defaultValue?: string | undefined;
-  onValueChange?: ((value: string) => void) | undefined;
-  label?: string | undefined;
-  placeholder?: string | undefined;
-  helperText?: string | undefined;
-  errorText?: string | undefined;
-  invalid?: boolean | undefined;
-  disabled?: boolean | undefined;
-  required?: boolean | undefined;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  label?: string;
+  placeholder?: string;
+  helperText?: string;
+  errorText?: string;
+  invalid?: boolean;
+  disabled?: boolean;
+  required?: boolean;
 };
 
 export default function Select({
@@ -40,7 +40,7 @@ export default function Select({
   required,
   className,
   ...selectProps
-}: SelectProps) {
+}: Readonly<SelectProps>) {
   const [value, setValue] = useControllableState(valueProp, defaultValue, onValueChange);
 
   return (

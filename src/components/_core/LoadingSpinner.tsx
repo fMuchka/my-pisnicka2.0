@@ -1,10 +1,10 @@
 import styles from './LoadingSpinner.module.css';
 
 type LoadingSpinnerProps = {
-  label?: string | undefined;
+  label?: string;
 };
 
-export default function LoadingSpinner({ label }: LoadingSpinnerProps) {
+export default function LoadingSpinner({ label }: Readonly<LoadingSpinnerProps>) {
   return (
     <div className={styles.loadingContainer}>
       <div className={styles.spinner} />

@@ -6,13 +6,13 @@ import type { CheckboxVariant } from './types';
 
 type CheckboxProps = {
   label: string;
-  checked?: boolean | undefined;
-  defaultChecked?: boolean | undefined;
-  onCheckedChange?: ((checked: boolean) => void) | undefined;
-  variant?: CheckboxVariant | undefined;
-  disabled?: boolean | undefined;
-  name?: string | undefined;
-  value?: string | undefined;
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  variant?: CheckboxVariant;
+  disabled?: boolean;
+  name?: string;
+  value?: string;
 };
 
 export default function Checkbox({
@@ -24,7 +24,7 @@ export default function Checkbox({
   disabled,
   name,
   value,
-}: CheckboxProps) {
+}: Readonly<CheckboxProps>) {
   return (
     <ArkCheckbox.Root
       checked={checked}

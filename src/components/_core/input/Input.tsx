@@ -14,20 +14,20 @@ type InputProps = Omit<
   ComponentProps<'input'>,
   'type' | 'value' | 'defaultValue' | 'onChange' | 'disabled' | 'readOnly' | 'required'
 > & {
-  value?: string | undefined;
-  defaultValue?: string | undefined;
-  onValueChange?: ((value: string) => void) | undefined;
-  label?: string | undefined;
-  type?: InputType | undefined;
-  helperText?: string | undefined;
-  errorText?: string | undefined;
-  successText?: string | undefined;
-  invalid?: boolean | undefined;
-  success?: boolean | undefined;
-  disabled?: boolean | undefined;
-  readOnly?: boolean | undefined;
-  required?: boolean | undefined;
-  prependIcon?: Icon | undefined;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  label?: string;
+  type?: InputType;
+  helperText?: string;
+  errorText?: string;
+  successText?: string;
+  invalid?: boolean;
+  success?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  required?: boolean;
+  prependIcon?: Icon;
 };
 
 export default function Input({
@@ -47,7 +47,7 @@ export default function Input({
   prependIcon: PrependIcon,
   className,
   ...inputProps
-}: InputProps) {
+}: Readonly<InputProps>) {
   const [value, setValue] = useControllableState(valueProp, defaultValue, onValueChange);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 

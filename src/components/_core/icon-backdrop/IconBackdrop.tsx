@@ -5,8 +5,8 @@ import type { IconBackdropShape, IconBackdropSize } from './types';
 import type { VariantClassMap } from '../types';
 
 type IconBackdropProps = {
-  shape?: IconBackdropShape | undefined;
-  size?: IconBackdropSize | undefined;
+  shape?: IconBackdropShape;
+  size?: IconBackdropSize;
   children: ReactNode;
 };
 
@@ -24,7 +24,7 @@ export default function IconBackdrop({
   shape = 'circle',
   size = 'md',
   children,
-}: IconBackdropProps) {
+}: Readonly<IconBackdropProps>) {
   return (
     <div className={cx(styles.iconBackdrop, shapeClass[shape], sizeClass[size])}>{children}</div>
   );

@@ -39,6 +39,6 @@ export const WithDescription: Story = {
   },
 };
 
-export const Disabled: Story = {
+export const DisabledState: Story = {
   args: { label: 'Sdílení polohy v relaci', defaultChecked: false, disabled: true },
 };

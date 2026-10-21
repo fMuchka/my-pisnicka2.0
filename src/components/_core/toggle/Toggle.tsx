@@ -3,12 +3,12 @@ import styles from './Toggle.module.css';
 
 type ToggleProps = {
   label: string;
-  checked?: boolean | undefined;
-  defaultChecked?: boolean | undefined;
-  onCheckedChange?: ((checked: boolean) => void) | undefined;
-  description?: string | undefined;
-  disabled?: boolean | undefined;
-  name?: string | undefined;
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  description?: string;
+  disabled?: boolean;
+  name?: string;
 };
 
 export default function Toggle({
@@ -19,7 +19,7 @@ export default function Toggle({
   description,
   disabled,
   name,
-}: ToggleProps) {
+}: Readonly<ToggleProps>) {
   return (
     <Switch.Root
       checked={checked}

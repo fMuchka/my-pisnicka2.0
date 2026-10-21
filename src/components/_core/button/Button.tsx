@@ -31,7 +31,7 @@ export default function Button({
   iconPosition = 'prepend',
   className,
   ...buttonProps
-}: ButtonProps) {
+}: Readonly<ButtonProps>) {
   const iconElement = Icon ? <Icon aria-hidden="true" /> : null;
 
   return (

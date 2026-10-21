@@ -10,10 +10,10 @@ type DrawerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Can only be closed from inside (e.g. a confirm button): no close button, Esc, outside click or drag. */
-  keepOpen?: boolean | undefined;
-  hideBackdrop?: boolean | undefined;
-  title?: string | undefined;
-  titleIcon?: Icon | undefined;
+  keepOpen?: boolean;
+  hideBackdrop?: boolean;
+  title?: string;
+  titleIcon?: Icon;
   children?: ReactNode;
 };
 
@@ -25,7 +25,7 @@ export default function Drawer({
   title = '',
   titleIcon: TitleIcon,
   children,
-}: DrawerProps) {
+}: Readonly<DrawerProps>) {
   return (
     <ArkDrawer.Root
       closeOnEscape={!keepOpen}
