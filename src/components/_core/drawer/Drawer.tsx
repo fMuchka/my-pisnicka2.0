@@ -4,7 +4,7 @@ import { XIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cx } from '../cx';
 import styles from './Drawer.module.css';
-import type { DrawerTitleIcon } from './types';
+import type { Icon } from '../types';
 
 type DrawerProps = {
   open: boolean;
@@ -13,7 +13,7 @@ type DrawerProps = {
   keepOpen?: boolean | undefined;
   hideBackdrop?: boolean | undefined;
   title?: string | undefined;
-  titleIcon?: DrawerTitleIcon | undefined;
+  titleIcon?: Icon | undefined;
   children?: ReactNode;
 };
 
@@ -23,11 +23,9 @@ export default function Drawer({
   keepOpen = false,
   hideBackdrop = false,
   title = '',
-  titleIcon,
+  titleIcon: TitleIcon,
   children,
 }: DrawerProps) {
-  const TitleIcon = titleIcon?.component;
-
   return (
     <ArkDrawer.Root
       closeOnEscape={!keepOpen}
@@ -49,7 +47,7 @@ export default function Drawer({
               </ArkDrawer.Grabber>
             )}
             <ArkDrawer.Title className={styles.title}>
-              {TitleIcon && <TitleIcon {...titleIcon.props} />}
+              {TitleIcon && <TitleIcon aria-hidden="true" />}
               {title}
             </ArkDrawer.Title>
             {children}

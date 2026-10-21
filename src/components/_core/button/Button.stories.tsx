@@ -49,7 +49,7 @@ export const Text: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: { position: 'prepend', component: Plus },
+    icon: Plus,
   },
 };
 
@@ -58,6 +58,6 @@ export const WithIcon: Story = {
 export const IconOnly: Story = {
   args: {
     label: '',
-    icon: { position: 'prepend', component: Plus },
+    icon: Plus,
   },
 };

@@ -41,7 +41,7 @@ describe('Drawer', () => {
         open
         onOpenChange={noop}
         title="Filtry"
-        titleIcon={{ component: ListMusicIcon }}
+        titleIcon={ListMusicIcon}
       />
     );
 

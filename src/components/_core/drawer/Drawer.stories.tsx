@@ -53,7 +53,7 @@ const meta = {
   },
   args: {
     title: 'Filtry',
-    titleIcon: { component: ListMusicIcon },
+    titleIcon: ListMusicIcon,
   },
 } satisfies Meta<typeof DrawerDemo>;
 

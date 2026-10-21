@@ -1,14 +1,15 @@
 import type { ComponentProps } from 'react';
 import { cx } from '../cx';
 import styles from './Button.module.css';
-import type { ButtonIcon, ButtonRoleVariation, ButtonStyleVariation } from './types';
-import type { VariantClassMap } from '../types';
+import type { ButtonIconPosition, ButtonRoleVariation, ButtonStyleVariation } from './types';
+import type { Icon, VariantClassMap } from '../types';
 
 type ButtonProps = ComponentProps<'button'> & {
   label?: string;
   colorVariation?: ButtonRoleVariation;
   styleVariation?: ButtonStyleVariation;
-  icon?: ButtonIcon;
+  icon?: Icon;
+  iconPosition?: ButtonIconPosition;
 };
 
 const colorClass: VariantClassMap<ButtonRoleVariation> = {
@@ -26,21 +27,21 @@ export default function Button({
   label = '',
   colorVariation = 'primary',
   styleVariation = 'filled',
-  icon,
+  icon: Icon,
+  iconPosition = 'prepend',
   className,
   ...buttonProps
 }: ButtonProps) {
-  const Icon = icon?.component;
-  const iconElement = Icon ? <Icon {...icon.props} /> : null;
+  const iconElement = Icon ? <Icon aria-hidden="true" /> : null;
 
   return (
     <button
       {...buttonProps}
       className={cx(styles.btn, colorClass[colorVariation], styleClass[styleVariation], className)}
     >
-      {icon?.position === 'prepend' && iconElement}
+      {iconPosition === 'prepend' && iconElement}
       {label && <span>{label}</span>}
-      {icon?.position !== 'prepend' && iconElement}
+      {iconPosition === 'append' && iconElement}
     </button>
   );
 }
