@@ -6,7 +6,8 @@ import FieldMessages from '../field/FieldMessages';
 import fieldStyles from '../field/field.module.css';
 import { useControllableState } from '../useControllableState';
 import styles from './Input.module.css';
-import type { InputIcon, InputType } from './types';
+import type { InputType } from './types';
+import type { Icon } from '../types';
 
 // Remaining props (name, autoComplete, aria-label, …) go to the <input>, not the wrapper.
 type InputProps = Omit<
@@ -26,7 +27,7 @@ type InputProps = Omit<
   disabled?: boolean | undefined;
   readOnly?: boolean | undefined;
   required?: boolean | undefined;
-  prependIcon?: InputIcon | undefined;
+  prependIcon?: Icon | undefined;
 };
 
 export default function Input({
