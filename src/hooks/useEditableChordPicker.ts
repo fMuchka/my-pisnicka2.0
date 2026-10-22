@@ -17,7 +17,7 @@ export function useEditableChordPicker(contextChords: string[]) {
   );
 
   const [isChordPickerOpen, setIsChordPickerOpen] = useState(false);
-  const [selectedTab, setChordPickerTab] = useState<ChordPickerTab>(
+  const [selectedTab, setSelectedTab] = useState<ChordPickerTab>(
     usedChordItems.length > 0 ? 'used' : 'all'
   );
   // An empty "used" tab is useless, so fall back to the full chord list.
@@ -31,7 +31,7 @@ export function useEditableChordPicker(contextChords: string[]) {
   return {
     allTabSelectedChord,
     chordPickerTab,
-    setChordPickerTab,
+    setSelectedTab: setSelectedTab,
     isChordPickerOpen,
     setIsChordPickerOpen,
     QUICK_ALL_TAB_ROOTS,

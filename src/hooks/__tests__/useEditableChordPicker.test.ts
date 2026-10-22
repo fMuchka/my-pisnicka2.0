@@ -15,7 +15,7 @@ describe('useEditableChordPicker', () => {
       initialProps: { chords: ['G'] },
     });
 
-    act(() => result.current.setChordPickerTab('used'));
+    act(() => result.current.setSelectedTab('used'));
     rerender({ chords: [] });
 
     expect(result.current.chordPickerTab).toBe('all');
