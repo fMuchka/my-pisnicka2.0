@@ -11,7 +11,7 @@ type QrCodeProps = {
 export default function QrCode({
   value,
   size = 224,
-  overlaySrc = '/android/android-launchericon-192-192.png',
+  overlaySrc = '/mypisnicka-icon.svg',
   overlayAlt = 'MyPísnička',
 }: Readonly<QrCodeProps>) {
   return (
