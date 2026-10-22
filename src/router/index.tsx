@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { createBrowserRouter, redirect, type RouteObject } from 'react-router';
 import App from '../App';
-import LoadingSpinner from '../components/_core/LoadingSpinner';
+import LoadingSpinner from '../components/_core/loading-spinner/LoadingSpinner';
 import { isAuthenticated, waitForAuthReady } from '../hooks/useAuth';
 import { selectHasActiveSession, useSessionStore } from '../stores/session';
 import Routes from './Routes';
