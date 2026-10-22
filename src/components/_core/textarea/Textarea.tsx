@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { cx } from '../cx';
 import FieldMessages from '../field/FieldMessages';
 import fieldStyles from '../field/field.module.css';
-import { useControllableState } from '../useControllableState';
+import { useControllableState } from '../../../hooks/useControllableState';
 import styles from './Textarea.module.css';
 
 // Remaining props (name, aria-label, …) go to the <textarea>, not the wrapper.

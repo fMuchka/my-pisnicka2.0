@@ -4,7 +4,7 @@ import { useState, type ComponentProps } from 'react';
 import { cx } from '../cx';
 import FieldMessages from '../field/FieldMessages';
 import fieldStyles from '../field/field.module.css';
-import { useControllableState } from '../useControllableState';
+import { useControllableState } from '../../../hooks/useControllableState';
 import styles from './Input.module.css';
 import type { InputType } from './types';
 import type { Icon } from '../types';

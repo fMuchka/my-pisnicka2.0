@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import { cx } from '../cx';
 import FieldMessages from '../field/FieldMessages';
 import fieldStyles from '../field/field.module.css';
-import { useControllableState } from '../useControllableState';
+import { useControllableState } from '../../../hooks/useControllableState';
 import styles from './Select.module.css';
 import type { SelectOption } from './types';
 
