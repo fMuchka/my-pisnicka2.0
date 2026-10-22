@@ -81,8 +81,7 @@ export function useSongListPlaylists(params: UseSongListPlaylistsParams) {
   const canCreatePlaylist =
     !isSessionGuestView && currentUserId.length > 0 && playlistScope === 'mine';
 
-  const canEditSelectedPlaylist =
-    selectedPlaylist != null && selectedPlaylist.ownerId === currentUserId;
+  const canEditSelectedPlaylist = selectedPlaylist?.ownerId === currentUserId;
 
   const canAddSongToPlaylist =
     canEditSelectedPlaylist &&
