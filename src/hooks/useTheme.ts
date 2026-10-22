@@ -28,7 +28,7 @@ const isTheme = (value: string | null): value is Theme => value === 'light' || v
 const isInstrument = (value: string | null): value is Instrument =>
   value === 'guitar' || value === 'ukulele';
 const isColorPreset = (value: string | null): value is ColorPreset =>
-  COLOR_PRESETS.some((preset) => preset === value);
+  COLOR_PRESETS.some((preset) => preset === value); // NOSONAR: Some makes more sense here than includes due to guard typecheck
 const isHexColor = (value: string | null): value is string =>
   value != null && /^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/.test(value);
 const isValidFontSize = (value: unknown): value is number =>
@@ -52,9 +52,9 @@ const normalizeHexColor = (value: string) => {
 
 export const getContrastTextColor = (backgroundHex: string): '#000000' | '#ffffff' => {
   const normalized = normalizeHexColor(backgroundHex);
-  const red = parseInt(normalized.slice(1, 3), 16) / 255;
-  const green = parseInt(normalized.slice(3, 5), 16) / 255;
-  const blue = parseInt(normalized.slice(5, 7), 16) / 255;
+  const red = Number.parseInt(normalized.slice(1, 3), 16) / 255;
+  const green = Number.parseInt(normalized.slice(3, 5), 16) / 255;
+  const blue = Number.parseInt(normalized.slice(5, 7), 16) / 255;
 
   const toLinear = (channel: number) =>
     channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
@@ -87,7 +87,7 @@ const applyTheme = (nextTheme: Theme) => {
     return;
   }
 
-  document.documentElement.setAttribute('data-theme', nextTheme);
+  document.documentElement.dataset.theme = nextTheme;
 };
 
 const applyColorPreset = (nextPreset: ColorPreset) => {
@@ -95,7 +95,7 @@ const applyColorPreset = (nextPreset: ColorPreset) => {
     return;
   }
 
-  document.documentElement.setAttribute('data-color', nextPreset);
+  document.documentElement.dataset.color = nextPreset;
 };
 
 const readChordToken = (): string => {
