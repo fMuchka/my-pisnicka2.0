@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 
 export type PageNavigation = {
-  pageTitle?: string | undefined;
-  fadeAway?: boolean | undefined;
+  pageTitle?: string;
+  fadeAway?: boolean;
 };
 
 /** What the app-level Navigation renders: `usePageNavigationState((s) => s.pageTitle)`. */
