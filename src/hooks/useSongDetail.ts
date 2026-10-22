@@ -13,7 +13,7 @@ const loadSong = async (songId: string): Promise<Song | null> => {
   const cached = await getSong(songId);
 
   // The list view caches songs without their text, so those still need a full fetch.
-  if (!cached || !cached.text?.trim()) {
+  if (!cached?.text?.trim()) {
     return refreshSong(songId);
   }
 
