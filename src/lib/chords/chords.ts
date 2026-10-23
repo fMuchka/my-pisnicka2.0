@@ -51,7 +51,7 @@ function unwrapChordToken(value: string): string {
 
 export function normalizeChord(chord: string): string | null {
   const candidate = unwrapChordToken(chord);
-  const match = candidate.match(CHORD_REGEX);
+  const match = new RegExp(CHORD_REGEX).exec(candidate);
 
   if (!match) {
     return null;
@@ -105,7 +105,7 @@ export function transposeChord(chord: string, semitoneShift: number): string {
     return chord;
   }
 
-  const match = chord.match(CHORD_REGEX);
+  const match = new RegExp(CHORD_REGEX).exec(chord);
 
   if (!match) {
     return chord;
