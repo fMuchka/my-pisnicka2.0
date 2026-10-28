@@ -1,12 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { cssTokens } from './vite-plugins/cssTokens';
 
 export default defineConfig({
   css: {
     modules: { localsConvention: 'camelCaseOnly' },
   },
   plugins: [
+    cssTokens(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

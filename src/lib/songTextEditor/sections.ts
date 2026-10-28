@@ -3,6 +3,7 @@ import {
   SECTIONS_DICTIONARY,
   type SectionTypes,
 } from '../sections/sectionsDictionary';
+import { cssVarName } from '../../styles/tokens';
 
 export type SectionType = SectionTypes;
 
@@ -25,7 +26,7 @@ export function sectionLabel(type: SectionType): string {
 
 export function sectionOptionStyle(type: SectionType): Record<string, string> {
   return {
-    '--section-option-accent': SECTIONS_DICTIONARY[type].color,
+    [cssVarName('section-option-accent')]: SECTIONS_DICTIONARY[type].color,
   };
 }
 

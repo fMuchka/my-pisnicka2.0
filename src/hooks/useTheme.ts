@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import type { Instrument } from '../lib/chords/chords.database';
 
+import { COLOR_PRESETS, cssVar, cssVarName, type CssToken } from '../styles/tokens';
+
 export type Theme = 'light' | 'dark';
 
-export const COLOR_PRESETS = ['red', 'orange', 'green', 'teal', 'blue', 'purple'] as const;
 export type ColorPreset = (typeof COLOR_PRESETS)[number];
 
 const THEME_STORAGE_KEY = 'my-pisnicka:theme';
@@ -103,22 +104,29 @@ const readChordToken = (): string => {
     return DEFAULT_CHORD_BY_THEME[DEFAULT_THEME];
   }
 
-  return getComputedStyle(document.documentElement).getPropertyValue('--text-chord').trim();
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(cssVarName('text-chord'))
+    .trim();
 };
 
 const readFontSizeToken = (
-  token: '--font-size-lyrics' | '--font-size-chords',
+  token: Extract<CssToken, 'font-size-lyrics' | 'font-size-chords'>,
   fallback: number
 ): number => {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return fallback;
   }
 
-  const rawValue = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+  const rawValue = getComputedStyle(document.documentElement)
+    .getPropertyValue(cssVarName(token))
+    .trim();
   const numericValue = Number.parseFloat(rawValue);
 
   return isValidFontSize(numericValue) ? numericValue : fallback;
 };
+
+const setToken = (token: CssToken, value: string) =>
+  document.documentElement.style.setProperty(cssVarName(token), value);
 
 type CustomColors = { chordColor: string; lyricsFontSize: number; chordFontSize: number };
 
@@ -130,14 +138,14 @@ const applyCustomColors = ({ chordColor, lyricsFontSize, chordFontSize }: Custom
   const chordContrastColor = getContrastTextColor(chordColor);
 
   // Older components still read these instead of --brand; point them at the chosen preset.
-  document.documentElement.style.setProperty('--accent', 'var(--brand)');
-  document.documentElement.style.setProperty('--accent-light', 'var(--brand)');
-  document.documentElement.style.setProperty('--color-primary', 'var(--brand)');
-  document.documentElement.style.setProperty('--song-chord-inline-bg', chordColor);
-  document.documentElement.style.setProperty('--song-chord-inline-color', chordContrastColor);
-  document.documentElement.style.setProperty('--chord-icon-contrast', chordContrastColor);
-  document.documentElement.style.setProperty('--font-size-lyrics', `${lyricsFontSize}px`);
-  document.documentElement.style.setProperty('--font-size-chords', `${chordFontSize}px`);
+  setToken('accent', cssVar('brand'));
+  setToken('accent-light', cssVar('brand'));
+  setToken('color-primary', cssVar('brand'));
+  setToken('song-chord-inline-bg', chordColor);
+  setToken('song-chord-inline-color', chordContrastColor);
+  setToken('chord-icon-contrast', chordContrastColor);
+  setToken('font-size-lyrics', `${lyricsFontSize}px`);
+  setToken('font-size-chords', `${chordFontSize}px`);
 };
 
 const readInitialPreferences = () => {
@@ -162,10 +170,10 @@ const readInitialPreferences = () => {
     preferredInstrument: isInstrument(storedInstrument) ? storedInstrument : DEFAULT_INSTRUMENT,
     lyricsFontSize: isValidFontSize(storedLyricsSize)
       ? storedLyricsSize
-      : readFontSizeToken('--font-size-lyrics', DEFAULT_LYRICS_FONT_SIZE),
+      : readFontSizeToken('font-size-lyrics', DEFAULT_LYRICS_FONT_SIZE),
     chordFontSize: isValidFontSize(storedChordSize)
       ? storedChordSize
-      : readFontSizeToken('--font-size-chords', DEFAULT_CHORD_FONT_SIZE),
+      : readFontSizeToken('font-size-chords', DEFAULT_CHORD_FONT_SIZE),
   };
 
   applyColorPreset(preferences.colorPreset);

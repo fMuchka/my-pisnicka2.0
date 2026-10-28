@@ -3,6 +3,7 @@ import { ListMusicIcon } from 'lucide-react';
 import { useState, type ComponentProps } from 'react';
 import Button from '../button/Button';
 import Drawer from './Drawer';
+import { cssVar } from '../../../styles/tokens';
 
 type DrawerDemoProps = Omit<ComponentProps<typeof Drawer>, 'open' | 'onOpenChange'> & {
   confirmToClose?: boolean;
@@ -26,7 +27,7 @@ function DrawerDemo({ confirmToClose = false, ...drawerProps }: DrawerDemoProps)
       >
         {confirmToClose ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ margin: 0, color: 'var(--ink-muted)', fontSize: 14, lineHeight: '21px' }}>
+            <p style={{ margin: 0, color: cssVar('ink-muted'), fontSize: 14, lineHeight: '21px' }}>
               Tento drawer nejde zavřít křížkem, klávesou Esc ani tažením — jen potvrzením.
             </p>
             <Button
@@ -35,7 +36,7 @@ function DrawerDemo({ confirmToClose = false, ...drawerProps }: DrawerDemoProps)
             />
           </div>
         ) : (
-          <p style={{ margin: 0, color: 'var(--ink-muted)', fontSize: 14, lineHeight: '21px' }}>
+          <p style={{ margin: 0, color: cssVar('ink-muted'), fontSize: 14, lineHeight: '21px' }}>
             Obsah draweru se vykresluje sem.
           </p>
         )}

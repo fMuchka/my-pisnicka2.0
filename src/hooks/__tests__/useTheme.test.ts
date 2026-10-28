@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cssVarName } from '../../styles/tokens';
 
 type UseThemeModule = typeof import('../useTheme');
 
@@ -39,12 +40,12 @@ describe('useTheme', () => {
 
     expect(state.lyricsFontSize).toBe(18);
     expect(state.chordFontSize).toBe(16);
-    expect(document.documentElement.style.getPropertyValue('--font-size-lyrics').trim()).toBe(
-      '18px'
-    );
-    expect(document.documentElement.style.getPropertyValue('--font-size-chords').trim()).toBe(
-      '16px'
-    );
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-lyrics')).trim()
+    ).toBe('18px');
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-chords')).trim()
+    ).toBe('16px');
   });
 
   it('updates font size values, css variables, and localStorage when setters are called', async () => {
@@ -55,12 +56,12 @@ describe('useTheme', () => {
 
     expect(useTheme.getState().lyricsFontSize).toBe(23);
     expect(useTheme.getState().chordFontSize).toBe(14);
-    expect(document.documentElement.style.getPropertyValue('--font-size-lyrics').trim()).toBe(
-      '23px'
-    );
-    expect(document.documentElement.style.getPropertyValue('--font-size-chords').trim()).toBe(
-      '14px'
-    );
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-lyrics')).trim()
+    ).toBe('23px');
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-chords')).trim()
+    ).toBe('14px');
     expect(localStorage.getItem('my-pisnicka:lyrics-font-size')).toBe('23');
     expect(localStorage.getItem('my-pisnicka:chord-font-size')).toBe('14');
   });
@@ -85,12 +86,12 @@ describe('useTheme', () => {
 
     expect(state.lyricsFontSize).toBe(20);
     expect(state.chordFontSize).toBe(17);
-    expect(document.documentElement.style.getPropertyValue('--font-size-lyrics').trim()).toBe(
-      '20px'
-    );
-    expect(document.documentElement.style.getPropertyValue('--font-size-chords').trim()).toBe(
-      '17px'
-    );
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-lyrics')).trim()
+    ).toBe('20px');
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-chords')).trim()
+    ).toBe('17px');
   });
 
   it('defaults preferred instrument to guitar and persists manual changes', async () => {
@@ -144,12 +145,12 @@ describe('useTheme', () => {
 
     expect(useTheme.getState().lyricsFontSize).toBe(18);
     expect(useTheme.getState().chordFontSize).toBe(16);
-    expect(document.documentElement.style.getPropertyValue('--font-size-lyrics').trim()).toBe(
-      '18px'
-    );
-    expect(document.documentElement.style.getPropertyValue('--font-size-chords').trim()).toBe(
-      '16px'
-    );
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-lyrics')).trim()
+    ).toBe('18px');
+    expect(
+      document.documentElement.style.getPropertyValue(cssVarName('font-size-chords')).trim()
+    ).toBe('16px');
     expect(useTheme.getState().preferredInstrument).toBe('guitar');
     expect(localStorage.getItem('my-pisnicka:instrument')).toBe('guitar');
     expect(localStorage.getItem('my-pisnicka:lyrics-font-size')).toBeNull();

@@ -8,6 +8,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
+import noRawCssVar from './eslint-rules/no-raw-css-var.js';
 
 export default [
   {
@@ -48,6 +49,17 @@ export default [
         },
       ],
       'prettier/prettier': 'warn',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
+    // The token definitions themselves are raw CSS.
+    ignores: ['src/styles/tokens.ts', 'src/styles/generateTokensCss.ts'],
+    plugins: {
+      local: { rules: { 'no-raw-css-var': noRawCssVar } },
+    },
+    rules: {
+      'local/no-raw-css-var': 'error',
     },
   },
   ...storybook.configs['flat/recommended'],
