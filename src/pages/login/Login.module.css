@@ -1,0 +1,63 @@
+.container {
+  max-width: 400px;
+  margin: auto;
+  width: 100%;
+
+  font-family: var(--font-sans);
+  background-color: var(--surface);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-md);
+
+  place-content: center;
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.logo-wrapper img {
+  width: 48px;
+  height: 48px;
+}
+
+.wordmark {
+  font: var(--text-heading);
+  letter-spacing: -0.01em;
+}
+
+.wordmark-accent {
+  color: var(--brand);
+}
+
+/** Divider */
+.divider {
+  margin: var(--space-xl) 0;
+  text-align: center;
+  position: relative;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border);
+}
+
+.divider-text {
+  position: relative;
+  display: inline-block;
+  padding: 0 var(--space-md);
+  background-color: var(--surface);
+  color: var(--ink-muted);
+  font-size: 14px;
+}

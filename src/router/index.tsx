@@ -42,7 +42,7 @@ export const routes: RouteObject[] = [
     HydrateFallback: LoadingSpinner,
     children: [
       { path: Routes.Home, loader: requireHost, lazy: page(() => import('../pages/home/Home')) },
-      { path: Routes.Login, lazy: page(() => import('../pages/Login')) },
+      { path: Routes.Login, lazy: page(() => import('../pages/login/Login')) },
       { path: Routes.Info, loader: requireHost, lazy: page(() => import('../pages/Info')) },
       {
         path: Routes.Settings,
