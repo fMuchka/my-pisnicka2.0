@@ -41,7 +41,7 @@ export const routes: RouteObject[] = [
     Component: App,
     HydrateFallback: LoadingSpinner,
     children: [
-      { path: Routes.Home, loader: requireHost, lazy: page(() => import('../pages/Home')) },
+      { path: Routes.Home, loader: requireHost, lazy: page(() => import('../pages/home/Home')) },
       { path: Routes.Login, lazy: page(() => import('../pages/Login')) },
       { path: Routes.Info, loader: requireHost, lazy: page(() => import('../pages/Info')) },
       {

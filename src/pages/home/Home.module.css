@@ -1,0 +1,39 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.greeting-eyebrow {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-muted);
+}
+
+.greeting-name {
+  margin: 2px 0 0;
+  font: var(--text-display);
+}
+
+.home-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--space-2xl) var(--space-xl);
+  }
+
+  .greeting-name {
+    font: var(--text-heading);
+  }
+}
