@@ -1,7 +1,11 @@
 import type { Preview } from '@storybook/react-vite';
 import { withThemeByDataAttribute } from '@storybook/addon-themes';
 import { MemoryRouter } from 'react-router';
+import { sb } from 'storybook/test';
 import '../src/styles/global.css';
+
+// Uses src/lib/__mocks__/authService.ts, so stories never call Firebase.
+sb.mock(import('../src/lib/authService.ts'));
 
 const preview: Preview = {
   parameters: {
