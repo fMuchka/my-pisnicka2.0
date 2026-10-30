@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Hero } from '../Hero';
+import { AppIntro } from '../AppIntro';
 
-describe('Hero', () => {
+describe('AppIntro', () => {
   it('shows the app name and version', () => {
     render(
-      <Hero
+      <AppIntro
         lastChangeLabel={null}
         onShowHistory={vi.fn()}
       />
@@ -17,7 +17,7 @@ describe('Hero', () => {
 
   it('labels the history pill with the last change', () => {
     render(
-      <Hero
+      <AppIntro
         lastChangeLabel="1. října 2026"
         onShowHistory={vi.fn()}
       />
@@ -30,7 +30,7 @@ describe('Hero', () => {
 
   it('hides the history pill without a last change', () => {
     render(
-      <Hero
+      <AppIntro
         lastChangeLabel={null}
         onShowHistory={vi.fn()}
       />
@@ -44,7 +44,7 @@ describe('Hero', () => {
     const user = userEvent.setup();
     const onShowHistory = vi.fn();
     render(
-      <Hero
+      <AppIntro
         lastChangeLabel="1. října 2026"
         onShowHistory={onShowHistory}
       />
@@ -57,7 +57,7 @@ describe('Hero', () => {
 
   it('styles the history pill as a link pill', () => {
     render(
-      <Hero
+      <AppIntro
         lastChangeLabel="1. října 2026"
         onShowHistory={vi.fn()}
       />

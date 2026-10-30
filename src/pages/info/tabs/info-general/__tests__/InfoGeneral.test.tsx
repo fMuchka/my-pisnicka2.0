@@ -19,7 +19,7 @@ describe('InfoGeneral', () => {
     ).toBeInTheDocument();
   });
 
-  it('passes the history request up from the hero', async () => {
+  it('passes the history request up from the app intro', async () => {
     const user = userEvent.setup();
     const onShowHistory = vi.fn();
     renderInfoGeneral(onShowHistory);

@@ -1,9 +1,9 @@
 import { getTimelineEntries } from '../../../../lib/timeline/timeline';
 import { FAQS, FEATURES } from './constants';
+import { AppIntro } from './parts/app-intro/AppIntro';
 import { FaqSection } from './parts/faq-section/FaqSection';
 import { FeaturesSection } from './parts/features-section/FeaturesSection';
 import { FirstVersionLink } from './parts/first-version-link/FirstVersionLink';
-import { Hero } from './parts/hero/Hero';
 import shared from './shared.module.css';
 import styles from './InfoGeneral.module.css';
 
@@ -16,7 +16,7 @@ export function InfoGeneral({ onShowHistory }: Readonly<InfoGeneralProps>) {
 
   return (
     <div className={styles.general}>
-      <Hero
+      <AppIntro
         lastChangeLabel={lastChangeLabel}
         onShowHistory={onShowHistory}
       />

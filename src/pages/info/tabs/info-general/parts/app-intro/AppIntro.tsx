@@ -1,32 +1,32 @@
 import { History } from 'lucide-react';
 import { classNames } from '../../../../../../lib/classNames';
 import { LOGO_SRC } from '../../constants';
-import styles from './Hero.module.css';
+import styles from './AppIntro.module.css';
 
-type HeroProps = {
+type AppIntroProps = {
   /** Date of the latest timeline entry; the history pill is hidden without one. */
   lastChangeLabel: string | null;
   onShowHistory: () => void;
 };
 
-export function Hero({ lastChangeLabel, onShowHistory }: Readonly<HeroProps>) {
+export function AppIntro({ lastChangeLabel, onShowHistory }: Readonly<AppIntroProps>) {
   return (
-    <section className={styles.hero}>
-      <div className={styles.heroBrand}>
+    <section className={styles.appIntro}>
+      <div className={styles.appIntroBrand}>
         <img
           src={LOGO_SRC}
           alt=""
-          className={styles.heroLogo}
+          className={styles.appIntroLogo}
         />
-        <h2 className={styles.heroTitle}>
-          MyPísnička <span className={styles.heroVersion}>2.0</span>
+        <h2 className={styles.appIntroTitle}>
+          MyPísnička <span className={styles.appIntroVersion}>2.0</span>
         </h2>
       </div>
-      <p className={styles.heroText}>
+      <p className={styles.appIntroText}>
         Nástroj pro kytaristy a skupiny, kteří chtějí jednoduše trénovat, sdílet písně a hrát spolu
         v reálném čase.
       </p>
-      <div className={styles.heroMeta}>
+      <div className={styles.appIntroMeta}>
         {lastChangeLabel && (
           <button
             type="button"
