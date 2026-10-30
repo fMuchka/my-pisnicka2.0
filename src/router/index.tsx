@@ -43,7 +43,7 @@ export const routes: RouteObject[] = [
     children: [
       { path: Routes.Home, loader: requireHost, lazy: page(() => import('../pages/home/Home')) },
       { path: Routes.Login, lazy: page(() => import('../pages/login/Login')) },
-      { path: Routes.Info, loader: requireHost, lazy: page(() => import('../pages/Info')) },
+      { path: Routes.Info, loader: requireHost, lazy: page(() => import('../pages/info/Info')) },
       {
         path: Routes.Settings,
         loader: requireHostOrSessionGuest,
