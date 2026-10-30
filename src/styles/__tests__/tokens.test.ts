@@ -16,6 +16,12 @@ const KNOWN_UNDECLARED = new Set([
   'text-secondary',
 ]);
 
+// Set inline by Ark UI at runtime, e.g. the Tabs indicator's position and size.
+const ARK_RUNTIME_VARS = new Set(['left', 'top', 'width', 'height']);
+
+// Read by Ark UI's inline styles, so a stylesheet may set them, e.g. the Tabs indicator transition.
+const ARK_INPUT_VARS = new Set(['transition-duration', 'transition-timing-function']);
+
 const tokenNames = new Set(Object.keys(CSS_TOKENS));
 const generatedFile = path.resolve(TOKENS_CSS_FILE);
 
@@ -28,7 +34,9 @@ const stylesheets = fs
 const unknownReferences = (text: string) =>
   [...text.matchAll(VAR_REFERENCE)]
     .map((match) => match[1]!)
-    .filter((name) => !tokenNames.has(name) && !KNOWN_UNDECLARED.has(name));
+    .filter(
+      (name) => !tokenNames.has(name) && !KNOWN_UNDECLARED.has(name) && !ARK_RUNTIME_VARS.has(name)
+    );
 
 describe('CSS tokens', () => {
   it('tokens.generated.css is up to date', () => {
@@ -54,7 +62,9 @@ describe('CSS tokens', () => {
   });
 
   it.each(stylesheets)('%s does not declare tokens outside tokens.ts', (file) => {
-    const declared = [...fs.readFileSync(file, 'utf8').matchAll(DECLARATION)].map((m) => m[1]);
+    const declared = [...fs.readFileSync(file, 'utf8').matchAll(DECLARATION)]
+      .map((m) => m[1]!)
+      .filter((name) => !ARK_INPUT_VARS.has(name));
     expect(declared).toEqual([]);
   });
 });
