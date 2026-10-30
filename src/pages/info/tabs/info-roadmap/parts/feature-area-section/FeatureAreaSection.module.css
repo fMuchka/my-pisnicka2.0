@@ -1,0 +1,22 @@
+.area {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.area-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.features {
+  list-style: none;
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.feature {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-secondary);
+  overflow: hidden;
+}

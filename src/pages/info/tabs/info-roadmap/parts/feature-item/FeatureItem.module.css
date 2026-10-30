@@ -1,0 +1,66 @@
+.summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-soft);
+}
+
+.feature-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 56px;
+  padding: var(--space-sm) 14px;
+}
+
+.feature-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--space-sm);
+}
+
+.feature-title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--brand) 45%, var(--border));
+  background: color-mix(in srgb, var(--brand) 14%, var(--surface));
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.chevron {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--ink-muted);
+  transition: transform var(--transition-fast);
+}
+
+details[open] > .summary > .chevron {
+  transform: rotate(180deg);
+}
+
+/* Lines the text up with the title: row padding + icon backdrop width + gap. */
+.feature-details {
+  padding: 0 14px 14px calc(14px + 32px + var(--space-sm));
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}

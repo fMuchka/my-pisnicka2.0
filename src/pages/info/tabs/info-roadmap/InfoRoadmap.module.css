@@ -1,0 +1,24 @@
+.roadmap {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.intro-title {
+  font-size: 1.2rem;
+  color: var(--ink);
+}
+
+.intro-text {
+  color: var(--ink-muted);
+}
+
+.outro {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
