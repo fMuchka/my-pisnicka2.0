@@ -19,6 +19,8 @@ body {
   color: var(--ink);
   font: var(--text-body);
   -webkit-overflow-scrolling: touch;
+  /* Mobile browsers flash a grey box on tapped buttons and summaries; components style their own states. */
+  -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--transition-slow),
     color var(--transition-slow);
