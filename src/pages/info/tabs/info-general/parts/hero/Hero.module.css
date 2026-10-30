@@ -1,0 +1,70 @@
+.hero {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--brand) 8%, var(--surface-secondary));
+}
+
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.hero-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.hero-title {
+  font-size: 1.3rem;
+  color: var(--ink);
+}
+
+.hero-version {
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.hero-text {
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.meta-pill--link {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.meta-pill--link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-soft);
+}
+
+.icon-xs {
+  width: 0.85rem;
+  height: 0.85rem;
+}

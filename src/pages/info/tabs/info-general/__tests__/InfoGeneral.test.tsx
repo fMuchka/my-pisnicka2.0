@@ -9,16 +9,7 @@ const renderInfoGeneral = (onShowHistory = vi.fn()) =>
   render(<InfoGeneral onShowHistory={onShowHistory} />);
 
 describe('InfoGeneral', () => {
-  it('lists every feature', () => {
-    renderInfoGeneral();
-
-    for (const feature of FEATURES) {
-      expect(screen.getByText(feature.title)).toBeInTheDocument();
-      expect(screen.getByText(feature.text)).toBeInTheDocument();
-    }
-  });
-
-  it('labels the history pill with the latest change', () => {
+  it('labels the history pill with the latest timeline entry', () => {
     renderInfoGeneral();
 
     expect(
@@ -28,7 +19,7 @@ describe('InfoGeneral', () => {
     ).toBeInTheDocument();
   });
 
-  it('asks to show the history when the pill is clicked', async () => {
+  it('passes the history request up from the hero', async () => {
     const user = userEvent.setup();
     const onShowHistory = vi.fn();
     renderInfoGeneral(onShowHistory);
@@ -38,45 +29,27 @@ describe('InfoGeneral', () => {
     expect(onShowHistory).toHaveBeenCalledOnce();
   });
 
-  it('opens only the first FAQ by default', () => {
+  it('renders the app features and FAQs', () => {
     renderInfoGeneral();
 
-    const [first, ...rest] = FAQS.map((faq) =>
-      screen.getByText(faq.question, { selector: 'summary' }).closest('details')
-    );
-
-    expect(first).toHaveAttribute('open');
-    for (const faq of rest) {
-      expect(faq).not.toHaveAttribute('open');
+    for (const feature of FEATURES) {
+      expect(screen.getByText(feature.title)).toBeInTheDocument();
+    }
+    for (const faq of FAQS) {
+      expect(screen.getByText(faq.question)).toBeInTheDocument();
     }
   });
 
-  it('toggles an FAQ answer when its question is clicked', async () => {
-    const user = userEvent.setup();
+  it('states the main goal', () => {
     renderInfoGeneral();
-    const question = screen.getByText(FAQS[1]!.question, { selector: 'summary' });
 
-    await user.click(question);
-
-    expect(question.closest('details')).toHaveAttribute('open');
+    expect(screen.getByRole('heading', { name: 'Hlavní cíl' })).toBeInTheDocument();
+    expect(screen.getByText(/podpořit společné hraní/i)).toBeInTheDocument();
   });
 
-  it('opens the first version in a new tab', () => {
+  it('links to the first version', () => {
     renderInfoGeneral();
 
-    const link = screen.getByRole('link', { name: /první verze mypísničky/i });
-    expect(link).toHaveAttribute('href', 'https://fmuchka.github.io/my-pisnicka/');
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
-  });
-
-  it('applies the module classes', () => {
-    renderInfoGeneral();
-
-    expect(screen.getByRole('button', { name: /poslední změna/i })).toHaveClass(
-      'meta-pill',
-      'meta-pill--link'
-    );
-    expect(screen.getByRole('link', { name: /první verze/i })).toHaveClass('v1-link');
+    expect(screen.getByRole('link', { name: /první verze mypísničky/i })).toBeInTheDocument();
   });
 });

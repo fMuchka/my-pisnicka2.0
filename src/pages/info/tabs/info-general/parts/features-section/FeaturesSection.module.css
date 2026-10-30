@@ -1,0 +1,28 @@
+.features {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-sm);
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-secondary);
+}
+
+.feature-title {
+  display: block;
+  color: var(--ink);
+}
+
+.feature-text {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}

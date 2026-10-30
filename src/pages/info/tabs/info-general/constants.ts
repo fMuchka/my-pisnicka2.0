@@ -3,6 +3,8 @@ import type { Faq, Feature } from './types';
 
 export const LOGO_SRC = '/mypisnicka-icon.svg';
 
+export const FIRST_VERSION_URL = 'https://fmuchka.github.io/my-pisnicka/';
+
 export const FEATURES: Feature[] = [
   {
     icon: Music,
