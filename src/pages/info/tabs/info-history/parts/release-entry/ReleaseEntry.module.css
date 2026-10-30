@@ -1,0 +1,45 @@
+.release {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-secondary);
+  overflow: hidden;
+}
+
+.release-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.release-heading {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.release-meta {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.badge-new {
+  border-radius: var(--radius-full);
+  background: var(--brand-fill);
+  color: var(--on-brand);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.22rem 0.45rem;
+  text-transform: uppercase;
+}
+
+.release-body {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
+  border-top: 1px solid var(--border);
+}

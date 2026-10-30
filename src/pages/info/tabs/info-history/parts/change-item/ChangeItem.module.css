@@ -1,0 +1,37 @@
+.change-row {
+  display: grid;
+  grid-template-columns: 14px 1fr 20px;
+  gap: var(--space-sm);
+  align-items: start;
+  min-height: 44px;
+  padding: 11px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.change-row--plain {
+  grid-template-columns: 14px 1fr;
+}
+
+.bullet {
+  width: 6px;
+  height: 6px;
+  margin-top: 0.45rem;
+  border-radius: 999px;
+  background: var(--text-disabled);
+}
+
+.bullet--new {
+  background: var(--brand);
+}
+
+.change-details {
+  margin: 0 0 var(--space-sm) 22px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
