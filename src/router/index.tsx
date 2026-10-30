@@ -47,7 +47,7 @@ export const routes: RouteObject[] = [
       {
         path: Routes.Settings,
         loader: requireHostOrSessionGuest,
-        lazy: page(() => import('../pages/Settings')),
+        lazy: page(() => import('../pages/settings/Settings')),
       },
       { path: Routes.Join, lazy: page(() => import('../pages/Join')) },
       {
