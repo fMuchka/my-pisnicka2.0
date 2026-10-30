@@ -2,7 +2,7 @@ import { ChevronDown, ExternalLink, History } from 'lucide-react';
 import { getTimelineEntries } from '../../../../lib/timeline/timeline';
 import { FAQS, FEATURES, LOGO_SRC } from './constants';
 import IconBackdrop from '../../../../components/_core/icon-backdrop/IconBackdrop';
-import { cx } from '../../../../components/_core/cx';
+import { classNames } from '../../../../lib/classNames';
 import styles from './InfoGeneral.module.css';
 
 type InfoGeneralProps = {
@@ -33,7 +33,7 @@ export function InfoGeneral({ onShowHistory }: Readonly<InfoGeneralProps>) {
           {lastChangeLabel && (
             <button
               type="button"
-              className={cx(styles.metaPill, styles.metaPillLink)}
+              className={classNames(styles.metaPill, styles.metaPillLink)}
               onClick={onShowHistory}
             >
               <History

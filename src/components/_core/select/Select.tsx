@@ -1,7 +1,7 @@
 import { Field } from '@ark-ui/react/field';
 import { ChevronDown } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import FieldMessages from '../field/FieldMessages';
 import fieldStyles from '../field/field.module.css';
 import { useControllableState } from '../../../hooks/useControllableState';
@@ -63,7 +63,7 @@ export default function Select({
           {...selectProps}
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          className={cx(
+          className={classNames(
             fieldStyles.fieldInput,
             styles.select,
             value === '' && styles.selectPlaceholder,

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import styles from './IconBackdrop.module.css';
 import type { IconBackdropShape, IconBackdropSize } from './types';
 import type { VariantClassMap } from '../types';
@@ -26,6 +26,8 @@ export default function IconBackdrop({
   children,
 }: Readonly<IconBackdropProps>) {
   return (
-    <div className={cx(styles.iconBackdrop, shapeClass[shape], sizeClass[size])}>{children}</div>
+    <div className={classNames(styles.iconBackdrop, shapeClass[shape], sizeClass[size])}>
+      {children}
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { Field } from '@ark-ui/react/field';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState, type ComponentProps } from 'react';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import FieldMessages from '../field/FieldMessages';
 import fieldStyles from '../field/field.module.css';
 import { useControllableState } from '../../../hooks/useControllableState';
@@ -82,7 +82,7 @@ export default function Input({
           value={value}
           onChange={(event) => setValue(event.target.value)}
           type={inputType}
-          className={cx(
+          className={classNames(
             fieldStyles.fieldInput,
             isSuccess && fieldStyles.fieldInputSuccess,
             PrependIcon && styles.inputWithPrepend,

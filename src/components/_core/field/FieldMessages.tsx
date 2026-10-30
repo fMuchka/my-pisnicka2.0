@@ -1,5 +1,5 @@
 import { Field } from '@ark-ui/react/field';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import styles from './FieldMessages.module.css';
 
 type FieldMessagesProps = {
@@ -32,13 +32,13 @@ export default function FieldMessages({
   return (
     <div className={styles.fieldMessages}>
       {errorText && (
-        <Field.ErrorText className={cx(styles.fieldMessage, styles.fieldMessageError)}>
+        <Field.ErrorText className={classNames(styles.fieldMessage, styles.fieldMessageError)}>
           {errorText}
         </Field.ErrorText>
       )}
       {showHelper && (
         <Field.HelperText
-          className={cx(
+          className={classNames(
             styles.fieldMessage,
             isSuccess && successText && styles.fieldMessageSuccess
           )}

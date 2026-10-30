@@ -1,4 +1,4 @@
-import { cx } from '../../../../../../components/_core/cx';
+import { classNames } from '../../../../../../lib/classNames';
 import type { VariantClassMap } from '../../../../../../components/_core/types';
 import type { ChangeGroup, ChangeType } from '../../../../../../lib/timeline/timeline';
 import { ChangeItem } from '../change-item/ChangeItem';
@@ -21,7 +21,7 @@ export function ChangeGroupSection({ group }: Readonly<ChangeGroupSectionProps>)
   return (
     <section className={styles.group}>
       {group.type && Icon && group.label && (
-        <h3 className={cx(styles.groupTitle, titleClass[group.type])}>
+        <h3 className={classNames(styles.groupTitle, titleClass[group.type])}>
           <Icon
             className={styles.groupIcon}
             aria-hidden="true"

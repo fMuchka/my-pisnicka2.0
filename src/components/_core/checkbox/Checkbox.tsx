@@ -1,6 +1,6 @@
 import { Checkbox as ArkCheckbox } from '@ark-ui/react/checkbox';
 import { Check } from 'lucide-react';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import styles from './Checkbox.module.css';
 import type { CheckboxVariant } from './types';
 
@@ -32,7 +32,7 @@ export default function Checkbox({
       disabled={disabled}
       name={name}
       value={value}
-      className={cx(styles.checkbox, variant === 'chip' && styles.checkboxChip)}
+      className={classNames(styles.checkbox, variant === 'chip' && styles.checkboxChip)}
       onCheckedChange={(details) => onCheckedChange?.(details.checked === true)}
     >
       <ArkCheckbox.Control className={styles.checkboxBox}>

@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import styles from './Button.module.css';
 import type { ButtonIconPosition, ButtonRoleVariation, ButtonStyleVariation } from './types';
 import type { Icon, VariantClassMap } from '../types';
@@ -37,7 +37,12 @@ export default function Button({
   return (
     <button
       {...buttonProps}
-      className={cx(styles.btn, colorClass[colorVariation], styleClass[styleVariation], className)}
+      className={classNames(
+        styles.btn,
+        colorClass[colorVariation],
+        styleClass[styleVariation],
+        className
+      )}
     >
       {iconPosition === 'prepend' && iconElement}
       {label && <span>{label}</span>}

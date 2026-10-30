@@ -2,7 +2,7 @@ import { Drawer as ArkDrawer } from '@ark-ui/react/drawer';
 import { Portal } from '@ark-ui/react/portal';
 import { XIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import styles from './Drawer.module.css';
 import type { Icon } from '../types';
 
@@ -37,7 +37,7 @@ export default function Drawer({
         {!hideBackdrop && <ArkDrawer.Backdrop className={styles.backdrop} />}
         <ArkDrawer.Positioner className={styles.positioner}>
           <ArkDrawer.Content
-            className={cx(styles.content, hideBackdrop && styles.contentCard)}
+            className={classNames(styles.content, hideBackdrop && styles.contentCard)}
             data-testid="drawer-content"
             draggable={!keepOpen}
           >

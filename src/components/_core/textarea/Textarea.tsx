@@ -1,6 +1,6 @@
 import { Field } from '@ark-ui/react/field';
 import type { ComponentProps } from 'react';
-import { cx } from '../cx';
+import { classNames } from '../../../lib/classNames';
 import FieldMessages from '../field/FieldMessages';
 import fieldStyles from '../field/field.module.css';
 import { useControllableState } from '../../../hooks/useControllableState';
@@ -62,7 +62,7 @@ export default function Textarea({
         {...textareaProps}
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        className={cx(fieldStyles.fieldInput, styles.textarea, className)}
+        className={classNames(fieldStyles.fieldInput, styles.textarea, className)}
         rows={rows}
         maxLength={maxLength}
       />

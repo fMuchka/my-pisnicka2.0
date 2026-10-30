@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react';
-import { cx } from '../../../../../../components/_core/cx';
+import { classNames } from '../../../../../../lib/classNames';
 import type { TimelineChange } from '../../../../../../lib/timeline/timeline';
 import shared from '../../shared.module.css';
 import styles from './ChangeItem.module.css';
@@ -12,14 +12,14 @@ type ChangeItemProps = {
 export function ChangeItem({ change }: Readonly<ChangeItemProps>) {
   const bullet = (
     <span
-      className={cx(styles.bullet, change.type === 'new' && styles.bulletNew)}
+      className={classNames(styles.bullet, change.type === 'new' && styles.bulletNew)}
       aria-hidden="true"
     />
   );
 
   if (!change.details) {
     return (
-      <div className={cx(styles.changeRow, styles.changeRowPlain)}>
+      <div className={classNames(styles.changeRow, styles.changeRowPlain)}>
         {bullet}
         <span>{change.text}</span>
       </div>
@@ -28,11 +28,11 @@ export function ChangeItem({ change }: Readonly<ChangeItemProps>) {
 
   return (
     <details>
-      <summary className={cx(shared.summary, styles.changeRow)}>
+      <summary className={classNames(shared.summary, styles.changeRow)}>
         {bullet}
         <span>{change.text}</span>
         <ChevronDown
-          className={cx(shared.chevron, shared.chevronSm)}
+          className={classNames(shared.chevron, shared.chevronSm)}
           aria-hidden="true"
         />
       </summary>

@@ -1,4 +1,4 @@
-import { cx } from '../../../../components/_core/cx';
+import { classNames } from '../../../../lib/classNames';
 import { getTimelineEntries, getUnseenReleaseDates } from '../../../../lib/timeline/timeline';
 import { MilestoneEntry } from './parts/milestone-entry/MilestoneEntry';
 import { ReleaseEntry } from './parts/release-entry/ReleaseEntry';
@@ -35,7 +35,7 @@ export function InfoHistory({ lastVisited }: Readonly<InfoHistoryProps>) {
               className={styles.timelineItem}
             >
               <span
-                className={cx(
+                className={classNames(
                   styles.timelineDot,
                   isLatest && styles.timelineDotLatest,
                   entry.kind === 'milestone' && styles.timelineDotMilestone

@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react';
-import { cx } from '../../../../../../components/_core/cx';
+import { classNames } from '../../../../../../lib/classNames';
 import {
   groupChangesByType,
   summarizeChanges,
@@ -22,7 +22,7 @@ export function ReleaseEntry({ release, isUnseen, defaultOpen }: Readonly<Releas
       className={styles.release}
       open={defaultOpen}
     >
-      <summary className={cx(shared.summary, styles.releaseSummary)}>
+      <summary className={classNames(shared.summary, styles.releaseSummary)}>
         <span className={styles.releaseHeading}>
           <span className={shared.entryDate}>
             {release.label}
