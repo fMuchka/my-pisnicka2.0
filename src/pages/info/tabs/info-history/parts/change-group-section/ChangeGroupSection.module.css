@@ -1,12 +1,7 @@
-.group {
-  --group-icon-size: 0.9rem;
-  --group-icon-gap: 6px;
-}
-
 .group-title {
   display: flex;
   align-items: center;
-  gap: var(--group-icon-gap);
+  gap: 6px;
   margin-top: var(--space-sm);
   font-size: 0.72rem;
   font-weight: 700;
@@ -16,8 +11,8 @@
 }
 
 .group-icon {
-  width: var(--group-icon-size);
-  height: var(--group-icon-size);
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .group-title--new .group-icon {
@@ -28,7 +23,7 @@
   list-style: none;
 }
 
-/* Bullets start where the heading text starts, so the type icons hang out as section markers. */
+/* Bullets start where the heading text starts (icon width + gap), so the type icons hang out as section markers. */
 .group-title + .changes {
-  padding-left: calc(var(--group-icon-size) + var(--group-icon-gap));
+  padding-left: calc(0.9rem + 6px);
 }

@@ -19,7 +19,7 @@ export function ChangeGroupSection({ group }: Readonly<ChangeGroupSectionProps>)
   const Icon = group.type ? GROUP_ICONS[group.type] : null;
 
   return (
-    <section className={styles.group}>
+    <section>
       {group.type && Icon && group.label && (
         <h3 className={classNames(styles.groupTitle, titleClass[group.type])}>
           <Icon
