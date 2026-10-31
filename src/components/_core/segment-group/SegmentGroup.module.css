@@ -1,0 +1,127 @@
+.segment-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.segment-group-label {
+  margin-bottom: var(--space-xs);
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.segments {
+  position: relative;
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: var(--radius-full);
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+  isolation: isolate;
+}
+
+.segment-indicator {
+  position: absolute;
+  z-index: -1;
+  height: var(--height);
+  width: var(--width);
+  top: var(--top);
+  left: var(--left);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--brand) 18%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 50%, var(--border));
+  /*
+   * Ark sets the transition inline and only lets these two variables tune it.
+   * Plain values: the --transition-* tokens bundle an easing, which is invalid as a duration.
+   * The curve overshoots slightly, so the pill settles onto the new segment.
+   */
+  --transition-duration: 320ms;
+  --transition-timing-function: cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-full);
+  color: var(--ink-muted);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color var(--transition-normal),
+    transform var(--transition-fast);
+}
+
+.segment:active:not([data-disabled]) {
+  transform: scale(0.96);
+}
+
+.segment[data-state='checked'] {
+  color: var(--ink);
+}
+
+.segment[data-state='checked'] .segment-icon {
+  animation: segment-icon-pop var(--transition-slow);
+}
+
+.segment[data-focus-visible] {
+  box-shadow: var(--focus-ring-soft);
+}
+
+.segment[data-disabled] {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.segment-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  font: var(--text-label);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.segment-icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 720px) {
+  .segment-text {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .segment-icon {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment-indicator {
+    --transition-duration: 0ms;
+  }
+
+  .segment,
+  .segment[data-state='checked'] .segment-icon {
+    transition: none;
+    animation: none;
+    transform: none;
+  }
+}
+
+@keyframes segment-icon-pop {
+  40% {
+    transform: scale(1.25);
+  }
+}
