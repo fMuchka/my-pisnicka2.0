@@ -1,30 +1,51 @@
 import { describe, expect, it } from 'vitest';
 import type { Song } from '../../../../../lib/song';
-import { isDraftValid, isValidCapo, parseCapo, toDraft } from '../draft';
+import { emptyDraft, isDraftValid, isValidCapo, parseCapo, toDraft } from '../draft';
+import type { SongDraft } from '../types';
 
-const draft = { title: 'Kometa', artist: 'Nohavica', capo: '', text: '' };
+const draft: SongDraft = {
+  title: 'Kometa',
+  artist: 'Nohavica',
+  capo: '',
+  text: '',
+  instrument: 'guitar',
+  tags: [],
+};
 
 describe('song draft', () => {
-  it('copies a song into a draft, capo as text', () => {
+  it('starts a new song for the given instrument, without tags', () => {
+    expect(emptyDraft('ukulele')).toEqual({
+      title: '',
+      artist: '',
+      capo: '',
+      text: '',
+      instrument: 'ukulele',
+      tags: [],
+    });
+  });
+
+  it('copies a song and its tags into a draft, capo as text', () => {
     const song: Song = {
       id: 's1',
       title: 'Kometa',
       artist: 'Nohavica',
       text: '[C]text',
       capo: 2,
+      instrument: 'ukulele',
       ownerId: 'u1',
     };
 
-    expect(toDraft(song)).toEqual({
+    expect(toDraft(song, ['folk'])).toEqual({
       title: 'Kometa',
       artist: 'Nohavica',
       capo: '2',
       text: '[C]text',
+      instrument: 'ukulele',
+      tags: ['folk'],
     });
-    expect(toDraft({ ...song, capo: undefined, text: undefined })).toMatchObject({
-      capo: '',
-      text: '',
-    });
+    expect(
+      toDraft({ ...song, capo: undefined, text: undefined, instrument: undefined }, null)
+    ).toMatchObject({ capo: '', text: '', instrument: '', tags: null });
   });
 
   it.each(['', ' ', '0', '3', ' 12 '])('accepts capo %j', (capo) => {

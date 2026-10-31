@@ -31,6 +31,7 @@ const save = vi.hoisted(() => ({ saveSong: vi.fn() }));
 vi.mock('../../../hooks/useSongDetail', () => ({ useSongDetail: () => ({ ...detail }) }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ ...auth }) }));
 vi.mock('../saveSong', () => save);
+vi.mock('../useSongTags', () => ({ useSongTags: () => ({ isLoading: false, tags: ['folk'] }) }));
 
 function LocationDisplay() {
   return <span data-testid="location">{useLocation().pathname}</span>;

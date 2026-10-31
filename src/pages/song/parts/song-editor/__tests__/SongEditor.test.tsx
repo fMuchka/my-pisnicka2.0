@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SongEditor } from '../SongEditor';
-import { EMPTY_DRAFT } from '../draft';
+import { emptyDraft } from '../draft';
 import type { SongDraft } from '../types';
 
 const filled: SongDraft = {
@@ -10,6 +10,8 @@ const filled: SongDraft = {
   artist: 'Nohavica',
   capo: '',
   text: '[verse]\n[C]Za sklem',
+  instrument: 'guitar',
+  tags: ['folk'],
 };
 
 const renderEditor = (props: Partial<Parameters<typeof SongEditor>[0]> = {}) => {
@@ -49,9 +51,61 @@ describe('SongEditor', () => {
     expect(onSubmit).toHaveBeenCalledWith({ ...filled, title: 'Bílá', capo: '3' });
   });
 
+  it('picks the instrument the chords are written for', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderEditor();
+
+    expect(screen.getByRole('radiogroup', { name: 'Akordy pro' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Kytaru' })).toBeChecked();
+
+    await user.click(screen.getByRole('radio', { name: 'Ukulele' }));
+    await user.click(saveButton());
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ instrument: 'ukulele' }));
+  });
+
+  it('leaves the instrument unpicked for a song that never had one', () => {
+    renderEditor({ initialDraft: { ...filled, instrument: '' } });
+
+    expect(screen.getByRole('radio', { name: 'Kytaru' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Ukulele' })).not.toBeChecked();
+  });
+
+  it('adds and removes tags', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderEditor();
+    const tagsInput = screen.getByRole('textbox', { name: 'Štítky' });
+
+    expect(screen.getByText('folk')).toBeInTheDocument();
+
+    await user.type(tagsInput, 'táborák{Enter}');
+    // Ark empties the input on the next animation frame, behind user-event's back, so user-event
+    // would keep typing after the old text. Clearing through it keeps the two in step.
+    await waitFor(() => expect(tagsInput).toHaveValue(''));
+    await user.clear(tagsInput);
+    await user.type(tagsInput, 'klasika,');
+    await user.click(screen.getByRole('button', { name: 'Odebrat folk' }));
+    await user.click(saveButton());
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ tags: ['táborák', 'klasika'] })
+    );
+  });
+
+  it('locks the tags when they could not be loaded, and saves them as unknown', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderEditor({ initialDraft: { ...filled, tags: null } });
+
+    expect(screen.getByRole('textbox', { name: 'Štítky' })).toBeDisabled();
+    expect(screen.getByText(/štítky se nepodařilo načíst/i)).toBeInTheDocument();
+
+    await user.click(saveButton());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ tags: null }));
+  });
+
   it('keeps save disabled until title and artist are filled', async () => {
     const user = userEvent.setup();
-    renderEditor({ initialDraft: EMPTY_DRAFT });
+    renderEditor({ initialDraft: emptyDraft('guitar') });
 
     expect(saveButton()).toBeDisabled();
 

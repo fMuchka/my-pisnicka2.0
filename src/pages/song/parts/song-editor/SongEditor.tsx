@@ -5,7 +5,9 @@ import ErrorMessage from '../../../../components/_core/error-message/ErrorMessag
 import Input from '../../../../components/_core/input/Input';
 import SegmentGroup from '../../../../components/_core/segment-group/SegmentGroup';
 import type { SegmentOption } from '../../../../components/_core/segment-group/types';
+import { TagsInput } from '../../../../components/_core/tags-input';
 import Textarea from '../../../../components/_core/textarea/Textarea';
+import type { Instrument } from '../../../../lib/chords/chords.database';
 import { SongSheet } from '../../../../components/song-sheet';
 import { isDraftValid, isValidCapo } from './draft';
 import type { SongDraft, SongEditorView } from './types';
@@ -15,6 +17,14 @@ const viewOptions: SegmentOption[] = [
   { value: 'edit', label: 'Upravit', icon: PencilLine },
   { value: 'preview', label: 'Náhled', icon: Eye },
 ];
+
+const instrumentOptions: SegmentOption[] = [
+  { value: 'guitar', label: 'Kytaru' },
+  { value: 'ukulele', label: 'Ukulele' },
+];
+
+const isInstrument = (value: string): value is Instrument =>
+  instrumentOptions.some((option) => option.value === value);
 
 const TEXT_HELP =
   'Sekce: [verse], [chorus], [bridge], [intro], [outro]. Akord před slovem: [Am]slovo.';
@@ -37,7 +47,7 @@ export function SongEditor({
   const [draft, setDraft] = useState(initialDraft);
   const [view, setView] = useState<SongEditorView>('edit');
 
-  const update = (field: keyof SongDraft) => (value: string) =>
+  const update = (field: 'title' | 'artist' | 'capo' | 'text') => (value: string) =>
     setDraft((current) => ({ ...current, [field]: value }));
 
   const handleSubmit = (event: FormEvent) => {
@@ -71,6 +81,26 @@ export function SongEditor({
           onValueChange={update('capo')}
           invalid={!isValidCapo(draft.capo)}
           errorText="Capo musí být nezáporné celé číslo."
+        />
+        <SegmentGroup
+          label="Akordy pro"
+          options={instrumentOptions}
+          value={draft.instrument}
+          onValueChange={(value) => {
+            if (isInstrument(value)) setDraft((current) => ({ ...current, instrument: value }));
+          }}
+        />
+        <TagsInput
+          label="Štítky"
+          value={draft.tags ?? []}
+          onValueChange={(tags) => setDraft((current) => ({ ...current, tags }))}
+          placeholder="Např. táborák, česká klasika"
+          helperText={
+            draft.tags === null
+              ? 'Štítky se nepodařilo načíst, uložením se nezmění.'
+              : 'Štítek potvrdíš Enterem nebo čárkou.'
+          }
+          disabled={draft.tags === null}
         />
       </div>
 

@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import ErrorMessage from '../../components/_core/error-message/ErrorMessage';
 import LoadingSpinner from '../../components/_core/loading-spinner/LoadingSpinner';
-import { EMPTY_DRAFT, toDraft } from './parts/song-editor/draft';
-import { SongEditor } from './parts/song-editor/SongEditor';
 import type { SongDraft } from './parts/song-editor/types';
+import { SongEditorView } from './parts/song-editor-view/SongEditorView';
 import { SongView } from './parts/song-view/SongView';
 import { useAuth } from '../../hooks/useAuth';
 import { useSongDetail } from '../../hooks/useSongDetail';
@@ -50,10 +49,8 @@ export default function Song() {
   if (isCreate || (isEditing && song)) {
     return (
       <section className={styles.container}>
-        <h1 className={styles.editorTitle}>{isCreate ? 'Nová píseň' : 'Upravit píseň'}</h1>
-        <SongEditor
-          key={song?.id ?? 'new'}
-          initialDraft={song && !isCreate ? toDraft(song) : EMPTY_DRAFT}
+        <SongEditorView
+          song={isCreate ? null : song}
           onSubmit={(draft) => void handleSubmit(draft)}
           onCancel={leaveEditor}
           isSaving={isSaving}

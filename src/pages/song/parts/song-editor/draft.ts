@@ -1,13 +1,24 @@
+import type { Instrument } from '../../../../lib/chords/chords.database';
 import type { Song } from '../../../../lib/song';
 import type { SongDraft } from './types';
 
-export const EMPTY_DRAFT: SongDraft = { title: '', artist: '', capo: '', text: '' };
+/** A new song: written for the user's preferred instrument, no tags yet. */
+export const emptyDraft = (instrument: Instrument): SongDraft => ({
+  title: '',
+  artist: '',
+  capo: '',
+  text: '',
+  instrument,
+  tags: [],
+});
 
-export const toDraft = (song: Song): SongDraft => ({
+export const toDraft = (song: Song, tags: string[] | null): SongDraft => ({
   title: song.title,
   artist: song.artist,
   capo: song.capo != null ? String(song.capo) : '',
   text: song.text ?? '',
+  instrument: song.instrument ?? '',
+  tags,
 });
 
 /** Empty is fine (no capo); anything else must be a whole number from 0 up. */

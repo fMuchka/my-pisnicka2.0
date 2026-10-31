@@ -3,6 +3,7 @@ import type { SongDraft } from './parts/song-editor/types';
 import {
   createSongCatalogEntry,
   fetchSongCatalogEntryBySourceSongId,
+  resolveSongCategoryIds,
   updateSongCatalogEntry,
   type CreateSongInput,
   type Song,
@@ -12,7 +13,8 @@ import { useSongStore } from '../../stores/song';
 
 /**
  * Creates the song (no `songId`) or updates it, then mirrors it into the public song catalog.
- * Categories are not editable yet, so an existing catalog entry keeps its own.
+ * The tags become the catalog entry's categories, creating any that don't exist yet. When the
+ * draft's tags are unknown (null), an existing entry keeps the categories it has.
  */
 export async function saveSong(draft: SongDraft, ownerId: string, songId?: string): Promise<Song> {
   const text = draft.text.trim();
@@ -23,6 +25,7 @@ export async function saveSong(draft: SongDraft, ownerId: string, songId?: strin
     text: text || undefined,
     chords: extractUniqueChords(text),
     ...(capo !== undefined ? { capo } : {}),
+    ...(draft.instrument ? { instrument: draft.instrument } : {}),
     ownerId,
   };
 
@@ -30,12 +33,17 @@ export async function saveSong(draft: SongDraft, ownerId: string, songId?: strin
   const saved = songId ? await updateSong(songId, input) : await createSong(input);
 
   const existingEntry = songId ? await fetchSongCatalogEntryBySourceSongId(saved.id) : null;
+  const categories =
+    draft.tags === null
+      ? (existingEntry?.categories ?? [])
+      : await resolveSongCategoryIds(draft.tags);
+
   const catalogInput = {
     sourceSongId: saved.id,
     title: saved.title,
     artist: saved.artist,
     chords: saved.chords,
-    categories: existingEntry?.categories ?? [],
+    categories,
     ownerId: saved.ownerId,
   };
 
@@ -45,5 +53,5 @@ export async function saveSong(draft: SongDraft, ownerId: string, songId?: strin
     await createSongCatalogEntry(catalogInput);
   }
 
-  return saved;
+  return { ...saved, categories };
 }
