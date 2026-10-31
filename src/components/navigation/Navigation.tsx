@@ -8,6 +8,7 @@ import { TopNavigation } from './top-navigation/TopNavigation';
 import { mainPage, menuPages, sessions, tabPages } from './constants';
 import { useAuth } from '../../hooks/useAuth';
 import { useDeviceViewType } from '../../hooks/useDeviceViewType';
+import { classNames } from '../../lib/classNames';
 import { usePageNavigationState } from '../../hooks/usePageNavigation';
 import Routes from '../../router/Routes';
 import {
@@ -59,8 +60,9 @@ export function Navigation() {
     const dock = appBarDock.current;
     if (!showAppBar || dock == null) return;
 
+    // A faded-away app bar is slid off screen, so the page gets that space back.
     const reserveHeight = () => {
-      document.body.style.paddingBottom = `${dock.offsetHeight}px`;
+      document.body.style.paddingBottom = fadeAway ? '' : `${dock.offsetHeight}px`;
     };
     reserveHeight();
 
@@ -71,7 +73,7 @@ export function Navigation() {
       observer.disconnect();
       document.body.style.paddingBottom = '';
     };
-  }, [showAppBar]);
+  }, [showAppBar, fadeAway]);
 
   const renderActions = () => {
     // Guests get neither the app bar nor menu links (both lead to host-only pages), so Settings is all they need.
@@ -110,7 +112,8 @@ export function Navigation() {
       {showAppBar && (
         <div
           ref={appBarDock}
-          className={styles.appBarDock}
+          className={classNames(styles.appBarDock, fadeAway && styles.appBarDockHidden)}
+          inert={fadeAway}
         >
           <AppBar
             pages={tabPages}

@@ -12,6 +12,7 @@ describe('SongHeader', () => {
         song={song}
         transpose={0}
         onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
       />
     );
 
@@ -27,6 +28,7 @@ describe('SongHeader', () => {
         song={{ title: 'Kometa', artist: 'Nohavica', originalKey: '  ' }}
         transpose={0}
         onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
       />
     );
 
@@ -40,6 +42,7 @@ describe('SongHeader', () => {
         song={{ ...song, text: '[C]Za [Am]sklem' }}
         transpose={2}
         onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
       />
     );
 
@@ -52,6 +55,7 @@ describe('SongHeader', () => {
         song={song}
         transpose={3}
         onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
       />
     );
     expect(screen.getByRole('status')).toHaveTextContent('+3');
@@ -61,6 +65,7 @@ describe('SongHeader', () => {
         song={song}
         transpose={-1}
         onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
       />
     );
     expect(screen.getByRole('status')).toHaveTextContent('-1');
@@ -74,6 +79,7 @@ describe('SongHeader', () => {
         song={song}
         transpose={1}
         onTransposeChange={onTransposeChange}
+        onStartPlay={vi.fn()}
       />
     );
 
@@ -84,6 +90,22 @@ describe('SongHeader', () => {
     expect(onTransposeChange).toHaveBeenLastCalledWith(0);
   });
 
+  it('starts playing from the play button', async () => {
+    const user = userEvent.setup();
+    const onStartPlay = vi.fn();
+    render(
+      <SongHeader
+        song={song}
+        transpose={0}
+        onTransposeChange={vi.fn()}
+        onStartPlay={onStartPlay}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Přehrát píseň' }));
+    expect(onStartPlay).toHaveBeenCalledOnce();
+  });
+
   it('shows the edit button only when editing is offered', async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
@@ -92,6 +114,7 @@ describe('SongHeader', () => {
         song={song}
         transpose={0}
         onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
       />
     );
     expect(screen.queryByRole('button', { name: 'Upravit píseň' })).not.toBeInTheDocument();
@@ -101,6 +124,7 @@ describe('SongHeader', () => {
         song={song}
         transpose={0}
         onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
         onEdit={onEdit}
       />
     );

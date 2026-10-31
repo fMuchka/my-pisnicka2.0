@@ -1,4 +1,4 @@
-import { Minus, Pencil, Plus } from 'lucide-react';
+import { Minus, Pencil, Play, Plus } from 'lucide-react';
 import Button from '../../../../components/_core/button/Button';
 import type { Song } from '../../../../lib/song';
 import { songChords } from './song-chords/chords';
@@ -12,6 +12,7 @@ type SongHeaderProps = {
   onTransposeChange: (transpose: number) => void;
   /** Shows the edit button when given. */
   onEdit?: () => void;
+  onStartPlay: () => void;
 };
 
 const formatTranspose = (value: number) => (value > 0 ? `+${value}` : `${value}`);
@@ -22,6 +23,7 @@ export function SongHeader({
   transpose,
   onTransposeChange,
   onEdit,
+  onStartPlay,
 }: Readonly<SongHeaderProps>) {
   return (
     <>
@@ -30,17 +32,25 @@ export function SongHeader({
           <h1 className={styles.title}>{song.title}</h1>
           <p className={styles.artist}>{song.artist}</p>
         </div>
-        {onEdit && (
+        <div className={styles.actionButtons}>
           <Button
-            icon={Pencil}
+            icon={Play}
             styleVariation="text"
-            aria-label="Upravit píseň"
-            onClick={onEdit}
+            aria-label="Přehrát píseň"
+            onClick={onStartPlay}
           />
-        )}
+          {onEdit && (
+            <Button
+              icon={Pencil}
+              styleVariation="text"
+              aria-label="Upravit píseň"
+              onClick={onEdit}
+            />
+          )}
+        </div>
       </header>
 
-      <div>
+      <div className={styles.details}>
         <dl className={styles.meta}>
           <div className={styles.metaItem}>
             <dt className={styles.metaLabel}>Capo</dt>

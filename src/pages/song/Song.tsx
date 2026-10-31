@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { generatePath, useLocation, useNavigate, useParams } from 'react-router';
 import ErrorMessage from '../../components/_core/error-message/ErrorMessage';
 import LoadingSpinner from '../../components/_core/loading-spinner/LoadingSpinner';
 import { EMPTY_DRAFT, toDraft } from './parts/song-editor/draft';
 import { SongEditor } from './parts/song-editor/SongEditor';
 import type { SongDraft } from './parts/song-editor/types';
+import { PlayControls } from './parts/play-controls/PlayControls';
 import { SongHeader } from './parts/song-header/SongHeader';
 import { SongSheet } from './parts/song-sheet/SongSheet';
 import { useAuth } from '../../hooks/useAuth';
+import { usePageNavigation } from '../../hooks/usePageNavigation';
 import { useSongDetail } from '../../hooks/useSongDetail';
 import type { Song as SongModel } from '../../lib/song';
 import Routes from '../../router/Routes';
@@ -30,12 +32,16 @@ export default function Song() {
   const [savedSong, setSavedSong] = useState<SongModel | null>(null);
   const song = savedSong?.id === songId ? savedSong : loadedSong;
 
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [transpose, setTranspose] = useState(0);
 
-  const canEdit = user != null && song != null && song.ownerId === user.uid;
+  usePageNavigation({ fadeAway: isPlaying });
+  const stopPlaying = useCallback(() => setIsPlaying(false), []);
+
+  const canEdit = song?.ownerId === user?.uid;
 
   const leaveEditor = () => {
     setSaveError(null);
@@ -109,12 +115,20 @@ export default function Song() {
 
   return (
     <section className={styles.container}>
-      <SongHeader
-        song={song}
-        transpose={transpose}
-        onTransposeChange={setTranspose}
-        onEdit={canEdit ? () => setIsEditing(true) : undefined}
-      />
+      {isPlaying ? (
+        <PlayControls
+          song={song}
+          onStop={stopPlaying}
+        />
+      ) : (
+        <SongHeader
+          song={song}
+          transpose={transpose}
+          onTransposeChange={setTranspose}
+          onEdit={canEdit ? () => setIsEditing(true) : undefined}
+          onStartPlay={() => setIsPlaying(true)}
+        />
+      )}
 
       <SongSheet
         text={song.text ?? ''}

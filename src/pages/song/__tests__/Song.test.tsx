@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes as RouterRoutes, useLocation } from 'react-router';
 import type { Song as SongModel } from '../../../lib/song';
+import { usePageNavigationState } from '../../../hooks/usePageNavigation';
 import Routes from '../../../router/Routes';
 import Song from '../Song';
 
@@ -85,6 +86,34 @@ describe('Song page', () => {
 
     await user.click(screen.getByRole('button', { name: 'Transponovat o půltón dolů' }));
     expect(screen.getByRole('status')).toHaveTextContent('+1');
+  });
+
+  it('swaps the header for the play controls and hides the navigation while playing', async () => {
+    const user = userEvent.setup();
+    renderSong();
+
+    await user.click(screen.getByRole('button', { name: 'Přehrát píseň' }));
+
+    expect(screen.getByRole('toolbar', { name: 'Přehrávání' })).toHaveTextContent('Kometa');
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    expect(usePageNavigationState.getState().fadeAway).toBe(true);
+    expect(screen.getByRole('heading', { name: 'Sloka' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Ukončit přehrávání' }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Kometa' })).toBeInTheDocument();
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
+    expect(usePageNavigationState.getState().fadeAway).toBe(false);
+  });
+
+  it('brings the navigation back when the page is left while playing', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderSong();
+
+    await user.click(screen.getByRole('button', { name: 'Přehrát píseň' }));
+    unmount();
+
+    expect(usePageNavigationState.getState().fadeAway).toBeUndefined();
   });
 
   it('shows a spinner while loading and the error when loading fails', () => {

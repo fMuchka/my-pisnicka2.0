@@ -4,4 +4,18 @@
   right: 0;
   bottom: 0;
   z-index: 20;
+  transition:
+    transform var(--transition-slow),
+    opacity var(--transition-slow);
+}
+
+.app-bar-dock--hidden {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-bar-dock {
+    transition: none;
+  }
 }

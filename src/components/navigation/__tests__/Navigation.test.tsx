@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { Navigation } from '../Navigation';
@@ -211,6 +211,25 @@ describe('Navigation', () => {
 
     unmount();
     expect(document.body.style.paddingBottom).toBe('');
+  });
+
+  it('slides the app bar away and frees its space while the page fades the navigation away', async () => {
+    view.isMobile = true;
+    const { container } = renderNavigation(Routes.Home);
+    const dock = container.querySelector('.app-bar-dock');
+
+    act(() => usePageNavigationState.setState({ fadeAway: true }, true));
+
+    expect(dock).toHaveClass('app-bar-dock--hidden');
+    expect(dock).toHaveAttribute('inert');
+    expect(screen.getByRole('banner', { hidden: true })).toHaveClass('fade-away');
+    expect(document.body.style.paddingBottom).toBe('');
+
+    act(() => usePageNavigationState.setState({}, true));
+
+    await waitFor(() => expect(dock).not.toHaveClass('app-bar-dock--hidden'));
+    expect(dock).not.toHaveAttribute('inert');
+    expect(document.body.style.paddingBottom).toMatch(/^\d+px$/);
   });
 
   it('leaves the body padding alone on desktop', () => {

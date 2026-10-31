@@ -54,9 +54,10 @@ describe('TopNavigation', () => {
     expect(screen.queryByRole('heading')).not.toBeInTheDocument();
   });
 
-  it('applies the fade-away class only when requested', () => {
+  it('fades away and takes itself out of reach only when requested', () => {
     const { rerender } = render(<TopNavigation onHome={noop} />);
     expect(screen.getByRole('banner')).not.toHaveClass('fade-away');
+    expect(screen.getByRole('banner')).not.toHaveAttribute('inert');
 
     rerender(
       <TopNavigation
@@ -64,7 +65,9 @@ describe('TopNavigation', () => {
         fadeAway
       />
     );
-    expect(screen.getByRole('banner')).toHaveClass('fade-away');
+    const banner = screen.getByRole('banner', { hidden: true });
+    expect(banner).toHaveClass('fade-away');
+    expect(banner).toHaveAttribute('inert');
   });
 
   it('keeps the logo image decorative, since the text names the button', () => {

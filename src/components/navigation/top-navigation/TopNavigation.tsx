@@ -20,33 +20,38 @@ export function TopNavigation({
   const hasPageTitle = Boolean(pageTitle?.trim());
 
   return (
-    <header className={classNames(styles.topNav, fadeAway && styles.fadeAway)}>
-      <div className={styles.topRow}>
-        <button
-          type="button"
-          className={styles.navTitle}
-          onClick={onHome}
-        >
-          <img
-            src="/mypisnicka-icon.svg"
-            alt=""
-            className={styles.logo}
-            width="30"
-            height="30"
-          />
-          MyPísnička
-        </button>
-        <div className={styles.navActions}>
-          <UserOptions />
-          {actions}
+    <header
+      className={classNames(styles.topNav, fadeAway && styles.fadeAway)}
+      inert={fadeAway}
+    >
+      <div className={styles.collapsible}>
+        <div className={styles.topRow}>
+          <button
+            type="button"
+            className={styles.navTitle}
+            onClick={onHome}
+          >
+            <img
+              src="/mypisnicka-icon.svg"
+              alt=""
+              className={styles.logo}
+              width="30"
+              height="30"
+            />
+            MyPísnička
+          </button>
+          <div className={styles.navActions}>
+            <UserOptions />
+            {actions}
+          </div>
         </div>
-      </div>
 
-      {hasPageTitle && (
-        <div className={styles.contextRow}>
-          <h1 className={styles.pageTitle}>{pageTitle}</h1>
-        </div>
-      )}
+        {hasPageTitle && (
+          <div className={styles.contextRow}>
+            <h1 className={styles.pageTitle}>{pageTitle}</h1>
+          </div>
+        )}
+      </div>
     </header>
   );
 }

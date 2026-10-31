@@ -4,7 +4,18 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  transition: all 0.3s;
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--transition-slow),
+    opacity var(--transition-slow),
+    border-color var(--transition-slow);
+}
+
+/* Lets the header shrink to nothing, so the page slides up while the navigation fades away. */
+.collapsible {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .top-row {
@@ -63,9 +74,15 @@
 }
 
 .fade-away {
-  position: relative;
-  top: -100px;
+  grid-template-rows: 0fr;
+  border-bottom-color: transparent;
   opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-nav {
+    transition: none;
+  }
 }
 
 @media (max-width: 600px) {
