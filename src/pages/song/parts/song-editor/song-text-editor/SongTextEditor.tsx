@@ -10,6 +10,7 @@ import {
   serializeSongDocument,
   type SongDocument,
 } from '../document/songDocument';
+import { ImportSongDrawer } from '../import-song/ImportSongDrawer';
 import { LyricsEditor } from '../lyrics-editor/LyricsEditor';
 import styles from './SongTextEditor.module.css';
 
@@ -34,8 +35,15 @@ const SOURCE_HELP =
  */
 export function SongTextEditor({ text, onChange }: Readonly<SongTextEditorProps>) {
   const [mode, setMode] = useState<TextEditorMode>('lyrics');
+  // What goes into the import drawer; null while it's closed.
+  const [importText, setImportText] = useState<string | null>(null);
   const document = useMemo(() => parseSongDocument(text), [text]);
   const changeDocument = (next: SongDocument) => onChange(serializeSongDocument(next));
+
+  const importSong = (songText: string, placement: 'append' | 'replace') => {
+    onChange(placement === 'append' ? `${text.trimEnd()}\n\n${songText}` : songText);
+    setImportText(null);
+  };
 
   if (mode === 'source') {
     return (
@@ -73,6 +81,7 @@ export function SongTextEditor({ text, onChange }: Readonly<SongTextEditorProps>
         <LyricsEditor
           document={document}
           onChange={changeDocument}
+          onImportRequest={setImportText}
         />
       ) : (
         <ChordEditor
@@ -88,6 +97,15 @@ export function SongTextEditor({ text, onChange }: Readonly<SongTextEditorProps>
         colorVariation="secondary"
         onClick={() => setMode('source')}
       />
+
+      {importText !== null && (
+        <ImportSongDrawer
+          initialText={importText}
+          hasText={document.length > 0}
+          onImport={importSong}
+          onClose={() => setImportText(null)}
+        />
+      )}
     </div>
   );
 }

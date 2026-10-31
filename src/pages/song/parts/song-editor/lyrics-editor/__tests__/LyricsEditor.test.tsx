@@ -12,6 +12,7 @@ import { LyricsEditor } from '../LyricsEditor';
 /** Renders the editor over stored song text and reports the text after each change. */
 const renderLyrics = (text: string) => {
   const onText = vi.fn<(text: string) => void>();
+  const onImportRequest = vi.fn<(pasted: string) => void>();
 
   function Host() {
     const [document, setDocument] = useState<SongDocument>(() => parseSongDocument(text));
@@ -22,12 +23,13 @@ const renderLyrics = (text: string) => {
           setDocument(next);
           onText(serializeSongDocument(next));
         }}
+        onImportRequest={onImportRequest}
       />
     );
   }
 
   render(<Host />);
-  return { lastText: () => onText.mock.lastCall?.[0] };
+  return { lastText: () => onText.mock.lastCall?.[0], onImportRequest };
 };
 
 const song = '[verse]\n[Am]Lorem ipsum\n[chorus]\nUt [G]enim';
@@ -89,5 +91,36 @@ describe('LyricsEditor', () => {
 
     expect(lastText()).toBe('[chorus]\nUt [G]enim');
     expect(screen.queryByRole('button', { name: /odebrat sekci/i })).not.toBeInTheDocument();
+  });
+
+  it('offers to import a song copied from the web', async () => {
+    const user = userEvent.setup();
+    const { onImportRequest } = renderLyrics(song);
+
+    await user.click(screen.getByRole('button', { name: 'Vložit z internetu' }));
+
+    expect(onImportRequest).toHaveBeenCalledWith('');
+  });
+
+  it('turns a pasted chords-over-lyrics song into an import instead of lyrics', async () => {
+    const user = userEvent.setup();
+    const { onImportRequest, lastText } = renderLyrics(song);
+
+    await user.click(screen.getByRole('textbox', { name: 'Text sekce Sloka' }));
+    await user.paste('G     D\nLorem ipsum');
+
+    expect(onImportRequest).toHaveBeenCalledWith('G     D\nLorem ipsum');
+    expect(lastText()).toBeUndefined();
+  });
+
+  it('pastes plain lyrics as usual', async () => {
+    const user = userEvent.setup();
+    const { onImportRequest, lastText } = renderLyrics('[verse]\n');
+
+    await user.click(screen.getByRole('textbox', { name: 'Text sekce Sloka' }));
+    await user.paste('Lorem ipsum');
+
+    expect(onImportRequest).not.toHaveBeenCalled();
+    expect(lastText()).toBe('[verse]\nLorem ipsum');
   });
 });

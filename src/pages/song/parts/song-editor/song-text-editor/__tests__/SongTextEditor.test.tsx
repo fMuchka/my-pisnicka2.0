@@ -45,6 +45,22 @@ describe('SongTextEditor', () => {
     expect(screen.getByRole('textbox', { name: 'Text sekce Sloka' })).toBeInTheDocument();
   });
 
+  it('imports a song pasted into a section, after the existing text', async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderTextEditor('[verse]\nLorem');
+
+    await user.click(screen.getByRole('textbox', { name: 'Text sekce Sloka' }));
+    await user.paste('R:\nC   G\nUt enim');
+    expect(screen.getByRole('textbox', { name: 'Zkopírovaný text' })).toHaveValue(
+      'R:\nC   G\nUt enim'
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Přidat na konec' }));
+
+    expect(onChange).toHaveBeenLastCalledWith('[verse]\nLorem\n\n[chorus]\n[C]Ut e[G]nim');
+    expect(screen.getByRole('textbox', { name: 'Text sekce Refrén' })).toHaveValue('Ut enim');
+  });
+
   it('edits the raw text in source mode and goes back to the editor', async () => {
     const user = userEvent.setup();
     const { onChange } = renderTextEditor('[verse]\n[Am]Lorem');

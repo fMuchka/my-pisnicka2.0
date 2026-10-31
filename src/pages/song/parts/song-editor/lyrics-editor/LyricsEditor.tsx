@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { ClipboardPaste, Plus, Trash2 } from 'lucide-react';
 import Button from '../../../../../components/_core/button/Button';
 import Select from '../../../../../components/_core/select/Select';
 import type { SelectOption } from '../../../../../components/_core/select/types';
@@ -9,6 +9,7 @@ import {
   sectionTypeOptions,
   type SectionType,
 } from '../../../../../lib/songTextEditor/sections';
+import { looksLikeChordSheet } from '../document/importChordSheet';
 import { remapSectionLines } from '../document/remapChords';
 import {
   emptyLine,
@@ -21,6 +22,8 @@ import styles from './LyricsEditor.module.css';
 type LyricsEditorProps = {
   document: SongDocument;
   onChange: (document: SongDocument) => void;
+  /** Opens the import of a song copied from the web, with what was pasted (or nothing yet). */
+  onImportRequest: (pasted: string) => void;
 };
 
 const UNLABELLED = 'none';
@@ -38,7 +41,7 @@ const nextSectionType = (document: SongDocument): SectionType =>
  * The song as sections of plain lyrics, each with its type. Chords aren't shown here, but they
  * stay with their letters as the lyrics change.
  */
-export function LyricsEditor({ document, onChange }: Readonly<LyricsEditorProps>) {
+export function LyricsEditor({ document, onChange, onImportRequest }: Readonly<LyricsEditorProps>) {
   // A new song starts with one empty verse to type into; it becomes real with the first letter.
   const sections: SongDocument =
     document.length > 0 ? document : [{ type: 'verse', lines: [emptyLine()] }];
@@ -99,19 +102,36 @@ export function LyricsEditor({ document, onChange }: Readonly<LyricsEditorProps>
                 updateSection(index, { ...section, lines: remapSectionLines(section.lines, value) })
               }
               placeholder="Text sekce…"
+              onPaste={(event) => {
+                // A song copied from the web, chords over lyrics: offer to convert it, rather than
+                // pasting chord lines in as lyrics.
+                const pasted = event.clipboardData.getData('text/plain');
+                if (looksLikeChordSheet(pasted)) {
+                  event.preventDefault();
+                  onImportRequest(pasted);
+                }
+              }}
             />
           </section>
         );
       })}
 
-      <Button
-        className={styles.addSection}
-        icon={Plus}
-        label="Přidat sekci"
-        colorVariation="secondary"
-        styleVariation="outlined"
-        onClick={addSection}
-      />
+      <div className={styles.actions}>
+        <Button
+          icon={Plus}
+          label="Přidat sekci"
+          colorVariation="secondary"
+          styleVariation="outlined"
+          onClick={addSection}
+        />
+        <Button
+          icon={ClipboardPaste}
+          label="Vložit z internetu"
+          colorVariation="secondary"
+          styleVariation="text"
+          onClick={() => onImportRequest('')}
+        />
+      </div>
     </div>
   );
 }
