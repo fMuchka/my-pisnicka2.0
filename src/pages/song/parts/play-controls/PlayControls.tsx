@@ -2,7 +2,8 @@ import { ChevronUp, ChevronsDown, ChevronsUp, Pause, Play, Rabbit, Turtle, X } f
 import { useEffect, useId } from 'react';
 import Button from '../../../../components/_core/button/Button';
 import { classNames } from '../../../../lib/classNames';
-import { formatTimeLeft, useTimeLeftVisible } from './timeLeft';
+import { useFeaturePreferences } from '../../../../stores/featurePreferences';
+import { formatTimeLeft } from './timeLeft';
 import type { JumpDirection } from './useAutoScroll';
 import styles from './PlayControls.module.css';
 
@@ -30,7 +31,10 @@ export function PlayControls({
   onJump,
   onExit,
 }: Readonly<PlayControlsProps>) {
-  const [timeLeftVisible, toggleTimeLeft] = useTimeLeftVisible();
+  // The same preference as in Settings, so the arrow here and the switch there stay in step.
+  const timeLeftVisible = useFeaturePreferences((state) => state.timeLeftVisible);
+  const setPreference = useFeaturePreferences((state) => state.setPreference);
+  const toggleTimeLeft = () => setPreference('timeLeftVisible', !timeLeftVisible);
   const timeLeftId = useId();
 
   // The navigation is hidden in play mode, so Escape is the keyboard way back out.

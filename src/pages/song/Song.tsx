@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { usePageNavigation } from '../../hooks/usePageNavigation';
 import { useSongDetail } from '../../hooks/useSongDetail';
 import { useWakeLock } from '../../hooks/useWakeLock';
+import { useFeaturePreferences } from '../../stores/featurePreferences';
 import type { Song as SongModel } from '../../lib/song';
 import Routes from '../../router/Routes';
 import { saveSong } from './saveSong';
@@ -43,8 +44,11 @@ export default function Song() {
   usePageNavigation({ fadeAway: isPlaying });
   const stopPlaying = useCallback(() => setIsPlaying(false), []);
   const sheetRef = useRef<HTMLDivElement>(null);
-  const autoScroll = useAutoScroll(isPlaying, sheetRef);
-  useWakeLock(isPlaying);
+  const tapToToggleScroll = useFeaturePreferences((s) => s.tapToToggleScroll);
+  const keepScreenAwake = useFeaturePreferences((s) => s.keepScreenAwake);
+  const allowManualScroll = useFeaturePreferences((s) => s.allowManualScroll);
+  const autoScroll = useAutoScroll(isPlaying, sheetRef, { allowManualScroll });
+  useWakeLock(isPlaying && keepScreenAwake);
 
   const canEdit = song?.ownerId === user?.uid;
 
@@ -142,10 +146,10 @@ export default function Song() {
         />
       )}
 
-      {/* In play mode a tap anywhere on the text pauses or resumes; the play button covers keyboard users. */}
+      {/* In play mode a tap anywhere on the text can pause or resume; the play button covers keyboard users. */}
       <div
         ref={sheetRef}
-        onClick={isPlaying ? autoScroll.toggleScrolling : undefined}
+        onClick={isPlaying && tapToToggleScroll ? autoScroll.toggleScrolling : undefined}
       >
         <SongSheet
           text={song.text ?? ''}

@@ -165,4 +165,34 @@ describe('useAutoScroll', () => {
 
     expect(scrollTo).not.toHaveBeenCalled();
   });
+
+  describe('manual scrolling', () => {
+    const scrollGesture = (type: 'wheel' | 'touchmove') => {
+      const event = new Event(type, { cancelable: true });
+      window.dispatchEvent(event);
+      return event;
+    };
+
+    it('is left alone by default', () => {
+      const { result } = renderHook(() => useAutoScroll(true, { current: null }));
+      act(() => result.current.toggleScrolling());
+
+      expect(scrollGesture('wheel').defaultPrevented).toBe(false);
+      expect(scrollGesture('touchmove').defaultPrevented).toBe(false);
+    });
+
+    it('is blocked only while auto-scrolling when not allowed', () => {
+      const { result } = renderHook(() =>
+        useAutoScroll(true, { current: null }, { allowManualScroll: false })
+      );
+      expect(scrollGesture('wheel').defaultPrevented).toBe(false);
+
+      act(() => result.current.toggleScrolling());
+      expect(scrollGesture('wheel').defaultPrevented).toBe(true);
+      expect(scrollGesture('touchmove').defaultPrevented).toBe(true);
+
+      act(() => result.current.toggleScrolling());
+      expect(scrollGesture('wheel').defaultPrevented).toBe(false);
+    });
+  });
 });

@@ -1,22 +1,26 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
-import { ChevronLeft, Check } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
+import { SegmentGroup } from '../../components/_core/segment-group';
+import type { SegmentOption } from '../../components/_core/segment-group/types';
 import { useAuth } from '../../hooks/useAuth';
 import { usePageNavigation } from '../../hooks/usePageNavigation';
-import { useTheme, type Theme } from '../../hooks/useTheme';
 import { selectActiveSessionRoute, useSessionStore } from '../../stores/session';
-import { cssVar } from '../../styles/tokens';
-import { presetOptions, themeOptions } from './constants';
+import { FeatureSettings } from './parts/feature-settings/FeatureSettings';
+import { VisualSettings } from './parts/visual-settings/VisualSettings';
 import styles from './Settings.module.css';
+import type { SettingsView } from './types';
 
-const themeSampleClass: Record<Theme, string | undefined> = {
-  dark: styles.themeSampleDark,
-  light: styles.themeSampleLight,
-};
+const viewOptions: SegmentOption[] = [
+  { value: 'visual', label: 'Vzhled' },
+  { value: 'features', label: 'Funkce' },
+];
 
 export default function Settings() {
   usePageNavigation({ pageTitle: 'Nastavení' });
 
-  const { theme, setTheme, colorPreset, setColorPreset } = useTheme();
+  const [currentView, setCurrentView] = useState<SettingsView>('visual');
+
   const { isGuest } = useAuth();
   const activeSessionRoute = useSessionStore(selectActiveSessionRoute);
 
@@ -38,83 +42,15 @@ export default function Settings() {
         </Link>
       )}
 
-      <section
-        className={styles.section}
-        aria-labelledby="settings-theme"
-      >
-        <div className={styles.eyebrow}>
-          <span className={styles.dot} />
-          <h2 id="settings-theme">Motiv</h2>
-        </div>
-        <div className={styles.themeGrid}>
-          {themeOptions.map((option) => {
-            const isActive = theme === option.value;
+      <SegmentGroup
+        aria-label="Sekce nastavení"
+        options={viewOptions}
+        value={currentView}
+        onValueChange={(value) => setCurrentView(value as SettingsView)}
+      />
 
-            return (
-              <button
-                key={option.value}
-                type="button"
-                className={
-                  isActive ? `${styles.themeCard} ${styles.themeCardActive}` : styles.themeCard
-                }
-                aria-pressed={isActive}
-                onClick={() => setTheme(option.value)}
-              >
-                <span className={`${styles.themeSample} ${themeSampleClass[option.value]}`} />
-                <span className={styles.themeLabel}>{option.label}</span>
-                <span className={styles.themeDescription}>{option.description}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section
-        className={styles.section}
-        aria-labelledby="settings-color"
-      >
-        <div className={styles.eyebrow}>
-          <span className={styles.dot} />
-          <h2 id="settings-color">Barva</h2>
-        </div>
-        <div className={styles.swatchGrid}>
-          {presetOptions.map((option) => {
-            const isActive = colorPreset === option.value;
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                className={isActive ? `${styles.swatch} ${styles.swatchActive}` : styles.swatch}
-                style={{ color: cssVar(`preset-${option.value}-vivid`) }}
-                aria-pressed={isActive}
-                onClick={() => setColorPreset(option.value)}
-              >
-                <span className={styles.swatchCircle}>
-                  {isActive && (
-                    <Check
-                      className={styles.swatchCheck}
-                      aria-hidden="true"
-                    />
-                  )}
-                </span>
-                <span className={styles.swatchLabel}>{option.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section
-        className={styles.section}
-        aria-labelledby="settings-preview"
-      >
-        <div className={styles.eyebrow}>
-          <span className={styles.dot} />
-          <h2 id="settings-preview">Náhled</h2>
-        </div>
-        <div className={styles.previewPlaceholder}>Náhled bude brzy</div>
-      </section>
+      {currentView === 'visual' && <VisualSettings />}
+      {currentView === 'features' && <FeatureSettings />}
     </section>
   );
 }

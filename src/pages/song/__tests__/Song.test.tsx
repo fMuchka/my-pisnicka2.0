@@ -5,6 +5,10 @@ import { MemoryRouter, Route, Routes as RouterRoutes, useLocation } from 'react-
 import type { Song as SongModel } from '../../../lib/song';
 import { usePageNavigationState } from '../../../hooks/usePageNavigation';
 import Routes from '../../../router/Routes';
+import {
+  DEFAULT_FEATURE_PREFERENCES,
+  useFeaturePreferences,
+} from '../../../stores/featurePreferences';
 import Song from '../Song';
 
 const song: SongModel = {
@@ -64,6 +68,7 @@ describe('Song page', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     // jsdom pages have no height, so a running frame would find the end straight away and pause.
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
+    useFeaturePreferences.setState(DEFAULT_FEATURE_PREFERENCES);
   });
 
   it('shows the song header, meta and sheet', () => {
@@ -123,6 +128,38 @@ describe('Song page', () => {
 
     await user.click(screen.getByRole('heading', { name: 'Sloka' }));
     expect(screen.getByRole('button', { name: 'Spustit posouvání' })).toBeInTheDocument();
+  });
+
+  it('ignores taps on the text when the user turned that off', async () => {
+    const user = userEvent.setup();
+    useFeaturePreferences.setState({ tapToToggleScroll: false });
+    renderSong();
+
+    await user.click(screen.getByRole('button', { name: 'Hrát' }));
+    await user.click(screen.getByRole('heading', { name: 'Sloka' }));
+
+    expect(screen.getByRole('button', { name: 'Spustit posouvání' })).toBeInTheDocument();
+  });
+
+  it('keeps the screen awake in play mode unless the user turned that off', async () => {
+    const user = userEvent.setup();
+    const request = vi.fn(() => Promise.resolve({ released: false, release: vi.fn() }));
+    Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true });
+
+    try {
+      useFeaturePreferences.setState({ keepScreenAwake: false });
+      const { unmount } = renderSong();
+      await user.click(screen.getByRole('button', { name: 'Hrát' }));
+      expect(request).not.toHaveBeenCalled();
+      unmount();
+
+      useFeaturePreferences.setState({ keepScreenAwake: true });
+      renderSong();
+      await user.click(screen.getByRole('button', { name: 'Hrát' }));
+      await waitFor(() => expect(request).toHaveBeenCalledWith('screen'));
+    } finally {
+      Reflect.deleteProperty(navigator, 'wakeLock');
+    }
   });
 
   it('leaves the text alone outside play mode', async () => {

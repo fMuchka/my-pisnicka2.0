@@ -37,8 +37,13 @@ const distanceFromTarget = (section: Element) =>
 /**
  * Auto-scroll for play mode: starts paused, scrolls the page down at an adjustable speed once started
  * and pauses at the end. Also jumps between the `<section>`s inside `sectionsRef`.
+ * With `allowManualScroll` off, the user can't scroll by hand while it runs.
  */
-export function useAutoScroll(isPlayMode: boolean, sectionsRef: RefObject<HTMLElement | null>) {
+export function useAutoScroll(
+  isPlayMode: boolean,
+  sectionsRef: RefObject<HTMLElement | null>,
+  { allowManualScroll = true }: { allowManualScroll?: boolean } = {}
+) {
   const [speed, setSpeed] = useState<number>(AUTO_SCROLL_SPEED.default);
   const [isScrolling, setIsScrolling] = useState(false);
   const pausedUntil = useRef(0);
@@ -91,6 +96,24 @@ export function useAutoScroll(isPlayMode: boolean, sectionsRef: RefObject<HTMLEl
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
   }, [isRunning, speed]);
+
+  // Swallows wheel and touch scrolling while it runs. Keyboard scrolling stays: blocking Space or
+  // the arrows on the whole page would also block them on the controls.
+  useEffect(() => {
+    if (!isRunning || allowManualScroll) return;
+
+    const preventScroll = (event: Event) => event.preventDefault();
+    // Not passive, or preventDefault() is ignored.
+    const options = { passive: false } as const;
+
+    window.addEventListener('wheel', preventScroll, options);
+    window.addEventListener('touchmove', preventScroll, options);
+
+    return () => {
+      window.removeEventListener('wheel', preventScroll);
+      window.removeEventListener('touchmove', preventScroll);
+    };
+  }, [isRunning, allowManualScroll]);
 
   const toggleScrolling = useCallback(() => setIsScrolling((value) => !value), []);
 

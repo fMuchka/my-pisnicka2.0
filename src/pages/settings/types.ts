@@ -10,3 +10,5 @@ export type PresetOption = {
   value: ColorPreset;
   label: string;
 };
+
+export type SettingsView = 'visual' | 'features';

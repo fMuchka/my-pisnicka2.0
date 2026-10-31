@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import {
+  DEFAULT_FEATURE_PREFERENCES,
+  useFeaturePreferences,
+} from '../../../../../stores/featurePreferences';
 import { PlayControls } from '../PlayControls';
 
 const renderControls = (props: Partial<Parameters<typeof PlayControls>[0]> = {}) => {
@@ -29,6 +33,7 @@ const renderControls = (props: Partial<Parameters<typeof PlayControls>[0]> = {})
 describe('PlayControls', () => {
   beforeEach(() => {
     localStorage.clear();
+    useFeaturePreferences.setState(DEFAULT_FEATURE_PREFERENCES);
   });
 
   it('starts or pauses the scrolling from the middle button', async () => {
@@ -105,6 +110,8 @@ describe('PlayControls', () => {
     expect(timeLeft()).toHaveAttribute('aria-hidden', 'true');
     expect(timeLeft()).toHaveAttribute('inert');
     expect(tab()).toHaveClass('time-left-tab', 'time-left-tab--closed');
+    // Shared with the Settings switch.
+    expect(useFeaturePreferences.getState().timeLeftVisible).toBe(false);
     unmount();
 
     renderControls();
@@ -117,6 +124,16 @@ describe('PlayControls', () => {
     expect(timeLeft()).toHaveAttribute('aria-hidden', 'false');
     expect(timeLeft()).not.toHaveAttribute('inert');
     expect(tab()).not.toHaveClass('time-left-tab--closed');
+  });
+
+  it('starts with the time left hidden when the user turned it off in Settings', () => {
+    useFeaturePreferences.setState({ timeLeftVisible: false });
+    renderControls();
+
+    expect(screen.getByRole('button', { name: 'Zobrazit zbývající čas' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
   });
 
   it('leaves play mode from the exit button or with Escape', async () => {

@@ -84,6 +84,21 @@ describe('Settings Page', () => {
     );
   });
 
+  it('switches between the visual and the feature settings', async () => {
+    const user = userEvent.setup();
+    renderSettings();
+
+    expect(screen.getByRole('radio', { name: 'Vzhled' })).toBeChecked();
+    expect(screen.getByRole('heading', { name: 'Motiv' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Režim hraní' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Funkce' }));
+
+    expect(screen.getByRole('heading', { name: 'Režim hraní' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /nezhasínat obrazovku/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Motiv' })).not.toBeInTheDocument();
+  });
+
   it('links guests back to their active session', () => {
     mocks.isGuest = true;
     setActiveSession();
