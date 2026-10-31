@@ -92,6 +92,17 @@ describe('SongEditor', () => {
     );
   });
 
+  it('suggests existing tags while typing one', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderEditor({ tagSuggestions: ['Táborák', 'Rock'] });
+
+    await user.type(screen.getByRole('textbox', { name: 'Štítky' }), 'tab');
+    await user.click(screen.getByRole('button', { name: 'Přidat štítek Táborák' }));
+    await user.click(saveButton());
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ tags: ['folk', 'Táborák'] }));
+  });
+
   it('locks the tags when they could not be loaded, and saves them as unknown', async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderEditor({ initialDraft: { ...filled, tags: null } });

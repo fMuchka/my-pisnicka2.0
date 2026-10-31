@@ -2,6 +2,7 @@ import LoadingSpinner from '../../../../components/_core/loading-spinner/Loading
 import { useTheme } from '../../../../hooks/useTheme';
 import type { Song } from '../../../../lib/song';
 import { useSongTags } from '../../useSongTags';
+import { useTagSuggestions } from '../../useTagSuggestions';
 import { emptyDraft, toDraft } from '../song-editor/draft';
 import { SongEditor } from '../song-editor/SongEditor';
 import type { SongDraft } from '../song-editor/types';
@@ -26,6 +27,7 @@ export function SongEditorView({
 }: Readonly<SongEditorViewProps>) {
   const preferredInstrument = useTheme((state) => state.preferredInstrument);
   const songTags = useSongTags(song?.id ?? null);
+  const tagSuggestions = useTagSuggestions();
 
   if (songTags.isLoading) return <LoadingSpinner label="Načítám štítky…" />;
 
@@ -35,6 +37,7 @@ export function SongEditorView({
       <SongEditor
         key={song?.id ?? 'new'}
         initialDraft={song ? toDraft(song, songTags.tags) : emptyDraft(preferredInstrument)}
+        tagSuggestions={tagSuggestions}
         onSubmit={onSubmit}
         onCancel={onCancel}
         isSaving={isSaving}

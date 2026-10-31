@@ -31,6 +31,8 @@ const TEXT_HELP =
 
 type SongEditorProps = {
   initialDraft: SongDraft;
+  /** Existing tags to offer while typing one. */
+  tagSuggestions?: string[];
   onSubmit: (draft: SongDraft) => void;
   onCancel: () => void;
   isSaving?: boolean;
@@ -39,6 +41,7 @@ type SongEditorProps = {
 
 export function SongEditor({
   initialDraft,
+  tagSuggestions,
   onSubmit,
   onCancel,
   isSaving = false,
@@ -94,6 +97,7 @@ export function SongEditor({
           label="Štítky"
           value={draft.tags ?? []}
           onValueChange={(tags) => setDraft((current) => ({ ...current, tags }))}
+          suggestions={tagSuggestions}
           placeholder="Např. táborák, česká klasika"
           helperText={
             draft.tags === null

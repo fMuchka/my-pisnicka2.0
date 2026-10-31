@@ -32,6 +32,7 @@ vi.mock('../../../hooks/useSongDetail', () => ({ useSongDetail: () => ({ ...deta
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ ...auth }) }));
 vi.mock('../saveSong', () => save);
 vi.mock('../useSongTags', () => ({ useSongTags: () => ({ isLoading: false, tags: ['folk'] }) }));
+vi.mock('../useTagSuggestions', () => ({ useTagSuggestions: () => [] }));
 
 function LocationDisplay() {
   return <span data-testid="location">{useLocation().pathname}</span>;
