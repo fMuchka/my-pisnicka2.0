@@ -1,0 +1,42 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 96px;
+  gap: var(--space-md);
+}
+
+.text {
+  font: var(--text-lyric-line);
+  font-size: 15px;
+  font-variant-ligatures: none;
+  tab-size: 4;
+}
+
+.preview {
+  min-height: 200px;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 767px) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .actions > * {
+    flex: 1;
+  }
+}

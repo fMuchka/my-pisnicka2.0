@@ -1,0 +1,66 @@
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-typed {
+  border-right: 1px solid var(--section-option-accent);
+}
+
+.section-label {
+  margin: 0 0 4px;
+  color: var(--ink-muted);
+  font: var(--text-eyebrow);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.line {
+  color: var(--ink);
+  font: var(--text-lyric-line);
+  font-size: var(--font-size-lyrics, 18px);
+  font-variant-ligatures: none;
+  white-space: pre-wrap;
+}
+
+.line-chorded {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.part {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chord {
+  min-height: 1.4em;
+  padding-right: 0.5ch;
+  color: var(--song-chord-inline-bg, var(--brand));
+  font: var(--text-chord-label);
+  font-size: var(--font-size-chords, 16px);
+  font-weight: 700;
+  white-space: pre;
+}
+
+.lyric {
+  white-space: pre-wrap;
+}
+
+.empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font: var(--text-body);
+  font-style: italic;
+}

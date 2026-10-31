@@ -55,8 +55,12 @@ export const routes: RouteObject[] = [
         loader: requireHost,
         lazy: page(() => import('../pages/song-library/SongLibrary')),
       },
-      { path: Routes.SongCreate, loader: requireHost, lazy: page(() => import('../pages/Song')) },
-      { path: Routes.Song, lazy: page(() => import('../pages/Song')) },
+      {
+        path: Routes.SongCreate,
+        loader: requireHost,
+        lazy: page(() => import('../pages/song/Song')),
+      },
+      { path: Routes.Song, lazy: page(() => import('../pages/song/Song')) },
       { path: Routes.Session, lazy: page(() => import('../pages/Session')) },
       {
         path: Routes.SessionList,
