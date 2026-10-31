@@ -4,41 +4,91 @@
   z-index: 10;
   display: flex;
   flex-direction: column;
+  align-items: center;
   margin: calc(-1 * var(--space-md)) calc(-1 * var(--space-lg)) 0;
-  padding: var(--space-sm) var(--space-lg) 0;
-  border-bottom: 1px solid var(--border-soft);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(8px);
+  /* Only the bar and the tab are solid; taps beside the tab reach the song text. */
+  pointer-events: none;
   animation: enter var(--transition-slow);
 }
 
+/*
+ * An empty first column mirrors the exit button's, so play/pause sits dead centre, above the time-left tab.
+ * The side columns are only as wide as the exit button, leaving the rest to the actions.
+ */
 .bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-self: stretch;
   align-items: center;
-  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
 }
 
 .actions {
   display: flex;
-  flex: 1;
+  grid-column: 2;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-evenly;
   min-width: 0;
 }
 
-.time-left-row {
+.bar .play-pause {
+  padding: 0 var(--space-md);
+}
+
+.exit {
+  grid-column: 3;
+  justify-self: end;
+}
+
+/* A small tab growing out of the bar's bottom edge: the time on top, the arrow under it. */
+.time-left-tab {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  min-height: 24px;
+  /* Covers the bar's bottom border, so the two read as one piece. */
+  margin-top: -1px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--border-soft);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  transition: padding var(--transition-normal);
+}
+
+.time-left-tab--closed {
+  padding: 0 var(--space-xs);
+}
+
+/* Shrinks the time away to nothing, which slides the arrow up into its place. */
+.time-left-collapsible {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows var(--transition-normal),
+    opacity var(--transition-normal);
+}
+
+.time-left-tab--closed .time-left-collapsible {
+  grid-template-rows: 0fr;
+  opacity: 0;
 }
 
 .time-left {
+  min-height: 0;
   margin: 0;
+  overflow: hidden;
+  padding-top: var(--space-xs);
   color: var(--ink-muted);
   font: var(--text-caption);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .time-left-toggle {
@@ -46,7 +96,7 @@
   align-items: center;
   justify-content: center;
   width: 32px;
-  height: 24px;
+  height: 20px;
   padding: 0;
   border: 0;
   border-radius: var(--radius-md);
@@ -58,6 +108,11 @@
 .time-left-toggle svg {
   width: 16px;
   height: 16px;
+  transition: transform var(--transition-normal);
+}
+
+.time-left-tab--closed .time-left-toggle svg {
+  transform: rotate(180deg);
 }
 
 .time-left-toggle:focus-visible {
@@ -75,12 +130,19 @@
 @media (min-width: 768px) {
   .controls {
     margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-xl)) 0;
-    padding: var(--space-sm) var(--space-xl) 0;
+  }
+
+  .bar {
+    padding: var(--space-sm) var(--space-xl);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .controls {
+  .controls,
+  .time-left-tab,
+  .time-left-collapsible,
+  .time-left-toggle svg {
     animation: none;
+    transition: none;
   }
 }

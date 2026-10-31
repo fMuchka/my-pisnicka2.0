@@ -91,23 +91,32 @@ describe('PlayControls', () => {
 
   it('hides and shows the time left, and remembers the choice', async () => {
     const user = userEvent.setup();
+    // Stays mounted to animate, so "hidden" means out of the accessibility tree and out of reach.
+    const timeLeft = () => screen.getByText(/Do konce zbývá/).parentElement;
+    const tab = () => timeLeft()?.parentElement;
     const { unmount } = renderControls();
 
     const hide = screen.getByRole('button', { name: 'Skrýt zbývající čas' });
     expect(hide).toHaveAttribute('aria-expanded', 'true');
+    expect(hide).toHaveAttribute('aria-controls', timeLeft()?.id);
+    expect(timeLeft()).toHaveAttribute('aria-hidden', 'false');
     await user.click(hide);
 
-    expect(screen.queryByText(/Do konce zbývá/)).not.toBeInTheDocument();
+    expect(timeLeft()).toHaveAttribute('aria-hidden', 'true');
+    expect(timeLeft()).toHaveAttribute('inert');
+    expect(tab()).toHaveClass('time-left-tab', 'time-left-tab--closed');
     unmount();
 
     renderControls();
-    expect(screen.queryByText(/Do konce zbývá/)).not.toBeInTheDocument();
+    expect(timeLeft()).toHaveAttribute('aria-hidden', 'true');
 
     const show = screen.getByRole('button', { name: 'Zobrazit zbývající čas' });
     expect(show).toHaveAttribute('aria-expanded', 'false');
     await user.click(show);
 
-    expect(screen.getByText('Do konce zbývá 1:20')).toBeInTheDocument();
+    expect(timeLeft()).toHaveAttribute('aria-hidden', 'false');
+    expect(timeLeft()).not.toHaveAttribute('inert');
+    expect(tab()).not.toHaveClass('time-left-tab--closed');
   });
 
   it('leaves play mode from the exit button or with Escape', async () => {

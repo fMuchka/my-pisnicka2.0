@@ -1,16 +1,7 @@
-import {
-  ChevronDown,
-  ChevronUp,
-  ChevronsDown,
-  ChevronsUp,
-  Pause,
-  Play,
-  Rabbit,
-  Turtle,
-  X,
-} from 'lucide-react';
+import { ChevronUp, ChevronsDown, ChevronsUp, Pause, Play, Rabbit, Turtle, X } from 'lucide-react';
 import { useEffect, useId } from 'react';
 import Button from '../../../../components/_core/button/Button';
+import { classNames } from '../../../../lib/classNames';
 import { formatTimeLeft, useTimeLeftVisible } from './timeLeft';
 import type { JumpDirection } from './useAutoScroll';
 import styles from './PlayControls.module.css';
@@ -75,6 +66,7 @@ export function PlayControls({
           />
           <Button
             icon={isScrolling ? Pause : Play}
+            className={styles.playPause}
             aria-label={isScrolling ? 'Pozastavit posouvání' : 'Spustit posouvání'}
             onClick={onToggleScrolling}
           />
@@ -96,29 +88,31 @@ export function PlayControls({
           icon={X}
           styleVariation="text"
           colorVariation="secondary"
+          className={styles.exit}
           aria-label="Ukončit režim hraní"
           onClick={onExit}
         />
       </div>
 
-      <div className={styles.timeLeftRow}>
-        {timeLeftVisible && (
-          <p
-            id={timeLeftId}
-            className={styles.timeLeft}
-          >
-            Do konce zbývá {formatTimeLeft(secondsLeft)}
-          </p>
-        )}
+      {/* Stays mounted when hidden, so it can collapse and the arrow slide up into its place. */}
+      <div className={classNames(styles.timeLeftTab, !timeLeftVisible && styles.timeLeftTabClosed)}>
+        <div
+          id={timeLeftId}
+          className={styles.timeLeftCollapsible}
+          aria-hidden={!timeLeftVisible}
+          inert={!timeLeftVisible}
+        >
+          <p className={styles.timeLeft}>Do konce zbývá {formatTimeLeft(secondsLeft)}</p>
+        </div>
         <button
           type="button"
           className={styles.timeLeftToggle}
           aria-label={timeLeftVisible ? 'Skrýt zbývající čas' : 'Zobrazit zbývající čas'}
           aria-expanded={timeLeftVisible}
-          aria-controls={timeLeftVisible ? timeLeftId : undefined}
+          aria-controls={timeLeftId}
           onClick={toggleTimeLeft}
         >
-          {timeLeftVisible ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+          <ChevronUp aria-hidden="true" />
         </button>
       </div>
     </div>
