@@ -1,5 +1,5 @@
-import { classNames } from '../../../../lib/classNames';
-import { sectionLabel, sectionOptionStyle } from '../../../../lib/songTextEditor/sections';
+import { classNames } from '../../lib/classNames';
+import { sectionLabel, sectionOptionStyle } from '../../lib/songTextEditor/sections';
 import { toSheetSections, type SheetLine } from './sheet';
 import styles from './SongSheet.module.css';
 

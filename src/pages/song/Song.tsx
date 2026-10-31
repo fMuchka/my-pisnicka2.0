@@ -8,7 +8,7 @@ import type { SongDraft } from './parts/song-editor/types';
 import { PlayControls } from './parts/play-controls/PlayControls';
 import { useAutoScroll } from './parts/play-controls/useAutoScroll';
 import { SongHeader } from './parts/song-header/SongHeader';
-import { SongSheet } from './parts/song-sheet/SongSheet';
+import { SongSheet } from '../../components/song-sheet';
 import { useAuth } from '../../hooks/useAuth';
 import { usePageNavigation } from '../../hooks/usePageNavigation';
 import { useSongDetail } from '../../hooks/useSongDetail';

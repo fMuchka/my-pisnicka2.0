@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { SongSheet } from '../SongSheet';
-import { cssVarName } from '../../../../../styles/tokens';
+import { cssVarName } from '../../../styles/tokens';
 
 describe('SongSheet', () => {
   it('shows the empty text for a song without lyrics', () => {

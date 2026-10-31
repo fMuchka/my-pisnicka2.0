@@ -84,6 +84,15 @@ describe('Settings Page', () => {
     );
   });
 
+  it('previews a song sheet with its sections and chords', () => {
+    renderSettings();
+
+    expect(screen.getByRole('heading', { name: 'Náhled' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sloka' })).toHaveClass('section-label');
+    expect(screen.getByRole('heading', { name: 'Refrén' })).toBeInTheDocument();
+    expect(screen.getAllByText('G')[0]).toHaveClass('chord');
+  });
+
   it('switches between the visual and the feature settings', async () => {
     const user = userEvent.setup();
     renderSettings();

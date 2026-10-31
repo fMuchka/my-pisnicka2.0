@@ -1,9 +1,6 @@
-import { transposeChord } from '../../../../lib/chords/chords';
-import {
-  getRenderParts,
-  type RenderPart,
-} from '../../../../lib/songTextEditor/editableChordDocument';
-import { parseMarkdownSections, type SectionType } from '../../../../lib/songTextEditor/sections';
+import { transposeChord } from '../../lib/chords/chords';
+import { getRenderParts, type RenderPart } from '../../lib/songTextEditor/editableChordDocument';
+import { parseMarkdownSections, type SectionType } from '../../lib/songTextEditor/sections';
 
 export type SheetLine = {
   parts: RenderPart[];

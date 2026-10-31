@@ -6,7 +6,7 @@ import Input from '../../../../components/_core/input/Input';
 import SegmentGroup from '../../../../components/_core/segment-group/SegmentGroup';
 import type { SegmentOption } from '../../../../components/_core/segment-group/types';
 import Textarea from '../../../../components/_core/textarea/Textarea';
-import { SongSheet } from '../song-sheet/SongSheet';
+import { SongSheet } from '../../../../components/song-sheet';
 import { isDraftValid, isValidCapo } from './draft';
 import type { SongDraft, SongEditorView } from './types';
 import styles from './SongEditor.module.css';

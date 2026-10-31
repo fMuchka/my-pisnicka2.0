@@ -1,9 +1,20 @@
 import { Check } from 'lucide-react';
+import { SongSheet } from '../../../../components/song-sheet';
 import { useTheme, type Theme } from '../../../../hooks/useTheme';
 import { cssVar } from '../../../../styles/tokens';
 import { presetOptions, themeOptions } from '../../constants';
 import { SettingsSection } from '../settings-section/SettingsSection';
 import styles from './VisualSettings.module.css';
+
+// Placeholder lyrics: one verse and a chorus, so both section accents show.
+const PREVIEW_SONG = [
+  '[verse]',
+  '[G]Lorem ipsum [Em]dolor sit, [C]amet conse[D]ctetur,',
+  '[G]adipiscing [Em]elit, sed [C]do eius[D]mod tempor.',
+  '[chorus]',
+  '[C]Ut enim [D]ad minim, [G]veniam [Em]quis,',
+  '[C]nostrud exer[D]citation [G]ullamco.',
+].join('\n');
 
 const themeSampleClass: Record<Theme, string | undefined> = {
   dark: styles.themeSampleDark,
@@ -70,7 +81,10 @@ export function VisualSettings() {
       </SettingsSection>
 
       <SettingsSection title="Náhled">
-        <div className={styles.previewPlaceholder}>Náhled bude brzy</div>
+        {/* A real sheet, so it shows exactly how songs look with the chosen theme and color. */}
+        <div className={styles.preview}>
+          <SongSheet text={PREVIEW_SONG} />
+        </div>
       </SettingsSection>
     </>
   );
