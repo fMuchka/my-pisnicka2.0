@@ -32,6 +32,19 @@ describe('SongTextEditor', () => {
     expect(screen.queryByRole('textbox', { name: 'Zdrojový text' })).not.toBeInTheDocument();
   });
 
+  it('switches between the lyrics and the chords', async () => {
+    const user = userEvent.setup();
+    renderTextEditor('[verse]\n[Am]Lorem');
+
+    await user.click(screen.getByRole('radio', { name: 'Akordy' }));
+
+    expect(screen.getByRole('application', { name: 'Akordy v textu' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Text sekce Sloka' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Text' }));
+    expect(screen.getByRole('textbox', { name: 'Text sekce Sloka' })).toBeInTheDocument();
+  });
+
   it('edits the raw text in source mode and goes back to the editor', async () => {
     const user = userEvent.setup();
     const { onChange } = renderTextEditor('[verse]\n[Am]Lorem');
