@@ -36,7 +36,8 @@ describe('SongEditor', () => {
 
     expect(screen.getByRole('textbox', { name: /název/i })).toHaveValue('Kometa');
     expect(screen.getByRole('textbox', { name: /interpret/i })).toHaveValue('Nohavica');
-    expect(screen.getByRole('textbox', { name: /text písně/i })).toHaveValue(filled.text);
+    // The lyrics editor shows the verse without its chord.
+    expect(screen.getByRole('textbox', { name: 'Text sekce Sloka' })).toHaveValue('Za sklem');
   });
 
   it('submits the edited draft', async () => {
@@ -137,21 +138,15 @@ describe('SongEditor', () => {
     expect(saveButton()).toBeDisabled();
   });
 
-  it('previews the song text and keeps edits when switching back', async () => {
+  it('saves lyrics edits into the song text, keeping the chords', async () => {
     const user = userEvent.setup();
-    renderEditor();
+    const { onSubmit } = renderEditor();
 
-    await user.type(screen.getByRole('textbox', { name: /text písně/i }), ' výlohy');
-    await user.click(screen.getByText('Náhled'));
+    await user.type(screen.getByRole('textbox', { name: 'Text sekce Sloka' }), ' výlohy');
+    await user.click(saveButton());
 
-    expect(screen.queryByRole('textbox', { name: /text písně/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Sloka' })).toBeInTheDocument();
-    expect(screen.getByText('C')).toHaveClass('chord');
-
-    await user.click(screen.getByText('Upravit'));
-
-    expect(screen.getByRole('textbox', { name: /text písně/i })).toHaveValue(
-      `${filled.text} výlohy`
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ text: '[verse]\n[C]Za sklem výlohy' })
     );
   });
 

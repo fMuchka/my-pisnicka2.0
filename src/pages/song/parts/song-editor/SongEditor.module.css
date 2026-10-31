@@ -10,21 +10,6 @@
   gap: var(--space-md);
 }
 
-.text {
-  font: var(--text-lyric-line);
-  font-size: 15px;
-  font-variant-ligatures: none;
-  tab-size: 4;
-}
-
-.preview {
-  min-height: 200px;
-  padding: var(--space-md);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
-
 .actions {
   display: flex;
   justify-content: flex-end;

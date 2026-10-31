@@ -11,5 +11,3 @@ export type SongDraft = {
   /** Tag labels. null when the song's tags could not be loaded: saving then leaves them as they are. */
   tags: string[] | null;
 };
-
-export type SongEditorView = 'edit' | 'preview';

@@ -1,0 +1,20 @@
+.text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.source {
+  font: var(--text-lyric-line);
+  font-size: 15px;
+  font-variant-ligatures: none;
+  tab-size: 4;
+}
+
+/* Kept small and quiet: the source text is there for those who know the format. */
+.text-editor .mode-switch {
+  align-self: flex-end;
+  min-height: 32px;
+  font: var(--text-caption);
+  color: var(--ink-muted);
+}

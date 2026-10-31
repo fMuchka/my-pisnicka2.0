@@ -1,4 +1,3 @@
-import { Eye, PencilLine } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import Button from '../../../../components/_core/button/Button';
 import ErrorMessage from '../../../../components/_core/error-message/ErrorMessage';
@@ -6,17 +5,11 @@ import Input from '../../../../components/_core/input/Input';
 import SegmentGroup from '../../../../components/_core/segment-group/SegmentGroup';
 import type { SegmentOption } from '../../../../components/_core/segment-group/types';
 import { TagsInput } from '../../../../components/_core/tags-input';
-import Textarea from '../../../../components/_core/textarea/Textarea';
 import type { Instrument } from '../../../../lib/chords/chords.database';
-import { SongSheet } from '../../../../components/song-sheet';
 import { isDraftValid, isValidCapo } from './draft';
-import type { SongDraft, SongEditorView } from './types';
+import { SongTextEditor } from './song-text-editor/SongTextEditor';
+import type { SongDraft } from './types';
 import styles from './SongEditor.module.css';
-
-const viewOptions: SegmentOption[] = [
-  { value: 'edit', label: 'Upravit', icon: PencilLine },
-  { value: 'preview', label: 'Náhled', icon: Eye },
-];
 
 const instrumentOptions: SegmentOption[] = [
   { value: 'guitar', label: 'Kytaru' },
@@ -25,9 +18,6 @@ const instrumentOptions: SegmentOption[] = [
 
 const isInstrument = (value: string): value is Instrument =>
   instrumentOptions.some((option) => option.value === value);
-
-const TEXT_HELP =
-  'Sekce: [verse], [chorus], [bridge], [intro], [outro]. Akord před slovem: [Am]slovo.';
 
 type SongEditorProps = {
   initialDraft: SongDraft;
@@ -48,7 +38,6 @@ export function SongEditor({
   error,
 }: Readonly<SongEditorProps>) {
   const [draft, setDraft] = useState(initialDraft);
-  const [view, setView] = useState<SongEditorView>('edit');
 
   const update = (field: 'title' | 'artist' | 'capo' | 'text') => (value: string) =>
     setDraft((current) => ({ ...current, [field]: value }));
@@ -108,28 +97,10 @@ export function SongEditor({
         />
       </div>
 
-      <SegmentGroup
-        aria-label="Režim editoru"
-        options={viewOptions}
-        value={view}
-        onValueChange={(value) => setView(value as SongEditorView)}
+      <SongTextEditor
+        text={draft.text}
+        onChange={update('text')}
       />
-
-      {view === 'edit' ? (
-        <Textarea
-          label="Text písně"
-          className={styles.text}
-          rows={16}
-          value={draft.text}
-          onValueChange={update('text')}
-          helperText={TEXT_HELP}
-          spellCheck={false}
-        />
-      ) : (
-        <div className={styles.preview}>
-          <SongSheet text={draft.text} />
-        </div>
-      )}
 
       {error && <ErrorMessage message={error} />}
 
