@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Palette, Star } from 'lucide-react';
 import { SegmentGroup } from '../../components/_core/segment-group';
 import type { SegmentOption } from '../../components/_core/segment-group/types';
 import { useAuth } from '../../hooks/useAuth';
@@ -12,8 +12,8 @@ import styles from './Settings.module.css';
 import type { SettingsView } from './types';
 
 const viewOptions: SegmentOption[] = [
-  { value: 'visual', label: 'Vzhled' },
-  { value: 'features', label: 'Funkce' },
+  { value: 'visual', label: 'Vzhled', icon: Palette },
+  { value: 'features', label: 'Funkce', icon: Star },
 ];
 
 export default function Settings() {
