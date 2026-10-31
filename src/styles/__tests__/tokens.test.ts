@@ -16,8 +16,8 @@ const KNOWN_UNDECLARED = new Set([
   'text-secondary',
 ]);
 
-// Set inline by Ark UI at runtime, e.g. the Tabs indicator's position and size.
-const ARK_RUNTIME_VARS = new Set(['left', 'top', 'width', 'height']);
+// Set inline by Ark UI at runtime, e.g. the Tabs indicator's position and size or the Drawer's swipe offset.
+const ARK_RUNTIME_VARS = new Set(['left', 'top', 'width', 'height', 'drawer-translate-x']);
 
 // Read by Ark UI's inline styles, so a stylesheet may set them, e.g. the Tabs indicator transition.
 const ARK_INPUT_VARS = new Set(['transition-duration', 'transition-timing-function']);

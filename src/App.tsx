@@ -1,9 +1,18 @@
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
+import { Navigation } from './components/navigation/Navigation';
+import Routes from './router/Routes';
+
+const pagesWithoutNavigation: string[] = [Routes.Login, Routes.Join];
 
 export default function App() {
+  const { pathname } = useLocation();
+
   return (
-    <main>
-      <Outlet />
-    </main>
+    <>
+      {!pagesWithoutNavigation.includes(pathname) && <Navigation />}
+      <main>
+        <Outlet />
+      </main>
+    </>
   );
 }

@@ -1,0 +1,38 @@
+.user-options-menu {
+  margin-top: var(--space-xs);
+  width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+  padding: var(--space-xs);
+  z-index: 20;
+}
+
+.user-options-menu:focus-visible {
+  outline: none;
+}
+
+.user-menu-button {
+  width: 100%;
+  justify-content: space-between;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+}
+
+.user-menu-button:hover,
+.user-menu-button[data-highlighted] {
+  background: var(--surface-secondary);
+}
+
+.user-menu-button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.user-trigger span {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
