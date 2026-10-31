@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes as RouterRoutes, useLocation } from 'react-router';
 import type { Song as SongModel } from '../../../lib/song';
@@ -79,7 +79,9 @@ describe('Song page', () => {
     await user.click(screen.getByRole('button', { name: 'Transponovat o půltón nahoru' }));
 
     expect(screen.getByRole('status')).toHaveTextContent('+2');
-    expect(screen.getByText('D')).toHaveClass('chord');
+    const verse = screen.getByRole('heading', { name: 'Sloka' }).closest('section') as HTMLElement;
+    expect(within(verse).getByText('D')).toHaveClass('chord');
+    expect(screen.getByRole('button', { name: /akordy/i })).toHaveTextContent('D');
 
     await user.click(screen.getByRole('button', { name: 'Transponovat o půltón dolů' }));
     expect(screen.getByRole('status')).toHaveTextContent('+1');

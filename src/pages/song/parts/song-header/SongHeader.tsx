@@ -1,10 +1,12 @@
 import { Minus, Pencil, Plus } from 'lucide-react';
 import Button from '../../../../components/_core/button/Button';
 import type { Song } from '../../../../lib/song';
+import { songChords } from './song-chords/chords';
+import { SongChords } from './song-chords/SongChords';
 import styles from './SongHeader.module.css';
 
 type SongHeaderProps = {
-  song: Pick<Song, 'title' | 'artist' | 'capo' | 'originalKey'>;
+  song: Pick<Song, 'title' | 'artist' | 'capo' | 'originalKey' | 'chords' | 'text'>;
   /** Semitones the sheet is shifted by. */
   transpose: number;
   onTransposeChange: (transpose: number) => void;
@@ -14,7 +16,7 @@ type SongHeaderProps = {
 
 const formatTranspose = (value: number) => (value > 0 ? `+${value}` : `${value}`);
 
-/** Song title and artist with the capo, key and transposition row below. */
+/** Song title and artist with the capo, key and transposition row and the chords below. */
 export function SongHeader({
   song,
   transpose,
@@ -38,38 +40,42 @@ export function SongHeader({
         )}
       </header>
 
-      <dl className={styles.meta}>
-        <div className={styles.metaItem}>
-          <dt className={styles.metaLabel}>Capo</dt>
-          <dd className={styles.metaValue}>{song.capo ?? '—'}</dd>
-        </div>
-        <div className={styles.metaItem}>
-          <dt className={styles.metaLabel}>Tónina</dt>
-          <dd className={styles.metaValue}>{song.originalKey?.trim() || '—'}</dd>
-        </div>
-        <div className={styles.metaItem}>
-          <dt className={styles.metaLabel}>Transpozice</dt>
-          <dd className={styles.metaValue}>
-            <button
-              type="button"
-              className={styles.stepper}
-              aria-label="Transponovat o půltón dolů"
-              onClick={() => onTransposeChange(transpose - 1)}
-            >
-              <Minus aria-hidden="true" />
-            </button>
-            <output aria-live="polite">{formatTranspose(transpose)}</output>
-            <button
-              type="button"
-              className={styles.stepper}
-              aria-label="Transponovat o půltón nahoru"
-              onClick={() => onTransposeChange(transpose + 1)}
-            >
-              <Plus aria-hidden="true" />
-            </button>
-          </dd>
-        </div>
-      </dl>
+      <div>
+        <dl className={styles.meta}>
+          <div className={styles.metaItem}>
+            <dt className={styles.metaLabel}>Capo</dt>
+            <dd className={styles.metaValue}>{song.capo ?? '—'}</dd>
+          </div>
+          <div className={styles.metaItem}>
+            <dt className={styles.metaLabel}>Tónina</dt>
+            <dd className={styles.metaValue}>{song.originalKey?.trim() || '—'}</dd>
+          </div>
+          <div className={styles.metaItem}>
+            <dt className={styles.metaLabel}>Transpozice</dt>
+            <dd className={styles.metaValue}>
+              <button
+                type="button"
+                className={styles.stepper}
+                aria-label="Transponovat o půltón dolů"
+                onClick={() => onTransposeChange(transpose - 1)}
+              >
+                <Minus aria-hidden="true" />
+              </button>
+              <output aria-live="polite">{formatTranspose(transpose)}</output>
+              <button
+                type="button"
+                className={styles.stepper}
+                aria-label="Transponovat o půltón nahoru"
+                onClick={() => onTransposeChange(transpose + 1)}
+              >
+                <Plus aria-hidden="true" />
+              </button>
+            </dd>
+          </div>
+        </dl>
+
+        <SongChords chords={songChords(song, transpose)} />
+      </div>
     </>
   );
 }

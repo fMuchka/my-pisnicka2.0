@@ -34,6 +34,18 @@ describe('SongHeader', () => {
     expect(screen.getByText('Tónina').nextElementSibling).toHaveTextContent('—');
   });
 
+  it('lists the transposed chords of the song', () => {
+    render(
+      <SongHeader
+        song={{ ...song, text: '[C]Za [Am]sklem' }}
+        transpose={2}
+        onTransposeChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /akordy/i })).toHaveTextContent('AkordyDHm');
+  });
+
   it('formats the transposition with its sign', () => {
     const { rerender } = render(
       <SongHeader
