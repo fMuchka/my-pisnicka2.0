@@ -96,7 +96,7 @@ describe('Song page', () => {
     const user = userEvent.setup();
     renderSong();
 
-    await user.click(screen.getByRole('button', { name: 'Režim hraní' }));
+    await user.click(screen.getByRole('button', { name: 'Hrát' }));
 
     expect(screen.getByRole('toolbar', { name: 'Přehrávání' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Vpřed na další část' })).toBeInTheDocument();
@@ -115,7 +115,7 @@ describe('Song page', () => {
     const user = userEvent.setup();
     renderSong();
 
-    await user.click(screen.getByRole('button', { name: 'Režim hraní' }));
+    await user.click(screen.getByRole('button', { name: 'Hrát' }));
     expect(screen.getByRole('button', { name: 'Spustit posouvání' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('heading', { name: 'Sloka' }));
@@ -138,7 +138,7 @@ describe('Song page', () => {
     const user = userEvent.setup();
     const { unmount } = renderSong();
 
-    await user.click(screen.getByRole('button', { name: 'Režim hraní' }));
+    await user.click(screen.getByRole('button', { name: 'Hrát' }));
     unmount();
 
     expect(usePageNavigationState.getState().fadeAway).toBeUndefined();

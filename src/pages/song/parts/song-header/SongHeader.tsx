@@ -1,4 +1,4 @@
-import { Guitar, Minus, Pencil, Plus } from 'lucide-react';
+import { Minus, Pencil, Play, Plus } from 'lucide-react';
 import Button from '../../../../components/_core/button/Button';
 import type { Song } from '../../../../lib/song';
 import { songChords } from './song-chords/chords';
@@ -34,9 +34,10 @@ export function SongHeader({
         </div>
         <div className={styles.actionButtons}>
           <Button
-            icon={Guitar}
-            styleVariation="text"
-            aria-label="Režim hraní"
+            icon={Play}
+            label="Hrát"
+            styleVariation="outlined"
+            className={styles.playButton}
             onClick={onStartPlay}
           />
           {onEdit && (
@@ -63,23 +64,21 @@ export function SongHeader({
           <div className={styles.metaItem}>
             <dt className={styles.metaLabel}>Transpozice</dt>
             <dd className={styles.metaValue}>
-              <button
+              <Button
                 type="button"
                 className={styles.stepper}
                 aria-label="Transponovat o půltón dolů"
                 onClick={() => onTransposeChange(transpose - 1)}
-              >
-                <Minus aria-hidden="true" />
-              </button>
+                icon={Minus}
+              />
               <output aria-live="polite">{formatTranspose(transpose)}</output>
-              <button
+              <Button
                 type="button"
                 className={styles.stepper}
                 aria-label="Transponovat o půltón nahoru"
                 onClick={() => onTransposeChange(transpose + 1)}
-              >
-                <Plus aria-hidden="true" />
-              </button>
+                icon={Plus}
+              />
             </dd>
           </div>
         </dl>

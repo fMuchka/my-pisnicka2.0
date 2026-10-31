@@ -44,9 +44,25 @@
 }
 
 .actionButtons {
-  justify-content: space-between;
   display: flex;
-  width: 100px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* Compact pill, so it sits next to the title instead of competing with it. Scoped to the header to outrank the base button. */
+.header .play-button {
+  min-height: 32px;
+  padding: 0 var(--space-md) 0 var(--space-sm);
+  gap: var(--space-xs);
+  border-radius: var(--radius-full);
+  font: var(--text-button-pill);
+  font-weight: 600;
+}
+
+.header .play-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .meta {

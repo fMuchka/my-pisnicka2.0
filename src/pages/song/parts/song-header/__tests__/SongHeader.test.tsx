@@ -102,7 +102,7 @@ describe('SongHeader', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'Režim hraní' }));
+    await user.click(screen.getByRole('button', { name: 'Hrát' }));
     expect(onStartPlay).toHaveBeenCalledOnce();
   });
 
