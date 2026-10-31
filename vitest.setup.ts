@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
+// Tests run as a user who accepted the cookie notice, so preferences are saved. Set before any app
+// module loads, since lib/preferenceStorage reads it once on import. Consent tests set their own.
+localStorage.setItem('my-pisnicka:cookie-notice-consent', 'accepted');
+
 // Polyfill ResizeObserver for jsdom (needed by Ark UI components)
 if (typeof global.ResizeObserver === 'undefined') {
   global.ResizeObserver = class ResizeObserver {

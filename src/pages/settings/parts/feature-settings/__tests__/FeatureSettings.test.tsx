@@ -5,6 +5,7 @@ import {
   DEFAULT_FEATURE_PREFERENCES,
   useFeaturePreferences,
 } from '../../../../../stores/featurePreferences';
+import { useTheme } from '../../../../../hooks/useTheme';
 import { FeatureSettings } from '../FeatureSettings';
 
 const switches = [
@@ -41,6 +42,22 @@ describe('FeatureSettings', () => {
 
     await user.click(toggle);
     expect(useFeaturePreferences.getState()[key]).toBe(true);
+  });
+
+  it('switches the preferred instrument for the whole app', async () => {
+    const user = userEvent.setup();
+    useTheme.getState().setPreferredInstrument('guitar');
+    render(<FeatureSettings />);
+
+    expect(screen.getByRole('radiogroup', { name: 'Preferovaný nástroj' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Kytara' })).toBeChecked();
+    expect(screen.getByText(/diagramy akordů/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Ukulele' }));
+
+    expect(useTheme.getState().preferredInstrument).toBe('ukulele');
+    expect(screen.getByRole('radio', { name: 'Ukulele' })).toBeChecked();
+    expect(localStorage.getItem('my-pisnicka:instrument')).toBe('ukulele');
   });
 
   it('reflects a preference changed elsewhere', () => {

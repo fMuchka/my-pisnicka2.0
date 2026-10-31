@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from 'react-router';
+import { CookieNotice } from './components/cookie-notice';
 import { Navigation } from './components/navigation/Navigation';
 import Routes from './router/Routes';
 
@@ -13,6 +14,7 @@ export default function App() {
       <main>
         <Outlet />
       </main>
+      <CookieNotice />
     </>
   );
 }

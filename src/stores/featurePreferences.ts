@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { setPreferenceItem } from '../lib/preferenceStorage';
 
 export type FeaturePreferences = {
   /** Play mode: whether the "time left" line is shown. The arrow in the play controls changes it too. */
@@ -43,13 +44,8 @@ const readStoredPreferences = (): FeaturePreferences => {
   return preferences;
 };
 
-const writeStoredPreferences = (preferences: FeaturePreferences) => {
-  try {
-    localStorage.setItem(FEATURE_PREFERENCES_STORAGE_KEY, JSON.stringify(preferences));
-  } catch {
-    // Storage blocked: the choice just lasts until the page is reloaded.
-  }
-};
+const writeStoredPreferences = (preferences: FeaturePreferences) =>
+  setPreferenceItem(FEATURE_PREFERENCES_STORAGE_KEY, JSON.stringify(preferences));
 
 type FeaturePreferencesState = FeaturePreferences & {
   setPreference: <K extends keyof FeaturePreferences>(key: K, value: FeaturePreferences[K]) => void;
@@ -58,7 +54,7 @@ type FeaturePreferencesState = FeaturePreferences & {
 const pickPreferences = (state: FeaturePreferencesState): FeaturePreferences =>
   Object.fromEntries(preferenceKeys.map((key) => [key, state[key]])) as FeaturePreferences;
 
-/** The user's on/off choices for app features, remembered in localStorage. */
+/** The user's on/off choices for app features, remembered in localStorage once they agree to it. */
 export const useFeaturePreferences = create<FeaturePreferencesState>()((set, get) => ({
   ...readStoredPreferences(),
 

@@ -8,7 +8,7 @@ export const TEST_CREDENTIALS = {
 // The cookie notice sits behind a full-screen backdrop while open, which
 // blocks every other click on the page — dismiss it before anything else.
 export async function dismissCookieConsent(page: Page) {
-  const acceptButton = page.getByRole('button', { name: 'Rozumím' });
+  const acceptButton = page.getByRole('button', { name: 'Přijmout' });
   if (await acceptButton.isVisible().catch(() => false)) {
     await acceptButton.click();
     await expect(acceptButton).not.toBeVisible();

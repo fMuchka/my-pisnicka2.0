@@ -1,0 +1,33 @@
+.card {
+  padding: 12px var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-secondary);
+}
+
+.explanation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}
+
+.explanation p {
+  margin: 0;
+}
+
+.group-title {
+  margin: 0 0 var(--space-xs);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding-left: 1.2em;
+}

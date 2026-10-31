@@ -10,7 +10,7 @@ test.describe('Login flow', () => {
     const notice = page.getByText('Sušenky, co nešmírují');
     await expect(notice).toBeVisible();
 
-    await page.getByRole('button', { name: 'Rozumím' }).click();
+    await page.getByRole('button', { name: 'Přijmout' }).click();
     await expect(notice).not.toBeVisible();
 
     await page.reload();

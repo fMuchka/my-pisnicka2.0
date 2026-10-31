@@ -1,3 +1,4 @@
+import { getPreferenceItem, setPreferenceItem } from '../preferenceStorage';
 import timelineData from './data.json';
 
 export type ChangeType = 'new' | 'improved' | 'fix';
@@ -156,7 +157,7 @@ export function getLatestTimelineTime(): string | null {
 }
 
 export function getLastVisitedTimelineTime(): string | null {
-  return localStorage.getItem(TIMELINE_LATEST_VISITED_STORAGE_KEY);
+  return getPreferenceItem(TIMELINE_LATEST_VISITED_STORAGE_KEY);
 }
 
 export function markLatestTimelineAsVisited(): void {
@@ -166,7 +167,7 @@ export function markLatestTimelineAsVisited(): void {
     return;
   }
 
-  localStorage.setItem(TIMELINE_LATEST_VISITED_STORAGE_KEY, latestTimelineTime);
+  setPreferenceItem(TIMELINE_LATEST_VISITED_STORAGE_KEY, latestTimelineTime);
 }
 
 export function hasUnseenTimelineUpdates(): boolean {

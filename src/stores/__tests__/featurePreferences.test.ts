@@ -11,6 +11,8 @@ const loadStore = async () => {
 describe('featurePreferences store', () => {
   beforeEach(() => {
     localStorage.clear();
+    // Each test re-imports the storage layer, which reads the consent again.
+    localStorage.setItem('my-pisnicka:cookie-notice-consent', 'accepted');
   });
 
   afterEach(() => {

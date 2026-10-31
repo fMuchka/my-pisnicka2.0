@@ -30,6 +30,8 @@ const loadTheme = async () => {
 describe('useTheme', () => {
   beforeEach(() => {
     localStorage.clear();
+    // Each case re-imports the storage layer, which reads the consent again.
+    localStorage.setItem('my-pisnicka:cookie-notice-consent', 'accepted');
     document.documentElement.removeAttribute('data-theme');
     document.documentElement.style.cssText = '';
     vi.unstubAllGlobals();

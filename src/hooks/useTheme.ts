@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Instrument } from '../lib/chords/chords.database';
+import { removePreferenceItem, setPreferenceItem } from '../lib/preferenceStorage';
 
 import { COLOR_PRESETS, cssVar, cssVarName, type CssToken } from '../styles/tokens';
 
@@ -201,7 +202,8 @@ type ThemeState = {
 };
 
 /**
- * Theme and reading preferences, persisted to localStorage and mirrored onto <html>.
+ * Theme and reading preferences, mirrored onto <html> and persisted to localStorage once the user
+ * has agreed to that (see lib/preferenceStorage).
  * Created on import, so the saved theme is applied before the first render.
  *
  * In components: `const theme = useTheme((s) => s.theme)`. Outside React: `useTheme.getState()`.
@@ -213,18 +215,18 @@ export const useTheme = create<ThemeState>()((set, get) => ({
     set({ theme: nextTheme });
     applyTheme(nextTheme);
     applyCustomColors(get());
-    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    setPreferenceItem(THEME_STORAGE_KEY, nextTheme);
   },
 
   setColorPreset: (nextPreset) => {
     set({ colorPreset: nextPreset });
     applyColorPreset(nextPreset);
-    localStorage.setItem(COLOR_PRESET_STORAGE_KEY, nextPreset);
+    setPreferenceItem(COLOR_PRESET_STORAGE_KEY, nextPreset);
   },
 
   setPreferredInstrument: (nextInstrument) => {
     set({ preferredInstrument: nextInstrument });
-    localStorage.setItem(INSTRUMENT_STORAGE_KEY, nextInstrument);
+    setPreferenceItem(INSTRUMENT_STORAGE_KEY, nextInstrument);
   },
 
   setChordColor: (nextColor) => {
@@ -234,7 +236,7 @@ export const useTheme = create<ThemeState>()((set, get) => ({
 
     set({ chordColor: nextColor });
     applyCustomColors(get());
-    localStorage.setItem(CHORD_STORAGE_KEY, nextColor);
+    setPreferenceItem(CHORD_STORAGE_KEY, nextColor);
   },
 
   setLyricsFontSize: (nextSize) => {
@@ -245,7 +247,7 @@ export const useTheme = create<ThemeState>()((set, get) => ({
     const lyricsFontSize = Math.round(nextSize);
     set({ lyricsFontSize });
     applyCustomColors(get());
-    localStorage.setItem(LYRICS_FONT_SIZE_STORAGE_KEY, String(lyricsFontSize));
+    setPreferenceItem(LYRICS_FONT_SIZE_STORAGE_KEY, String(lyricsFontSize));
   },
 
   setChordFontSize: (nextSize) => {
@@ -256,7 +258,7 @@ export const useTheme = create<ThemeState>()((set, get) => ({
     const chordFontSize = Math.round(nextSize);
     set({ chordFontSize });
     applyCustomColors(get());
-    localStorage.setItem(CHORD_FONT_SIZE_STORAGE_KEY, String(chordFontSize));
+    setPreferenceItem(CHORD_FONT_SIZE_STORAGE_KEY, String(chordFontSize));
   },
 
   resetToDefaults: () => {
@@ -270,11 +272,11 @@ export const useTheme = create<ThemeState>()((set, get) => ({
     applyColorPreset(DEFAULT_COLOR_PRESET);
     applyCustomColors(get());
 
-    localStorage.setItem(THEME_STORAGE_KEY, DEFAULT_THEME);
-    localStorage.setItem(INSTRUMENT_STORAGE_KEY, DEFAULT_INSTRUMENT);
-    localStorage.removeItem(COLOR_PRESET_STORAGE_KEY);
-    localStorage.removeItem(CHORD_STORAGE_KEY);
-    localStorage.removeItem(LYRICS_FONT_SIZE_STORAGE_KEY);
-    localStorage.removeItem(CHORD_FONT_SIZE_STORAGE_KEY);
+    setPreferenceItem(THEME_STORAGE_KEY, DEFAULT_THEME);
+    setPreferenceItem(INSTRUMENT_STORAGE_KEY, DEFAULT_INSTRUMENT);
+    removePreferenceItem(COLOR_PRESET_STORAGE_KEY);
+    removePreferenceItem(CHORD_STORAGE_KEY);
+    removePreferenceItem(LYRICS_FONT_SIZE_STORAGE_KEY);
+    removePreferenceItem(CHORD_FONT_SIZE_STORAGE_KEY);
   },
 }));
