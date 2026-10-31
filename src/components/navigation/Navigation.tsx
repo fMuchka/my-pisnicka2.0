@@ -18,6 +18,10 @@ import {
 } from '../../stores/session';
 import styles from './Navigation.module.css';
 
+// How far the main tab's circle sticks up out of the app bar (its negative margin in AppBar.module.css).
+// offsetHeight leaves it out, but it still covers whatever is underneath.
+const MAIN_TAB_OVERHANG_PX = 28;
+
 const getCurrentPageId = (path: string) => {
   if (path.startsWith('/song/')) return mainPage.id;
   if (path === Routes.Session) return sessions.id;
@@ -62,7 +66,9 @@ export function Navigation() {
 
     // A faded-away app bar is slid off screen, so the page gets that space back.
     const reserveHeight = () => {
-      document.body.style.paddingBottom = fadeAway ? '' : `${dock.offsetHeight}px`;
+      document.body.style.paddingBottom = fadeAway
+        ? ''
+        : `${dock.offsetHeight + MAIN_TAB_OVERHANG_PX}px`;
     };
     reserveHeight();
 

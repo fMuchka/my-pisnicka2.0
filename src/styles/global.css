@@ -8,13 +8,15 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-html,
-body {
+html {
   height: 100%;
   width: 100%;
 }
 
 body {
+  /* min-height, not height: the body has to grow with the page so its bottom padding (the app bar's space) ends up after the content. */
+  min-height: 100%;
+  width: 100%;
   background-color: var(--surface);
   color: var(--ink);
   font: var(--text-body);
