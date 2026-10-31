@@ -67,6 +67,50 @@
   outline: 2px solid var(--brand);
 }
 
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 2px 12px 2px 8px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--ink);
+  font: var(--text-label);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.suggestion svg {
+  width: 14px;
+  height: 14px;
+  color: var(--brand);
+}
+
+.suggestion:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .suggestion:hover {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+}
+
 .input {
   flex: 1;
   min-width: 8ch;
