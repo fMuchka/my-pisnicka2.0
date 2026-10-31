@@ -53,7 +53,7 @@ export const routes: RouteObject[] = [
       {
         path: Routes.SongLibrary,
         loader: requireHost,
-        lazy: page(() => import('../pages/SongLibrary')),
+        lazy: page(() => import('../pages/song-library/SongLibrary')),
       },
       { path: Routes.SongCreate, loader: requireHost, lazy: page(() => import('../pages/Song')) },
       { path: Routes.Song, lazy: page(() => import('../pages/Song')) },

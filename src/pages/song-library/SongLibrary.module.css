@@ -1,0 +1,22 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+}
+
+.result-count {
+  margin: 0;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--space-xl) var(--space-xl) var(--space-2xl);
+  }
+}
