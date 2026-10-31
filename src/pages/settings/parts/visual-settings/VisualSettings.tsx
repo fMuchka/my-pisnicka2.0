@@ -3,6 +3,7 @@ import { SongSheet } from '../../../../components/song-sheet';
 import { useTheme, type Theme } from '../../../../hooks/useTheme';
 import { cssVar } from '../../../../styles/tokens';
 import { presetOptions, themeOptions } from '../../constants';
+import { FontSizeStepper } from '../font-size-stepper/FontSizeStepper';
 import { SettingsSection } from '../settings-section/SettingsSection';
 import styles from './VisualSettings.module.css';
 
@@ -21,9 +22,18 @@ const themeSampleClass: Record<Theme, string | undefined> = {
   light: styles.themeSampleLight,
 };
 
-/** Theme and color preset pickers. */
+/** Theme, color preset and font size pickers, with a song preview showing the result. */
 export function VisualSettings() {
-  const { theme, setTheme, colorPreset, setColorPreset } = useTheme();
+  const {
+    theme,
+    setTheme,
+    colorPreset,
+    setColorPreset,
+    lyricsFontSize,
+    setLyricsFontSize,
+    chordFontSize,
+    setChordFontSize,
+  } = useTheme();
 
   return (
     <>
@@ -77,6 +87,21 @@ export function VisualSettings() {
               </button>
             );
           })}
+        </div>
+      </SettingsSection>
+
+      <SettingsSection title="Velikost písma">
+        <div className={styles.fontSizes}>
+          <FontSizeStepper
+            label="Text písně"
+            value={lyricsFontSize}
+            onChange={setLyricsFontSize}
+          />
+          <FontSizeStepper
+            label="Akordy"
+            value={chordFontSize}
+            onChange={setChordFontSize}
+          />
         </div>
       </SettingsSection>
 

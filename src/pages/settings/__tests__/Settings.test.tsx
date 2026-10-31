@@ -7,6 +7,7 @@ import Routes from '../../../router/Routes';
 import { useTheme } from '../../../hooks/useTheme';
 import { usePageNavigationState } from '../../../hooks/usePageNavigation';
 import { useSessionStore } from '../../../stores/session';
+import { cssVarName } from '../../../styles/tokens';
 
 const mocks = vi.hoisted(() => ({
   isGuest: false,
@@ -81,6 +82,24 @@ describe('Settings Page', () => {
     expect(screen.getByRole('button', { name: 'Klasika' })).toHaveAttribute(
       'aria-pressed',
       'false'
+    );
+  });
+
+  it('changes the lyrics and chord font sizes', async () => {
+    const user = userEvent.setup();
+    useTheme.getState().setLyricsFontSize(18);
+    useTheme.getState().setChordFontSize(16);
+    renderSettings();
+
+    await user.click(screen.getByRole('button', { name: 'Text písně: zvětšit' }));
+    await user.click(screen.getByRole('button', { name: 'Akordy: zmenšit' }));
+
+    expect(useTheme.getState().lyricsFontSize).toBe(19);
+    expect(useTheme.getState().chordFontSize).toBe(15);
+    expect(screen.getByRole('group', { name: 'Text písně' })).toHaveTextContent('19 px');
+    expect(screen.getByRole('group', { name: 'Akordy' })).toHaveTextContent('15 px');
+    expect(document.documentElement.style.getPropertyValue(cssVarName('font-size-lyrics'))).toBe(
+      '19px'
     );
   });
 

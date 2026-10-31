@@ -1,0 +1,68 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: 44px;
+}
+
+.label {
+  color: var(--ink);
+  font: var(--text-body);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.value {
+  min-width: 6ch;
+  color: var(--ink);
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.stepper svg {
+  width: 16px;
+  height: 16px;
+}
+
+.stepper:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.stepper:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.stepper:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .stepper:hover:not(:disabled) {
+    background: var(--surface-selected);
+  }
+}

@@ -18,6 +18,8 @@ const DEFAULT_INSTRUMENT: Instrument = 'guitar';
 const DEFAULT_COLOR_PRESET: ColorPreset = 'red';
 const MIN_FONT_SIZE = 12;
 const MAX_FONT_SIZE = 28;
+/** The range setLyricsFontSize and setChordFontSize accept, in px. */
+export const FONT_SIZE_LIMITS = { min: MIN_FONT_SIZE, max: MAX_FONT_SIZE } as const;
 const DEFAULT_LYRICS_FONT_SIZE = 18;
 const DEFAULT_CHORD_FONT_SIZE = 16;
 const DEFAULT_CHORD_BY_THEME: Record<Theme, string> = {
