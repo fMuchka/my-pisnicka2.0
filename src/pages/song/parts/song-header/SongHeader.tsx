@@ -1,4 +1,4 @@
-import { Minus, Pencil, Play, Plus } from 'lucide-react';
+import { Guitar, Minus, Pencil, Plus } from 'lucide-react';
 import Button from '../../../../components/_core/button/Button';
 import type { Song } from '../../../../lib/song';
 import { songChords } from './song-chords/chords';
@@ -34,9 +34,9 @@ export function SongHeader({
         </div>
         <div className={styles.actionButtons}>
           <Button
-            icon={Play}
+            icon={Guitar}
             styleVariation="text"
-            aria-label="Přehrát píseň"
+            aria-label="Režim hraní"
             onClick={onStartPlay}
           />
           {onEdit && (

@@ -8,6 +8,8 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Keeps a section jumped to while playing clear of the sticky play controls. */
+  scroll-margin-top: 96px;
 }
 
 .section-typed {

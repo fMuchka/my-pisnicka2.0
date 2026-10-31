@@ -60,6 +60,10 @@ describe('Song page', () => {
     detail.songLoading = false;
     auth.user = { uid: 'owner' };
     save.saveSong.mockReset();
+    // Auto-scroll runs while playing; jsdom has no scrolling.
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    // jsdom pages have no height, so a running frame would find the end straight away and pause.
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
   });
 
   it('shows the song header, meta and sheet', () => {
@@ -92,25 +96,49 @@ describe('Song page', () => {
     const user = userEvent.setup();
     renderSong();
 
-    await user.click(screen.getByRole('button', { name: 'Přehrát píseň' }));
+    await user.click(screen.getByRole('button', { name: 'Režim hraní' }));
 
-    expect(screen.getByRole('toolbar', { name: 'Přehrávání' })).toHaveTextContent('Kometa');
+    expect(screen.getByRole('toolbar', { name: 'Přehrávání' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Vpřed na další část' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
     expect(usePageNavigationState.getState().fadeAway).toBe(true);
     expect(screen.getByRole('heading', { name: 'Sloka' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Ukončit přehrávání' }));
+    await user.click(screen.getByRole('button', { name: 'Ukončit režim hraní' }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Kometa' })).toBeInTheDocument();
     expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
     expect(usePageNavigationState.getState().fadeAway).toBe(false);
   });
 
+  it('starts play mode paused and pauses or resumes on a tap on the song text', async () => {
+    const user = userEvent.setup();
+    renderSong();
+
+    await user.click(screen.getByRole('button', { name: 'Režim hraní' }));
+    expect(screen.getByRole('button', { name: 'Spustit posouvání' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('heading', { name: 'Sloka' }));
+    expect(screen.getByRole('button', { name: 'Pozastavit posouvání' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('heading', { name: 'Sloka' }));
+    expect(screen.getByRole('button', { name: 'Spustit posouvání' })).toBeInTheDocument();
+  });
+
+  it('leaves the text alone outside play mode', async () => {
+    const user = userEvent.setup();
+    renderSong();
+
+    await user.click(screen.getByRole('heading', { name: 'Sloka' }));
+
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
+  });
+
   it('brings the navigation back when the page is left while playing', async () => {
     const user = userEvent.setup();
     const { unmount } = renderSong();
 
-    await user.click(screen.getByRole('button', { name: 'Přehrát píseň' }));
+    await user.click(screen.getByRole('button', { name: 'Režim hraní' }));
     unmount();
 
     expect(usePageNavigationState.getState().fadeAway).toBeUndefined();

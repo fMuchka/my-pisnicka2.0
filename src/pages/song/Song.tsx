@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { generatePath, useLocation, useNavigate, useParams } from 'react-router';
 import ErrorMessage from '../../components/_core/error-message/ErrorMessage';
 import LoadingSpinner from '../../components/_core/loading-spinner/LoadingSpinner';
@@ -6,11 +6,13 @@ import { EMPTY_DRAFT, toDraft } from './parts/song-editor/draft';
 import { SongEditor } from './parts/song-editor/SongEditor';
 import type { SongDraft } from './parts/song-editor/types';
 import { PlayControls } from './parts/play-controls/PlayControls';
+import { useAutoScroll } from './parts/play-controls/useAutoScroll';
 import { SongHeader } from './parts/song-header/SongHeader';
 import { SongSheet } from './parts/song-sheet/SongSheet';
 import { useAuth } from '../../hooks/useAuth';
 import { usePageNavigation } from '../../hooks/usePageNavigation';
 import { useSongDetail } from '../../hooks/useSongDetail';
+import { useWakeLock } from '../../hooks/useWakeLock';
 import type { Song as SongModel } from '../../lib/song';
 import Routes from '../../router/Routes';
 import { saveSong } from './saveSong';
@@ -40,6 +42,9 @@ export default function Song() {
 
   usePageNavigation({ fadeAway: isPlaying });
   const stopPlaying = useCallback(() => setIsPlaying(false), []);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const autoScroll = useAutoScroll(isPlaying, sheetRef);
+  useWakeLock(isPlaying);
 
   const canEdit = song?.ownerId === user?.uid;
 
@@ -117,8 +122,15 @@ export default function Song() {
     <section className={styles.container}>
       {isPlaying ? (
         <PlayControls
-          song={song}
-          onStop={stopPlaying}
+          isScrolling={autoScroll.isScrolling}
+          secondsLeft={autoScroll.secondsLeft}
+          canSpeedUp={autoScroll.canSpeedUp}
+          canSlowDown={autoScroll.canSlowDown}
+          onToggleScrolling={autoScroll.toggleScrolling}
+          onSpeedUp={autoScroll.speedUp}
+          onSlowDown={autoScroll.slowDown}
+          onJump={autoScroll.jump}
+          onExit={stopPlaying}
         />
       ) : (
         <SongHeader
@@ -130,10 +142,16 @@ export default function Song() {
         />
       )}
 
-      <SongSheet
-        text={song.text ?? ''}
-        transpose={transpose}
-      />
+      {/* In play mode a tap anywhere on the text pauses or resumes; the play button covers keyboard users. */}
+      <div
+        ref={sheetRef}
+        onClick={isPlaying ? autoScroll.toggleScrolling : undefined}
+      >
+        <SongSheet
+          text={song.text ?? ''}
+          transpose={transpose}
+        />
+      </div>
     </section>
   );
 }
