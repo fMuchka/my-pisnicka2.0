@@ -11,6 +11,7 @@ import {
   where,
   limit,
 } from 'firebase/firestore';
+import type { Instrument } from './chords/chords.database';
 import { db } from './firebase';
 import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
 
@@ -23,6 +24,7 @@ export interface Song {
   categories?: string[]; // Array of category ids from songCategories collection
   originalKey?: string;
   capo?: number;
+  instrument?: Instrument; // What the chords are written for; missing on older songs
   createdAt?: Timestamp; // Firestore Timestamp
   ownerId: string;
 }
@@ -36,6 +38,7 @@ export interface SongDocument {
   chords?: Song['chords'];
   originalKey?: Song['originalKey'];
   capo?: Song['capo'];
+  instrument?: Song['instrument'];
   createdAt?: Song['createdAt'];
   ownerId?: Song['ownerId'];
 }
@@ -72,6 +75,7 @@ export interface CreateSongInput {
   text?: string;
   chords?: string[];
   capo?: number;
+  instrument?: Instrument;
   ownerId: string;
 }
 
@@ -81,8 +85,12 @@ export interface UpdateSongInput {
   text?: string;
   chords?: string[];
   capo?: number;
+  instrument?: Instrument;
   ownerId: string;
 }
+
+const isInstrument = (value: unknown): value is Instrument =>
+  value === 'guitar' || value === 'ukulele';
 
 /**
  * Deterministic song selection for home screen.
@@ -137,6 +145,7 @@ const mapSongDoc = (
     chords: songDoc.chords,
     originalKey: songDoc.originalKey ?? undefined,
     capo: songDoc.capo ?? undefined,
+    instrument: isInstrument(songDoc.instrument) ? songDoc.instrument : undefined,
     createdAt: songDoc.createdAt,
     ownerId: songDoc.ownerId ?? '',
   };
@@ -323,6 +332,20 @@ export async function fetchSongCatalogEntryBySourceSongId(
   return mapSongListDoc(first, first.data());
 }
 
+/** Labels of the song's tags (its catalog entry's categories), in the entry's order. */
+export async function fetchSongTagLabels(sourceSongId: Song['id']): Promise<string[]> {
+  const entry = await fetchSongCatalogEntryBySourceSongId(sourceSongId);
+  if (!entry?.categories?.length) return [];
+
+  const labelsById = new Map(
+    (await fetchAllSongCategories()).map((category) => [category.id, category.value])
+  );
+
+  return entry.categories
+    .map((categoryId) => labelsById.get(categoryId))
+    .filter((label): label is string => label !== undefined);
+}
+
 export async function fetchAllUserSongs(ownerId: string): Promise<Song[]> {
   const songsRef = collection(db, 'songs');
   const q = query(songsRef, where('ownerId', '==', ownerId));
@@ -355,6 +378,7 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     createdAt: Timestamp.now(),
     ownerId: input.ownerId,
     ...(input.capo !== undefined ? { capo: input.capo } : {}),
+    ...(input.instrument !== undefined ? { instrument: input.instrument } : {}),
   };
 
   const songRef = await addDoc(collection(db, 'songs'), heavySongData);
@@ -366,6 +390,7 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     text: heavySongData.text,
     chords: input.chords,
     capo: input.capo,
+    instrument: input.instrument,
     createdAt: heavySongData.createdAt,
     ownerId: heavySongData.ownerId ?? input.ownerId,
   };
@@ -425,6 +450,7 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     text: input.text,
     ownerId: input.ownerId,
     ...(input.capo !== undefined ? { capo: input.capo } : {}),
+    ...(input.instrument !== undefined ? { instrument: input.instrument } : {}),
   };
 
   await updateDoc(songRef, heavySongPatch as DocumentData);
@@ -436,6 +462,7 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     text: heavySongPatch.text,
     chords: input.chords,
     capo: input.capo,
+    instrument: input.instrument,
     ownerId: heavySongPatch.ownerId ?? input.ownerId,
   };
 };
