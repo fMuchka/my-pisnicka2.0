@@ -8,7 +8,7 @@ import { getLatestTimelineTime } from '../../../lib/timeline/timeline';
 
 const TIMELINE_VISITED_STORAGE_KEY = 'my-pisnicka:timeline-latest-visited-time';
 
-const tab = (name: RegExp) => screen.getByRole('tab', { name });
+const tab = (name: RegExp) => screen.getByRole('radio', { name });
 
 describe('Info Page', () => {
   beforeEach(() => {
@@ -24,8 +24,8 @@ describe('Info Page', () => {
   it('opens on Historie', () => {
     render(<Info />);
 
-    expect(tab(/historie/i)).toHaveAttribute('aria-selected', 'true');
-    expect(tab(/plány/i)).toHaveAttribute('aria-selected', 'false');
+    expect(tab(/historie/i)).toBeChecked();
+    expect(tab(/plány/i)).not.toBeChecked();
   });
 
   it('shows the unseen banner and marks the latest release as visited', () => {
@@ -53,13 +53,13 @@ describe('Info Page', () => {
     expect(screen.queryByText(/od tvé poslední návštěvy/i)).not.toBeInTheDocument();
   });
 
-  it('switches tabs and unmounts the one it leaves', async () => {
+  it('switches sections and unmounts the one it leaves', async () => {
     const user = userEvent.setup();
     render(<Info />);
 
     await user.click(tab(/plány/i));
 
-    expect(tab(/plány/i)).toHaveAttribute('aria-selected', 'true');
+    expect(tab(/plány/i)).toBeChecked();
     expect(await screen.findByText('Na čem se pracuje')).toBeInTheDocument();
     expect(screen.queryByText(/od tvé poslední návštěvy/i)).not.toBeInTheDocument();
   });
@@ -71,7 +71,7 @@ describe('Info Page', () => {
     await user.click(tab(/plány/i));
     await user.click(await screen.findByRole('button', { name: /celá historie/i }));
 
-    expect(tab(/historie/i)).toHaveAttribute('aria-selected', 'true');
+    expect(tab(/historie/i)).toBeChecked();
   });
 
   it('switches from Obecné info back to Historie via the last change pill', async () => {
@@ -81,6 +81,6 @@ describe('Info Page', () => {
     await user.click(tab(/obecné info/i));
     await user.click(await screen.findByRole('button', { name: /poslední změna/i }));
 
-    expect(tab(/historie/i)).toHaveAttribute('aria-selected', 'true');
+    expect(tab(/historie/i)).toBeChecked();
   });
 });
