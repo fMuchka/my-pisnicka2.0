@@ -37,7 +37,10 @@ describe('ChordChart', () => {
 
     expect(screen.getByText('Am')).toHaveClass('name');
     expect(screen.getByRole('img', { name: 'Diagram akordu Am' })).toHaveClass('canvas');
-    expect(svguitar.chart.configure).toHaveBeenCalledWith(expect.objectContaining({ strings: 6 }));
+    expect(svguitar.chart.configure).toHaveBeenCalledWith(
+      // CSS paints it, so it picks up the brand color and follows theme changes.
+      expect.objectContaining({ strings: 6, color: 'currentColor' })
+    );
     expect(svguitar.chart.chord).toHaveBeenCalledWith(
       expect.objectContaining({ fingers: expect.any(Array) as unknown })
     );

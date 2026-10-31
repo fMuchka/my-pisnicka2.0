@@ -42,8 +42,8 @@
 .chord-chip {
   padding: 2px var(--space-sm);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--song-chord-inline-bg, var(--brand)) 14%, transparent);
-  color: var(--song-chord-inline-bg, var(--brand));
+  background: var(--brand-soft);
+  color: var(--brand);
   font: var(--text-chord-label);
   font-size: 14px;
   font-weight: 700;

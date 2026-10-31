@@ -3,7 +3,6 @@ import { ChordStyle, SVGuitarChord } from 'svguitar';
 import { useTheme } from '../../hooks/useTheme';
 import { getChordFingerPositions } from '../../lib/chords/chords';
 import type { Instrument } from '../../lib/chords/chords.database';
-import { cssVar } from '../../styles/tokens';
 import styles from './ChordChart.module.css';
 
 type ChordChartProps = {
@@ -26,7 +25,9 @@ export default function ChordChart({ chord }: Readonly<ChordChartProps>) {
 
     const chart = new SVGuitarChord(canvasRef.current)
       .configure({
-        color: cssVar('brand'),
+        // svguitar writes colors into SVG attributes, which can't resolve var(); currentColor
+        // takes the CSS color instead, so the chart follows the theme without being redrawn.
+        color: 'currentColor',
         strokeWidth: 2,
         style: ChordStyle.handdrawn,
         ...INSTRUMENT_SETTINGS[instrument],
