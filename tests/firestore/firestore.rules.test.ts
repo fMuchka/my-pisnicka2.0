@@ -105,6 +105,50 @@ describe('firestore.rules', () => {
     );
   });
 
+  it.each(['private', 'public'])('allows saving a %s song', async (visibility) => {
+    const db = authedDb('user-a');
+
+    await assertSucceeds(
+      setDoc(doc(db, 'songs/song-1'), {
+        text: 'Lyrics',
+        visibility,
+        createdAt: Timestamp.now(),
+        ownerId: 'user-a',
+      })
+    );
+    await assertSucceeds(
+      setDoc(doc(db, 'songCatalog/catalog-1'), {
+        sourceSongId: 'song-1',
+        title: 'Song title',
+        artist: 'Artist name',
+        visibility,
+        ownerId: 'user-a',
+      })
+    );
+  });
+
+  it('denies an unknown song visibility', async () => {
+    const db = authedDb('user-a');
+
+    await assertFails(
+      setDoc(doc(db, 'songs/song-1'), {
+        text: 'Lyrics',
+        visibility: 'friends',
+        createdAt: Timestamp.now(),
+        ownerId: 'user-a',
+      })
+    );
+    await assertFails(
+      setDoc(doc(db, 'songCatalog/catalog-1'), {
+        sourceSongId: 'song-1',
+        title: 'Song title',
+        artist: 'Artist name',
+        visibility: 'friends',
+        ownerId: 'user-a',
+      })
+    );
+  });
+
   it('denies updating songs ownerId', async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       await setDoc(doc(context.firestore(), 'songs/song-1'), {

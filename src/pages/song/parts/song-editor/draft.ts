@@ -2,13 +2,14 @@ import type { Instrument } from '../../../../lib/chords/chords.database';
 import type { Song } from '../../../../lib/song';
 import type { SongDraft } from './types';
 
-/** A new song: written for the user's preferred instrument, no tags yet. */
+/** A new song: written for the user's preferred instrument, shared with everyone, no tags yet. */
 export const emptyDraft = (instrument: Instrument): SongDraft => ({
   title: '',
   artist: '',
   capo: '',
   text: '',
   instrument,
+  visibility: 'public',
   tags: [],
 });
 
@@ -18,6 +19,8 @@ export const toDraft = (song: Song, tags: string[] | null): SongDraft => ({
   capo: song.capo != null ? String(song.capo) : '',
   text: song.text ?? '',
   instrument: song.instrument ?? '',
+  // Songs saved before visibility existed are all public.
+  visibility: song.visibility ?? 'public',
   tags,
 });
 

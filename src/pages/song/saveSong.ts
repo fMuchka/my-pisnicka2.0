@@ -26,6 +26,7 @@ export async function saveSong(draft: SongDraft, ownerId: string, songId?: strin
     chords: extractUniqueChords(text),
     ...(capo !== undefined ? { capo } : {}),
     ...(draft.instrument ? { instrument: draft.instrument } : {}),
+    visibility: draft.visibility,
     ownerId,
   };
 
@@ -44,6 +45,7 @@ export async function saveSong(draft: SongDraft, ownerId: string, songId?: strin
     artist: saved.artist,
     chords: saved.chords,
     categories,
+    visibility: draft.visibility,
     ownerId: saved.ownerId,
   };
 

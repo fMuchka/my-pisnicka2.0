@@ -21,6 +21,11 @@ service cloud.firestore {
       return !data.keys().hasAny([field]) || data[field] == null || data[field] is number;
     }
 
+    // Songs saved before visibility existed have none, and count as public.
+    function hasOptionalVisibility(data) {
+      return !data.keys().hasAny(['visibility']) || data.visibility in ['private', 'public'];
+    }
+
     function isValidSongStorage(data) {
       return data.keys().hasAll(['ownerId'])
         && data.keys().hasOnly([
@@ -31,7 +36,8 @@ service cloud.firestore {
           'artist',
           'chords',
           'capo',
-          'instrument'
+          'instrument',
+          'visibility'
         ])
         && data.ownerId is string
         && data.ownerId.size() > 0
@@ -41,7 +47,8 @@ service cloud.firestore {
         && hasOptionalString(data, 'artist')
         && hasOptionalList(data, 'chords')
         && hasOptionalNumber(data, 'capo')
-        && (!data.keys().hasAny(['instrument']) || data.instrument in ['guitar', 'ukulele']);
+        && (!data.keys().hasAny(['instrument']) || data.instrument in ['guitar', 'ukulele'])
+        && hasOptionalVisibility(data);
     }
 
     function isValidNewSong() {
@@ -122,7 +129,15 @@ service cloud.firestore {
     
 
     function isValidSongCatalogEntry(data) {
-      return data.keys().hasOnly(['title', 'artist', 'ownerId', 'sourceSongId', 'chords', 'categories'])
+      return data.keys().hasOnly([
+          'title',
+          'artist',
+          'ownerId',
+          'sourceSongId',
+          'chords',
+          'categories',
+          'visibility'
+        ])
         && data.title is string
         && data.title.size() > 0
         && data.title.size() <= 200
@@ -134,7 +149,8 @@ service cloud.firestore {
         && data.ownerId is string
         && data.ownerId.size() > 0
         && hasOptionalList(data, 'chords')
-        && hasOptionalList(data, 'categories');
+        && hasOptionalList(data, 'categories')
+        && hasOptionalVisibility(data);
     }
 
     function isValidSongCategory(data) {

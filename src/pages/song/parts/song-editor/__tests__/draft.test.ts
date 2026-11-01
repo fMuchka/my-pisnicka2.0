@@ -9,17 +9,19 @@ const draft: SongDraft = {
   capo: '',
   text: '',
   instrument: 'guitar',
+  visibility: 'public',
   tags: [],
 };
 
 describe('song draft', () => {
-  it('starts a new song for the given instrument, without tags', () => {
+  it('starts a new public song for the given instrument, without tags', () => {
     expect(emptyDraft('ukulele')).toEqual({
       title: '',
       artist: '',
       capo: '',
       text: '',
       instrument: 'ukulele',
+      visibility: 'public',
       tags: [],
     });
   });
@@ -32,6 +34,7 @@ describe('song draft', () => {
       text: '[C]text',
       capo: 2,
       instrument: 'ukulele',
+      visibility: 'private',
       ownerId: 'u1',
     };
 
@@ -41,11 +44,15 @@ describe('song draft', () => {
       capo: '2',
       text: '[C]text',
       instrument: 'ukulele',
+      visibility: 'private',
       tags: ['folk'],
     });
     expect(
-      toDraft({ ...song, capo: undefined, text: undefined, instrument: undefined }, null)
-    ).toMatchObject({ capo: '', text: '', instrument: '', tags: null });
+      toDraft(
+        { ...song, capo: undefined, text: undefined, instrument: undefined, visibility: undefined },
+        null
+      )
+    ).toMatchObject({ capo: '', text: '', instrument: '', visibility: 'public', tags: null });
   });
 
   it.each(['', ' ', '0', '3', ' 12 '])('accepts capo %j', (capo) => {
