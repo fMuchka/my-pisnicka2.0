@@ -58,6 +58,7 @@ export function SongTextEditor({ text, onChange }: Readonly<SongTextEditorProps>
           spellCheck={false}
         />
         <Button
+          type="button"
           className={styles.modeSwitch}
           label="Zpět do editoru"
           styleVariation="text"
@@ -91,6 +92,7 @@ export function SongTextEditor({ text, onChange }: Readonly<SongTextEditorProps>
       )}
 
       <Button
+        type="button"
         className={styles.modeSwitch}
         label="Upravit zdrojový text"
         styleVariation="text"

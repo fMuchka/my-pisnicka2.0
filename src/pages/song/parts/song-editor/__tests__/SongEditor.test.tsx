@@ -40,6 +40,21 @@ describe('SongEditor', () => {
     expect(screen.getByRole('textbox', { name: 'Text sekce Sloka' })).toHaveValue('Za sklem');
   });
 
+  it('keeps editing when using the song text tools', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderEditor();
+
+    await user.click(screen.getByRole('button', { name: 'Přidat sekci' }));
+    await user.click(screen.getByRole('button', { name: 'Odebrat sekci Refrén' }));
+    await user.click(screen.getByRole('button', { name: 'Vložit z internetu' }));
+    expect(await screen.findByRole('textbox', { name: 'Zkopírovaný text' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await user.click(await screen.findByRole('button', { name: 'Upravit zdrojový text' }));
+    await user.click(screen.getByRole('button', { name: 'Zpět do editoru' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('submits the edited draft', async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderEditor();

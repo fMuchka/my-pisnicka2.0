@@ -114,6 +114,7 @@ export function ChordPicker({
           ))}
         </div>
         <Button
+          type="button"
           label={`Použít ${composed}`}
           onClick={() => onPick(composed)}
         />
@@ -121,6 +122,7 @@ export function ChordPicker({
 
       {current && (
         <Button
+          type="button"
           label={`Odebrat ${current}`}
           styleVariation="text"
           colorVariation="secondary"

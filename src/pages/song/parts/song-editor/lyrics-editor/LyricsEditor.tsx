@@ -85,6 +85,7 @@ export function LyricsEditor({ document, onChange, onImportRequest }: Readonly<L
               </div>
               {sections.length > 1 && (
                 <Button
+                  type="button"
                   icon={Trash2}
                   styleVariation="text"
                   colorVariation="secondary"
@@ -118,6 +119,7 @@ export function LyricsEditor({ document, onChange, onImportRequest }: Readonly<L
 
       <div className={styles.actions}>
         <Button
+          type="button"
           icon={Plus}
           label="Přidat sekci"
           colorVariation="secondary"
@@ -125,6 +127,7 @@ export function LyricsEditor({ document, onChange, onImportRequest }: Readonly<L
           onClick={addSection}
         />
         <Button
+          type="button"
           icon={ClipboardPaste}
           label="Vložit z internetu"
           colorVariation="secondary"

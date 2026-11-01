@@ -65,6 +65,7 @@ export function ImportSongDrawer({
         {hasText ? (
           <>
             <Button
+              type="button"
               label="Nahradit text písně"
               colorVariation="secondary"
               styleVariation="outlined"
@@ -72,6 +73,7 @@ export function ImportSongDrawer({
               onClick={() => onImport(converted, 'replace')}
             />
             <Button
+              type="button"
               label="Přidat na konec"
               disabled={isEmpty}
               onClick={() => onImport(converted, 'append')}
@@ -79,6 +81,7 @@ export function ImportSongDrawer({
           </>
         ) : (
           <Button
+            type="button"
             label="Vložit"
             disabled={isEmpty}
             onClick={() => onImport(converted, 'replace')}
