@@ -79,6 +79,32 @@ describe('firestore.rules', () => {
     );
   });
 
+  it('allows saving which instrument the chords are written for', async () => {
+    const db = authedDb('user-a');
+
+    await assertSucceeds(
+      setDoc(doc(db, 'songs/song-1'), {
+        text: 'Lyrics',
+        instrument: 'ukulele',
+        createdAt: Timestamp.now(),
+        ownerId: 'user-a',
+      })
+    );
+  });
+
+  it('denies an unknown instrument', async () => {
+    const db = authedDb('user-a');
+
+    await assertFails(
+      setDoc(doc(db, 'songs/song-1'), {
+        text: 'Lyrics',
+        instrument: 'banjo',
+        createdAt: Timestamp.now(),
+        ownerId: 'user-a',
+      })
+    );
+  });
+
   it('denies updating songs ownerId', async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       await setDoc(doc(context.firestore(), 'songs/song-1'), {

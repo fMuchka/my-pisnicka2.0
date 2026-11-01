@@ -30,7 +30,8 @@ service cloud.firestore {
           'title',
           'artist',
           'chords',
-          'capo'
+          'capo',
+          'instrument'
         ])
         && data.ownerId is string
         && data.ownerId.size() > 0
@@ -39,7 +40,8 @@ service cloud.firestore {
         && hasOptionalString(data, 'title')
         && hasOptionalString(data, 'artist')
         && hasOptionalList(data, 'chords')
-        && hasOptionalNumber(data, 'capo');
+        && hasOptionalNumber(data, 'capo')
+        && (!data.keys().hasAny(['instrument']) || data.instrument in ['guitar', 'ukulele']);
     }
 
     function isValidNewSong() {
