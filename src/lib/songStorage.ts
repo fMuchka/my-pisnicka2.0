@@ -30,7 +30,6 @@ function mergeSongCatalogEntry(catalogEntry: SongCatalogEntry, cachedSong: Song 
     title: catalogEntry.title,
     artist: catalogEntry.artist,
     categories: catalogEntry.categories,
-    visibility: catalogEntry.visibility ?? cachedSong?.visibility,
     ownerId: catalogEntry.ownerId ?? cachedSong?.ownerId ?? '',
   };
 }

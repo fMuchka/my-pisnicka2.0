@@ -224,7 +224,6 @@ describe('Song Service - Unit Tests', () => {
           title: 'Song title',
           artist: 'Artist name',
           text: '[G] line',
-          visibility: 'private',
           createdAt: 'ts',
         }),
       });
@@ -236,7 +235,6 @@ describe('Song Service - Unit Tests', () => {
         title: 'Song title',
         artist: 'Artist name',
         text: '[G] line',
-        visibility: 'private',
         createdAt: 'ts',
         ownerId: '',
       });
@@ -253,7 +251,6 @@ describe('Song Service - Unit Tests', () => {
         artist: 'New artist',
         text: '[Am] new line',
         chords: ['Am', 'C'],
-        visibility: 'public',
         ownerId: 'dude',
       });
 
@@ -261,7 +258,6 @@ describe('Song Service - Unit Tests', () => {
         'songs-collection-ref',
         expect.objectContaining({
           text: '[Am] new line',
-          visibility: 'public',
           ownerId: 'dude',
         })
       );

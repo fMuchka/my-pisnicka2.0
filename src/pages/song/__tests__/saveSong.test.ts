@@ -24,7 +24,6 @@ const draft: SongDraft = {
   capo: '2',
   text: ' [C]Za [Am]sklem \n',
   instrument: 'ukulele',
-  visibility: 'private',
   tags: ['folk', 'táborák'],
 };
 const saved: Song = {
@@ -45,7 +44,7 @@ describe('saveSong', () => {
     useSongStore.setState({ createSong, updateSong });
   });
 
-  it('creates a trimmed song with its chords, instrument and visibility, and a catalog entry with its tags', async () => {
+  it('creates a trimmed song with its chords and instrument, and a catalog entry with its tags', async () => {
     await expect(saveSong(draft, 'u1')).resolves.toEqual({
       ...saved,
       categories: ['cat-folk', 'cat-taborak'],
@@ -58,7 +57,6 @@ describe('saveSong', () => {
       chords: ['C', 'Am'],
       capo: 2,
       instrument: 'ukulele',
-      visibility: 'private',
       ownerId: 'u1',
     });
     expect(catalog.fetchBySource).not.toHaveBeenCalled();
@@ -67,7 +65,6 @@ describe('saveSong', () => {
       expect.objectContaining({
         sourceSongId: 's1',
         categories: ['cat-folk', 'cat-taborak'],
-        visibility: 'private',
         ownerId: 'u1',
       })
     );

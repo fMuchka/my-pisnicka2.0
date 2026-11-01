@@ -5,7 +5,6 @@ import Input from '../../../../components/_core/input/Input';
 import SegmentGroup from '../../../../components/_core/segment-group/SegmentGroup';
 import type { SegmentOption } from '../../../../components/_core/segment-group/types';
 import { TagsInput } from '../../../../components/_core/tags-input';
-import { Toggle } from '../../../../components/_core/toggle';
 import type { Instrument } from '../../../../lib/chords/chords.database';
 import { isDraftValid, isValidCapo } from './draft';
 import { SongTextEditor } from './song-text-editor/SongTextEditor';
@@ -95,14 +94,6 @@ export function SongEditor({
               : 'Štítek potvrdíš Enterem nebo čárkou.'
           }
           disabled={draft.tags === null}
-        />
-        <Toggle
-          label="Veřejná píseň"
-          description="Veřejnou píseň najdou a zahrají si i ostatní. Sdílením písní pomáháš budovat zpěvník pro všechny."
-          checked={draft.visibility === 'public'}
-          onCheckedChange={(isPublic) =>
-            setDraft((current) => ({ ...current, visibility: isPublic ? 'public' : 'private' }))
-          }
         />
       </div>
 

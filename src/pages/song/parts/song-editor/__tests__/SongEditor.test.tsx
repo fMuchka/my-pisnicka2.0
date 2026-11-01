@@ -11,7 +11,6 @@ const filled: SongDraft = {
   capo: '',
   text: '[verse]\n[C]Za sklem',
   instrument: 'guitar',
-  visibility: 'public',
   tags: ['folk'],
 };
 
@@ -54,20 +53,6 @@ describe('SongEditor', () => {
     await user.click(screen.getByRole('button', { name: 'Zpět do editoru' }));
 
     expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it('makes the song private or public', async () => {
-    const user = userEvent.setup();
-    const { onSubmit } = renderEditor();
-
-    const isPublic = screen.getByRole('switch', { name: /veřejná píseň/i });
-    expect(isPublic).toBeChecked();
-    expect(screen.getByText(/budovat zpěvník pro všechny/)).toBeInTheDocument();
-
-    await user.click(isPublic);
-    await user.click(saveButton());
-
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ visibility: 'private' }));
   });
 
   it('submits the edited draft', async () => {

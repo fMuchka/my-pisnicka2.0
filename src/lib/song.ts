@@ -15,9 +15,6 @@ import type { Instrument } from './chords/chords.database';
 import { db } from './firebase';
 import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
 
-/** Public songs are shared with everyone; private ones are just for their owner. */
-export type SongVisibility = 'private' | 'public';
-
 export interface Song {
   id: string;
   title: string;
@@ -28,7 +25,6 @@ export interface Song {
   originalKey?: string;
   capo?: number;
   instrument?: Instrument; // What the chords are written for; missing on older songs
-  visibility?: SongVisibility; // Missing on older songs, which are all public
   createdAt?: Timestamp; // Firestore Timestamp
   ownerId: string;
 }
@@ -43,7 +39,6 @@ export interface SongDocument {
   originalKey?: Song['originalKey'];
   capo?: Song['capo'];
   instrument?: Song['instrument'];
-  visibility?: Song['visibility'];
   createdAt?: Song['createdAt'];
   ownerId?: Song['ownerId'];
 }
@@ -54,7 +49,6 @@ export interface SongCatalogEntry {
   artist: Song['artist'];
   chords?: Song['chords'];
   categories?: Song['categories'];
-  visibility?: Song['visibility'];
   createdAt?: Song['createdAt'];
   id: string;
   ownerId: string;
@@ -66,7 +60,6 @@ export interface SongCatalogEntryInput {
   artist: Song['artist'];
   chords?: Song['chords'];
   categories?: Song['categories'];
-  visibility?: Song['visibility'];
   createdAt?: Song['createdAt'];
   ownerId: string;
 }
@@ -83,7 +76,6 @@ export interface CreateSongInput {
   chords?: string[];
   capo?: number;
   instrument?: Instrument;
-  visibility?: SongVisibility;
   ownerId: string;
 }
 
@@ -94,15 +86,11 @@ export interface UpdateSongInput {
   chords?: string[];
   capo?: number;
   instrument?: Instrument;
-  visibility?: SongVisibility;
   ownerId: string;
 }
 
 const isInstrument = (value: unknown): value is Instrument =>
   value === 'guitar' || value === 'ukulele';
-
-const isSongVisibility = (value: unknown): value is SongVisibility =>
-  value === 'private' || value === 'public';
 
 /**
  * Deterministic song selection for home screen.
@@ -158,7 +146,6 @@ const mapSongDoc = (
     originalKey: songDoc.originalKey ?? undefined,
     capo: songDoc.capo ?? undefined,
     instrument: isInstrument(songDoc.instrument) ? songDoc.instrument : undefined,
-    visibility: isSongVisibility(songDoc.visibility) ? songDoc.visibility : undefined,
     createdAt: songDoc.createdAt,
     ownerId: songDoc.ownerId ?? '',
   };
@@ -179,7 +166,6 @@ const mapSongListDoc = (
     artist: data.artist,
     chords: data.chords,
     categories,
-    visibility: isSongVisibility(data.visibility) ? data.visibility : undefined,
     createdAt: data.createdAt,
     ownerId: data.ownerId,
   };
@@ -393,7 +379,6 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     ownerId: input.ownerId,
     ...(input.capo !== undefined ? { capo: input.capo } : {}),
     ...(input.instrument !== undefined ? { instrument: input.instrument } : {}),
-    ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
   };
 
   const songRef = await addDoc(collection(db, 'songs'), heavySongData);
@@ -406,7 +391,6 @@ export const createSong = async (input: CreateSongInput): Promise<Song> => {
     chords: input.chords,
     capo: input.capo,
     instrument: input.instrument,
-    visibility: input.visibility,
     createdAt: heavySongData.createdAt,
     ownerId: heavySongData.ownerId ?? input.ownerId,
   };
@@ -424,9 +408,8 @@ export const createSongCatalogEntry = async (
     ownerId: input.ownerId,
     ...(input.chords !== undefined ? { chords: input.chords } : {}),
     ...(normalizedCategoryIds !== undefined ? { categories: normalizedCategoryIds } : {}),
-    ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
   } satisfies Pick<SongCatalogEntry, 'sourceSongId' | 'title' | 'artist' | 'ownerId'> &
-    Partial<Pick<SongCatalogEntry, 'chords' | 'categories' | 'visibility'>>;
+    Partial<Pick<SongCatalogEntry, 'chords' | 'categories'>>;
 
   const songRef = await addDoc(collection(db, 'songCatalog'), songData);
 
@@ -450,9 +433,8 @@ export const updateSongCatalogEntry = async (
     ownerId: input.ownerId,
     ...(input.chords !== undefined ? { chords: input.chords } : {}),
     ...(normalizedCategoryIds !== undefined ? { categories: normalizedCategoryIds } : {}),
-    ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
   } satisfies Pick<SongCatalogEntryInput, 'title' | 'artist' | 'sourceSongId' | 'ownerId'> &
-    Partial<Pick<SongCatalogEntryInput, 'chords' | 'categories' | 'visibility'>>;
+    Partial<Pick<SongCatalogEntryInput, 'chords' | 'categories'>>;
 
   await updateDoc(songRef, songData as DocumentData);
 
@@ -469,7 +451,6 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     ownerId: input.ownerId,
     ...(input.capo !== undefined ? { capo: input.capo } : {}),
     ...(input.instrument !== undefined ? { instrument: input.instrument } : {}),
-    ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
   };
 
   await updateDoc(songRef, heavySongPatch as DocumentData);
@@ -482,7 +463,6 @@ export const updateSong = async (songId: string, input: UpdateSongInput): Promis
     chords: input.chords,
     capo: input.capo,
     instrument: input.instrument,
-    visibility: input.visibility,
     ownerId: heavySongPatch.ownerId ?? input.ownerId,
   };
 };
