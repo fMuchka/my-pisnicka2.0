@@ -1,5 +1,7 @@
-import { Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import Button from '../../components/_core/button/Button';
 import Input from '../../components/_core/input/Input';
 import { SongList } from '../../components/song-list/SongList';
 import { usePageNavigation } from '../../hooks/usePageNavigation';
@@ -9,9 +11,11 @@ import type { PublicMode, SongLibraryTab } from './types';
 import styles from './SongLibrary.module.css';
 import SegmentGroup from '../../components/_core/segment-group/SegmentGroup';
 import { publicModeOptions, tabOptions } from './constants';
+import Routes from '../../router/Routes';
 
 export default function SongLibrary() {
   usePageNavigation({ pageTitle: 'Knihovna' });
+  const navigate = useNavigate();
 
   const [publicMode, setPublicMode] = useState<PublicMode>('private');
   const [activeTab, setActiveTab] = useState<SongLibraryTab>('songs');
@@ -46,12 +50,19 @@ export default function SongLibrary() {
             aria-label="Hledat interpreta nebo píseň"
           />
 
-          <p
-            className={styles.resultCount}
-            aria-live="polite"
-          >
-            {formatResultCount(songs.length, query)}
-          </p>
+          <div className={styles.listHeader}>
+            <p
+              className={styles.resultCount}
+              aria-live="polite"
+            >
+              {formatResultCount(songs.length, query)}
+            </p>
+            <Button
+              icon={Plus}
+              label="Vytvořit píseň"
+              onClick={() => void navigate(Routes.SongCreate)}
+            />
+          </div>
 
           <SongList songs={songs} />
         </>
