@@ -4,6 +4,7 @@ import ErrorMessage from '../../components/_core/error-message/ErrorMessage';
 import LoadingSpinner from '../../components/_core/loading-spinner/LoadingSpinner';
 import type { SongDraft } from './parts/song-editor/types';
 import { SongEditorView } from './parts/song-editor-view/SongEditorView';
+import { SongPlaylistsDrawer } from './parts/song-playlists-drawer/SongPlaylistsDrawer';
 import { SongView } from './parts/song-view/SongView';
 import { useAuth } from '../../hooks/useAuth';
 import { useSongDetail } from '../../hooks/useSongDetail';
@@ -15,7 +16,7 @@ export default function Song() {
   const { songId } = useParams();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
 
   const isCreate = pathname === Routes.SongCreate;
   const {
@@ -28,6 +29,7 @@ export default function Song() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [transpose, setTranspose] = useState(0);
+  const [isPlaylistsOpen, setIsPlaylistsOpen] = useState(false);
 
   const canEdit = song?.ownerId === user?.uid;
 
@@ -85,7 +87,15 @@ export default function Song() {
         transpose={transpose}
         onTransposeChange={setTranspose}
         onEdit={canEdit ? () => setIsEditing(true) : undefined}
+        onManagePlaylists={user != null && !isGuest ? () => setIsPlaylistsOpen(true) : undefined}
       />
+
+      {isPlaylistsOpen && (
+        <SongPlaylistsDrawer
+          song={song}
+          onClose={() => setIsPlaylistsOpen(false)}
+        />
+      )}
     </section>
   );
 }

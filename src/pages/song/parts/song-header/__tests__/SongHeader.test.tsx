@@ -131,4 +131,30 @@ describe('SongHeader', () => {
     await user.click(screen.getByRole('button', { name: 'Upravit píseň' }));
     expect(onEdit).toHaveBeenCalledOnce();
   });
+
+  it('shows the add-to-playlist button only when it is offered', async () => {
+    const user = userEvent.setup();
+    const onManagePlaylists = vi.fn();
+    const { rerender } = render(
+      <SongHeader
+        song={song}
+        transpose={0}
+        onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Přidat do playlistu' })).not.toBeInTheDocument();
+
+    rerender(
+      <SongHeader
+        song={song}
+        transpose={0}
+        onTransposeChange={vi.fn()}
+        onStartPlay={vi.fn()}
+        onManagePlaylists={onManagePlaylists}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: 'Přidat do playlistu' }));
+    expect(onManagePlaylists).toHaveBeenCalledOnce();
+  });
 });

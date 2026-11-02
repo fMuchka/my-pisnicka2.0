@@ -15,13 +15,21 @@ type SongViewProps = {
   onTransposeChange: (transpose: number) => void;
   /** Shows the edit button when given. */
   onEdit?: () => void;
+  /** Shows the add-to-playlist button when given. */
+  onManagePlaylists?: () => void;
 };
 
 /**
  * The song to read: header and sheet. In play mode the navigation hides, the header gives way to
  * the auto-scroll controls and the screen can be kept awake.
  */
-export function SongView({ song, transpose, onTransposeChange, onEdit }: Readonly<SongViewProps>) {
+export function SongView({
+  song,
+  transpose,
+  onTransposeChange,
+  onEdit,
+  onManagePlaylists,
+}: Readonly<SongViewProps>) {
   const [isPlaying, setIsPlaying] = useState(false);
   const stopPlaying = useCallback(() => setIsPlaying(false), []);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -54,6 +62,7 @@ export function SongView({ song, transpose, onTransposeChange, onEdit }: Readonl
           transpose={transpose}
           onTransposeChange={onTransposeChange}
           onEdit={onEdit}
+          onManagePlaylists={onManagePlaylists}
           onStartPlay={() => setIsPlaying(true)}
         />
       )}

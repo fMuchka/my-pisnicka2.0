@@ -1,4 +1,4 @@
-import { Minus, Pencil, Play, Plus } from 'lucide-react';
+import { ListPlus, Minus, Pencil, Play, Plus } from 'lucide-react';
 import Button from '../../../../components/_core/button/Button';
 import type { Song } from '../../../../lib/song';
 import { songChords } from './song-chords/chords';
@@ -12,6 +12,8 @@ type SongHeaderProps = {
   onTransposeChange: (transpose: number) => void;
   /** Shows the edit button when given. */
   onEdit?: () => void;
+  /** Shows the add-to-playlist button when given. */
+  onManagePlaylists?: () => void;
   onStartPlay: () => void;
 };
 
@@ -23,6 +25,7 @@ export function SongHeader({
   transpose,
   onTransposeChange,
   onEdit,
+  onManagePlaylists,
   onStartPlay,
 }: Readonly<SongHeaderProps>) {
   return (
@@ -40,6 +43,14 @@ export function SongHeader({
             className={styles.playButton}
             onClick={onStartPlay}
           />
+          {onManagePlaylists && (
+            <Button
+              icon={ListPlus}
+              styleVariation="text"
+              aria-label="Přidat do playlistu"
+              onClick={onManagePlaylists}
+            />
+          )}
           {onEdit && (
             <Button
               icon={Pencil}
