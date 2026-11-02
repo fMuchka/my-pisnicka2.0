@@ -16,7 +16,7 @@ type ArtistGroup = {
   songs: SongListItem[];
 };
 
-const byArtistThenTitle = (a: SongListItem, b: SongListItem) =>
+export const byArtistThenTitle = (a: SongListItem, b: SongListItem) =>
   a.artist.localeCompare(b.artist, 'cs', { sensitivity: 'base' }) ||
   a.title.localeCompare(b.title, 'cs', { sensitivity: 'base' });
 

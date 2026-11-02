@@ -1,0 +1,34 @@
+.songs {
+  display: flex;
+  flex-direction: column;
+  max-height: 45vh;
+  margin: 0;
+  padding: 0 var(--space-xs);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.songs > li + li {
+  border-top: 1px solid var(--border-soft);
+}
+
+.empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font: var(--text-body);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 560px) {
+  .actions > * {
+    flex: 1;
+  }
+}

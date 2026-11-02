@@ -19,7 +19,22 @@ vi.mock('../../../components/song-list/SongList', () => ({
   SongList: () => null,
 }));
 
+vi.mock('../parts/playlists-tab/PlaylistsTab', () => ({
+  PlaylistsTab: ({ mode }: { mode: string }) => <p>Playlisty: {mode}</p>,
+}));
+
 describe('SongLibrary', () => {
+  it('shows the playlists of the chosen source', async () => {
+    const user = userEvent.setup();
+    render(<SongLibrary />);
+
+    await user.click(screen.getByText('Playlisty'));
+    expect(screen.getByText('Playlisty: private')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Veřejné'));
+    expect(screen.getByText('Playlisty: public')).toBeInTheDocument();
+  });
+
   it('opens the song form to create a new song', async () => {
     const user = userEvent.setup();
     render(<SongLibrary />);
