@@ -1,12 +1,15 @@
-import { ChevronDown, Globe, ListMusic, Plus, X } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, Globe, ListMusic, Plus, Settings2, X } from 'lucide-react';
 import { generatePath, Link } from 'react-router';
 import Button from '../../../../components/_core/button/Button';
+import type { PlaylistWithSongs } from '../../../../hooks/usePlaylists';
 import type { PlaylistSongRef } from '../../../../lib/playlist';
 import type { Song } from '../../../../lib/song';
 import Routes from '../../../../router/Routes';
 import { formatSongCount } from '../../filter';
-import type { PlaylistWithSongs } from '../../usePlaylists';
+import { playlistEntries } from '../../playlistEntries';
 import styles from './PlaylistList.module.css';
+
+export type PlaylistAction = 'add-songs' | 'reorder' | 'edit';
 
 type PlaylistListProps = {
   playlists: PlaylistWithSongs[];
@@ -15,7 +18,7 @@ type PlaylistListProps = {
   /** Marks public playlists; pointless where every playlist is public. */
   showVisibility: boolean;
   emptyText: string;
-  onAddSongs: (playlist: PlaylistWithSongs) => void;
+  onAction: (playlist: PlaylistWithSongs, action: PlaylistAction) => void;
   onRemoveSong: (playlist: PlaylistWithSongs, songRef: PlaylistSongRef) => void;
 };
 
@@ -26,7 +29,7 @@ export function PlaylistList({
   canEdit,
   showVisibility,
   emptyText,
-  onAddSongs,
+  onAction,
   onRemoveSong,
 }: Readonly<PlaylistListProps>) {
   if (playlists.length === 0) {
@@ -36,11 +39,7 @@ export function PlaylistList({
   return (
     <ul className={styles.playlists}>
       {playlists.map((playlist) => {
-        // Refs to songs that are gone (deleted, or not loaded yet) are left out.
-        const entries = playlist.songRefs.flatMap((songRef) => {
-          const song = songById.get(songRef.sourceSongId);
-          return song ? [{ songRef, song }] : [];
-        });
+        const entries = playlistEntries(playlist, songById);
         const isEditable = canEdit(playlist);
 
         return (
@@ -99,14 +98,33 @@ export function PlaylistList({
                 )}
 
                 {isEditable && (
-                  <Button
-                    type="button"
-                    icon={Plus}
-                    label="Přidat písně"
-                    styleVariation="text"
-                    className={styles.addButton}
-                    onClick={() => onAddSongs(playlist)}
-                  />
+                  <div className={styles.actions}>
+                    <Button
+                      type="button"
+                      icon={Plus}
+                      label="Přidat písně"
+                      styleVariation="text"
+                      className={styles.actionButton}
+                      onClick={() => onAction(playlist, 'add-songs')}
+                    />
+                    <Button
+                      type="button"
+                      icon={ArrowUpDown}
+                      label="Pořadí"
+                      styleVariation="text"
+                      className={styles.actionButton}
+                      disabled={entries.length < 2}
+                      onClick={() => onAction(playlist, 'reorder')}
+                    />
+                    <Button
+                      type="button"
+                      icon={Settings2}
+                      label="Upravit"
+                      styleVariation="text"
+                      className={styles.actionButton}
+                      onClick={() => onAction(playlist, 'edit')}
+                    />
+                  </div>
                 )}
               </div>
             </details>

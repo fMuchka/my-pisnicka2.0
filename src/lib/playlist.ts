@@ -10,6 +10,7 @@ import {
   updateDoc,
   where,
   orderBy,
+  writeBatch,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
@@ -118,16 +119,59 @@ export async function createPlaylist(input: CreatePlaylistInput): Promise<Playli
   };
 }
 
-export async function updatePlaylistVisibility(
-  playlistId: string,
-  visibility: PlaylistVisibility
-): Promise<void> {
-  const playlistRef = doc(db, 'playlists', playlistId);
+export interface UpdatePlaylistInput {
+  name: string;
+  visibility: PlaylistVisibility;
+}
 
-  await updateDoc(playlistRef, {
-    visibility,
+export async function updatePlaylist(
+  playlistId: string,
+  input: UpdatePlaylistInput
+): Promise<UpdatePlaylistInput> {
+  const name = normalizePlaylistName(input.name);
+
+  if (name.length === 0) {
+    throw new Error('Playlist name must not be empty.');
+  }
+
+  const changes = { name, visibility: input.visibility };
+
+  await updateDoc(doc(db, 'playlists', playlistId), {
+    ...changes,
     updatedAt: Timestamp.now(),
   });
+
+  return changes;
+}
+
+/** Deletes the playlist together with its song refs; the songs themselves stay. */
+export async function deletePlaylist(playlistId: string): Promise<void> {
+  const songsSnapshot = await getDocs(collection(db, 'playlists', playlistId, 'songs'));
+  const batch = writeBatch(db);
+
+  // The rules check song ref deletes against the playlist as it was before the batch,
+  // so the playlist can go in the same batch.
+  for (const songDoc of songsSnapshot.docs) {
+    batch.delete(songDoc.ref);
+  }
+  batch.delete(doc(db, 'playlists', playlistId));
+
+  await batch.commit();
+}
+
+/** Renumbers the playlist's song refs to follow the given order. */
+export async function reorderPlaylistSongs(
+  playlistId: string,
+  orderedSongRefIds: string[]
+): Promise<void> {
+  const batch = writeBatch(db);
+
+  orderedSongRefIds.forEach((songRefId, position) => {
+    batch.update(doc(db, 'playlists', playlistId, 'songs', songRefId), { position });
+  });
+  batch.update(doc(db, 'playlists', playlistId), { updatedAt: Timestamp.now() });
+
+  await batch.commit();
 }
 
 export async function fetchPlaylistSongRefs(playlistId: string): Promise<PlaylistSongRef[]> {

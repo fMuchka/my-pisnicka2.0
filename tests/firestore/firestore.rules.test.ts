@@ -6,7 +6,15 @@ import {
   assertFails,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc, deleteDoc, getDoc, Timestamp } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  Timestamp,
+  writeBatch,
+} from 'firebase/firestore';
 import { describe, it, beforeEach, beforeAll, afterAll } from 'vitest';
 
 const PROJECT_ID = 'my-pisnicka-rules-tests';
@@ -247,6 +255,60 @@ describe('firestore.rules', () => {
 
     await assertSucceeds(getDoc(doc(authedDb('user-b'), 'playlists/playlist-1')));
     await assertSucceeds(getDoc(doc(guestDb(), 'playlists/playlist-1')));
+  });
+
+  describe('playlist batches', () => {
+    beforeEach(async () => {
+      await testEnv.withSecurityRulesDisabled(async (context) => {
+        const db = context.firestore();
+        await setDoc(doc(db, 'playlists/playlist-1'), {
+          name: 'Owned by A',
+          ownerId: 'user-a',
+          visibility: 'public',
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+        for (const [index, refId] of ['ref-1', 'ref-2'].entries()) {
+          await setDoc(doc(db, `playlists/playlist-1/songs/${refId}`), {
+            sourceSongId: `song-${index}`,
+            position: index,
+            addedAt: Timestamp.now(),
+          });
+        }
+      });
+    });
+
+    const deleteWithSongs = (db: ReturnType<typeof authedDb>) => {
+      const batch = writeBatch(db);
+      batch.delete(doc(db, 'playlists/playlist-1/songs/ref-1'));
+      batch.delete(doc(db, 'playlists/playlist-1/songs/ref-2'));
+      batch.delete(doc(db, 'playlists/playlist-1'));
+      return batch.commit();
+    };
+
+    const reorder = (db: ReturnType<typeof authedDb>) => {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'playlists/playlist-1/songs/ref-1'), { position: 1 });
+      batch.update(doc(db, 'playlists/playlist-1/songs/ref-2'), { position: 0 });
+      batch.update(doc(db, 'playlists/playlist-1'), { updatedAt: Timestamp.now() });
+      return batch.commit();
+    };
+
+    it('lets the owner delete a playlist together with its songs in one batch', async () => {
+      await assertSucceeds(deleteWithSongs(authedDb('user-a')));
+    });
+
+    it('denies deleting someone else’s playlist', async () => {
+      await assertFails(deleteWithSongs(authedDb('user-b')));
+    });
+
+    it('lets the owner renumber the songs in one batch', async () => {
+      await assertSucceeds(reorder(authedDb('user-a')));
+    });
+
+    it('denies reordering someone else’s playlist', async () => {
+      await assertFails(reorder(authedDb('user-b')));
+    });
   });
 
   it('denies adding playlist song to playlist owned by another user', async () => {

@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react';
 import ErrorMessage from '../../../../components/_core/error-message/ErrorMessage';
 import LoadingSpinner from '../../../../components/_core/loading-spinner/LoadingSpinner';
+import { usePlaylists, type PlaylistWithSongs } from '../../../../hooks/usePlaylists';
 import type { PlaylistSongRef } from '../../../../lib/playlist';
 import type { Song } from '../../../../lib/song';
 import { formatPlaylistResultCount, matchesPlaylistQuery } from '../../filter';
+import { playlistEntries } from '../../playlistEntries';
 import type { PublicMode } from '../../types';
-import { usePlaylists, type PlaylistWithSongs } from '../../usePlaylists';
 import { AddSongsDrawer } from '../add-songs-drawer/AddSongsDrawer';
-import { CreatePlaylistDrawer } from '../create-playlist-drawer/CreatePlaylistDrawer';
 import { LibraryToolbar } from '../library-toolbar/LibraryToolbar';
-import { PlaylistList } from '../playlist-list/PlaylistList';
+import { PlaylistFormDrawer } from '../playlist-form-drawer/PlaylistFormDrawer';
+import { PlaylistList, type PlaylistAction } from '../playlist-list/PlaylistList';
+import { ReorderSongsDrawer } from '../reorder-songs-drawer/ReorderSongsDrawer';
 
 type PlaylistsTabProps = {
   mode: PublicMode;
@@ -17,18 +19,35 @@ type PlaylistsTabProps = {
   songs: Song[];
 };
 
+/** Which drawer is open, and for which playlist. */
+type OpenDrawer = { kind: 'create' } | { kind: PlaylistAction; playlistId: string } | null;
+
 export function PlaylistsTab({ mode, songs }: Readonly<PlaylistsTabProps>) {
-  const { playlists, isLoading, error, canEdit, create, addSongs, removeSong } = usePlaylists(mode);
+  const isMine = mode === 'private';
+  const {
+    playlists,
+    isLoading,
+    error,
+    canEdit,
+    create,
+    update,
+    remove,
+    addSongs,
+    removeSong,
+    reorderSongs,
+  } = usePlaylists(isMine ? 'mine' : 'public');
 
   const [query, setQuery] = useState('');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [addingToId, setAddingToId] = useState<string | null>(null);
+  const [drawer, setDrawer] = useState<OpenDrawer>(null);
   const [removeError, setRemoveError] = useState<string | null>(null);
 
   const songById = useMemo(() => new Map(songs.map((song) => [song.id, song])), [songs]);
   const visiblePlaylists = playlists.filter((playlist) => matchesPlaylistQuery(playlist, query));
-  const addingTo = playlists.find((playlist) => playlist.id === addingToId);
-  const isMine = mode === 'private';
+  const drawerPlaylist =
+    drawer && 'playlistId' in drawer
+      ? playlists.find((playlist) => playlist.id === drawer.playlistId)
+      : undefined;
+  const closeDrawer = () => setDrawer(null);
 
   const handleRemoveSong = async (playlist: PlaylistWithSongs, songRef: PlaylistSongRef) => {
     setRemoveError(null);
@@ -56,10 +75,54 @@ export function PlaylistsTab({ mode, songs }: Readonly<PlaylistsTabProps>) {
         canEdit={canEdit}
         showVisibility={isMine}
         emptyText={emptyText}
-        onAddSongs={(playlist) => setAddingToId(playlist.id)}
+        onAction={(playlist, kind) => setDrawer({ kind, playlistId: playlist.id })}
         onRemoveSong={(playlist, songRef) => void handleRemoveSong(playlist, songRef)}
       />
     );
+  };
+
+  const renderPlaylistDrawer = (playlist: PlaylistWithSongs, kind: PlaylistAction) => {
+    switch (kind) {
+      case 'add-songs':
+        return (
+          <AddSongsDrawer
+            playlistName={playlist.name}
+            songs={songs.filter(
+              (song) => !playlist.songRefs.some((songRef) => songRef.sourceSongId === song.id)
+            )}
+            onAdd={(songIds) => addSongs(playlist.id, songIds)}
+            onClose={closeDrawer}
+          />
+        );
+
+      case 'reorder': {
+        const entries = playlistEntries(playlist, songById);
+        const shownIds = new Set(entries.map((entry) => entry.songRef.id));
+        // Refs the drawer can't show keep their place at the end instead of being renumbered away.
+        const hiddenIds = playlist.songRefs
+          .filter((ref) => !shownIds.has(ref.id))
+          .map((ref) => ref.id);
+
+        return (
+          <ReorderSongsDrawer
+            playlistName={playlist.name}
+            entries={entries}
+            onSave={(orderedIds) => reorderSongs(playlist.id, [...orderedIds, ...hiddenIds])}
+            onClose={closeDrawer}
+          />
+        );
+      }
+
+      case 'edit':
+        return (
+          <PlaylistFormDrawer
+            playlist={playlist}
+            onSubmit={(input) => update(playlist.id, input)}
+            onDelete={() => remove(playlist.id)}
+            onClose={closeDrawer}
+          />
+        );
+    }
   };
 
   return (
@@ -70,30 +133,26 @@ export function PlaylistsTab({ mode, songs }: Readonly<PlaylistsTabProps>) {
         searchLabel="Hledat playlist"
         resultCount={isLoading ? '' : formatPlaylistResultCount(visiblePlaylists.length, query)}
         createLabel={isMine ? 'Vytvořit playlist' : undefined}
-        onCreate={() => setIsCreateOpen(true)}
+        onCreate={() => setDrawer({ kind: 'create' })}
       />
 
       {removeError && <ErrorMessage message={removeError} />}
 
       {renderPlaylists()}
 
-      {isCreateOpen && (
-        <CreatePlaylistDrawer
-          onCreate={create}
-          onClose={() => setIsCreateOpen(false)}
+      {drawer?.kind === 'create' && (
+        <PlaylistFormDrawer
+          onSubmit={async (input) => {
+            await create(input);
+          }}
+          onClose={closeDrawer}
         />
       )}
 
-      {addingTo && (
-        <AddSongsDrawer
-          playlistName={addingTo.name}
-          songs={songs.filter(
-            (song) => !addingTo.songRefs.some((songRef) => songRef.sourceSongId === song.id)
-          )}
-          onAdd={(songIds) => addSongs(addingTo.id, songIds)}
-          onClose={() => setAddingToId(null)}
-        />
-      )}
+      {drawerPlaylist &&
+        drawer &&
+        drawer.kind !== 'create' &&
+        renderPlaylistDrawer(drawerPlaylist, drawer.kind)}
     </>
   );
 }

@@ -1,0 +1,50 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+.danger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-soft);
+}
+
+.danger .actions {
+  align-self: stretch;
+}
+
+.danger-text {
+  margin: 0;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}
+
+.delete-text-button,
+.delete-text-button:hover {
+  color: var(--danger);
+}
+
+.delete-button,
+.delete-button:hover {
+  background: var(--danger-fill);
+  border-color: var(--danger-fill);
+  color: var(--on-danger);
+  box-shadow: none;
+}
+
+@media (max-width: 560px) {
+  .actions > * {
+    flex: 1;
+  }
+}

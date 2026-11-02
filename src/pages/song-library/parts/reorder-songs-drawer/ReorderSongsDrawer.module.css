@@ -1,0 +1,107 @@
+.sort-button {
+  align-self: flex-start;
+  min-height: 40px;
+}
+
+.songs {
+  max-height: 50vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.song {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 52px;
+  padding: 0 var(--space-xs);
+}
+
+.song + .song {
+  border-top: 1px solid var(--border-soft);
+}
+
+.position {
+  flex: none;
+  min-width: 1.75em;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.song-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.song-title,
+.song-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.song-title {
+  color: var(--ink);
+  font: var(--text-body);
+  font-size: 15px;
+}
+
+.song-artist {
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}
+
+.move-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.move-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.move-button:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .move-button:not(:disabled):hover {
+    background: var(--surface-secondary);
+  }
+}
+
+.move-button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 560px) {
+  .actions > * {
+    flex: 1;
+  }
+}

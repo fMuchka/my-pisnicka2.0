@@ -175,7 +175,13 @@
   outline-offset: -2px;
 }
 
-.add-button {
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.action-button {
   min-height: 40px;
 }
 

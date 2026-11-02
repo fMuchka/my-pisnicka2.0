@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import type { Song } from '../../../../../lib/song';
-import type { PlaylistWithSongs } from '../../../usePlaylists';
+import type { PlaylistWithSongs } from '../../../../../hooks/usePlaylists';
 import { PlaylistList } from '../PlaylistList';
 
 const songs: Song[] = [
@@ -24,7 +24,7 @@ const playlist: PlaylistWithSongs = {
 };
 
 const renderList = (props: Partial<Parameters<typeof PlaylistList>[0]> = {}) => {
-  const handlers = { onAddSongs: vi.fn(), onRemoveSong: vi.fn() };
+  const handlers = { onAction: vi.fn(), onRemoveSong: vi.fn() };
   render(
     <MemoryRouter>
       <PlaylistList
@@ -56,16 +56,22 @@ describe('PlaylistList', () => {
     expect(links[0]).toHaveAttribute('href', '/song/b');
   });
 
-  it('lets the owner add and remove songs', async () => {
+  it('lets the owner add and remove songs and manage the playlist', async () => {
     const user = userEvent.setup();
-    const { onAddSongs, onRemoveSong } = renderList();
+    const { onAction, onRemoveSong } = renderList();
     await user.click(screen.getByText('Táborák'));
 
     await user.click(screen.getByRole('button', { name: 'Odebrat Alpha z playlistu' }));
     expect(onRemoveSong).toHaveBeenCalledWith(playlist, playlist.songRefs[1]);
 
     await user.click(screen.getByRole('button', { name: 'Přidat písně' }));
-    expect(onAddSongs).toHaveBeenCalledWith(playlist);
+    expect(onAction).toHaveBeenCalledWith(playlist, 'add-songs');
+
+    await user.click(screen.getByRole('button', { name: 'Pořadí' }));
+    expect(onAction).toHaveBeenLastCalledWith(playlist, 'reorder');
+
+    await user.click(screen.getByRole('button', { name: 'Upravit' }));
+    expect(onAction).toHaveBeenLastCalledWith(playlist, 'edit');
   });
 
   it('only shows someone else’s playlist', async () => {
