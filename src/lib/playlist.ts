@@ -5,6 +5,7 @@ import {
   doc,
   getDocs,
   limit,
+  onSnapshot,
   query,
   Timestamp,
   updateDoc,
@@ -13,6 +14,7 @@ import {
   writeBatch,
   type DocumentData,
   type QueryDocumentSnapshot,
+  type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -69,28 +71,91 @@ const mapPlaylistSongRef = (
   };
 };
 
-const byUpdatedAtDesc = (a: Playlist, b: Playlist): number => {
-  const aMs = a.updatedAt?.toMillis() ?? 0;
-  const bMs = b.updatedAt?.toMillis() ?? 0;
+export type PlaylistWithSongs = Playlist & { songRefs: PlaylistSongRef[] };
 
-  return bMs - aMs;
-};
+/** The signed-in user's own playlists, or everyone else's public ones. */
+export type PlaylistScope = 'mine' | 'public';
 
-export async function fetchUserPlaylists(ownerId: string): Promise<Playlist[]> {
-  const playlistQuery = query(collection(db, 'playlists'), where('ownerId', '==', ownerId));
-  const snapshot = await getDocs(playlistQuery);
+// By name rather than by last change: the list is live, and a playlist jumping to the top while
+// songs are added to it would pull it from under the user.
+const byName = (a: Playlist, b: Playlist) =>
+  a.name.localeCompare(b.name, 'cs', { sensitivity: 'base' });
 
-  return snapshot.docs.map(mapPlaylist).sort(byUpdatedAtDesc);
-}
+/**
+ * Keeps `onChange` up to date with the playlists of `scope`, each with its songs in playlist
+ * order. Calls back once every playlist's songs have arrived, then on every change.
+ */
+export function subscribeToPlaylists(
+  scope: PlaylistScope,
+  userId: string,
+  onChange: (playlists: PlaylistWithSongs[]) => void,
+  onError: (error: Error) => void
+): Unsubscribe {
+  const playlistQuery =
+    scope === 'mine'
+      ? query(collection(db, 'playlists'), where('ownerId', '==', userId))
+      : query(collection(db, 'playlists'), where('visibility', '==', 'public'));
 
-export async function fetchPublicPlaylists(excludeOwnerId?: string): Promise<Playlist[]> {
-  const playlistQuery = query(collection(db, 'playlists'), where('visibility', '==', 'public'));
-  const snapshot = await getDocs(playlistQuery);
+  let playlists: Playlist[] | null = null;
+  const songRefs = new Map<string, PlaylistSongRef[]>();
+  const songListeners = new Map<string, Unsubscribe>();
 
-  return snapshot.docs
-    .map(mapPlaylist)
-    .filter((playlist) => (excludeOwnerId ? playlist.ownerId !== excludeOwnerId : true))
-    .sort(byUpdatedAtDesc);
+  const emit = () => {
+    if (playlists === null || playlists.some((playlist) => !songRefs.has(playlist.id))) return;
+    onChange(
+      playlists.map((playlist) => ({ ...playlist, songRefs: songRefs.get(playlist.id) ?? [] }))
+    );
+  };
+
+  const listenToSongs = (playlistId: string) =>
+    onSnapshot(
+      query(collection(db, 'playlists', playlistId, 'songs'), orderBy('position', 'asc')),
+      (snapshot) => {
+        songRefs.set(
+          playlistId,
+          snapshot.docs.map(mapPlaylistSongRef).filter((ref) => ref.sourceSongId.length > 0)
+        );
+        emit();
+      },
+      () => {
+        // A deleted playlist's songs stop being readable, sometimes before the playlist's
+        // removal arrives. It goes away with that; until then it just shows no songs.
+        songRefs.set(playlistId, []);
+        emit();
+      }
+    );
+
+  const stopPlaylists = onSnapshot(
+    playlistQuery,
+    (snapshot) => {
+      playlists = snapshot.docs
+        .map(mapPlaylist)
+        .filter((playlist) => scope === 'mine' || playlist.ownerId !== userId)
+        .sort(byName);
+
+      const ids = new Set(playlists.map((playlist) => playlist.id));
+      for (const [playlistId, stop] of songListeners) {
+        if (!ids.has(playlistId)) {
+          stop();
+          songListeners.delete(playlistId);
+          songRefs.delete(playlistId);
+        }
+      }
+      for (const playlist of playlists) {
+        if (!songListeners.has(playlist.id)) {
+          songListeners.set(playlist.id, listenToSongs(playlist.id));
+        }
+      }
+
+      emit();
+    },
+    onError
+  );
+
+  return () => {
+    stopPlaylists();
+    songListeners.forEach((stop) => stop());
+  };
 }
 
 export async function createPlaylist(input: CreatePlaylistInput): Promise<Playlist> {
@@ -172,16 +237,6 @@ export async function reorderPlaylistSongs(
   batch.update(doc(db, 'playlists', playlistId), { updatedAt: Timestamp.now() });
 
   await batch.commit();
-}
-
-export async function fetchPlaylistSongRefs(playlistId: string): Promise<PlaylistSongRef[]> {
-  const songsQuery = query(
-    collection(db, 'playlists', playlistId, 'songs'),
-    orderBy('position', 'asc')
-  );
-  const snapshot = await getDocs(songsQuery);
-
-  return snapshot.docs.map(mapPlaylistSongRef).filter((songRef) => songRef.sourceSongId.length > 0);
 }
 
 export async function addSongToPlaylist(

@@ -2,8 +2,8 @@
 // only reaches localStorage once the user has accepted it. Until then writes wait in memory and
 // still work for the visit; accepting saves them, declining drops them along with anything saved.
 //
-// Essential data does not come through here: the login (Firebase), the joined session, the song
-// cache and the consent choice itself.
+// Essential data does not come through here: the login (Firebase), the joined session and the
+// consent choice itself.
 
 export const STORAGE_CONSENT_KEY = 'my-pisnicka:cookie-notice-consent';
 

@@ -15,7 +15,6 @@ const storageGroups: StorageGroup[] = [
     items: [
       'Přihlášení.',
       'Relace, ke které ses připojil – jen do zavření karty.',
-      'Tvoje písně, aby se aplikace načítala rychle. Po 30 dnech se stáhnou znovu.',
       'Tvoje volba z tohohle přepínače.',
     ],
   },

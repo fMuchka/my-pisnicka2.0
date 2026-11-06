@@ -17,7 +17,8 @@ describe('PrivacySettings', () => {
     expect(screen.getByRole('heading', { name: /vždy/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Jen se souhlasem' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Nikdy' })).toBeInTheDocument();
-    expect(screen.getByText(/po 30 dnech se stáhnou znovu/i)).toBeInTheDocument();
+    expect(screen.getByText('Přihlášení.')).toBeInTheDocument();
+    expect(screen.queryByText(/písně/i)).not.toBeInTheDocument();
   });
 
   it('withdraws and gives the consent back', async () => {

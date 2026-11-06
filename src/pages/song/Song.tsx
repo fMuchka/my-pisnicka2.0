@@ -19,13 +19,8 @@ export default function Song() {
   const { user, isGuest } = useAuth();
 
   const isCreate = pathname === Routes.SongCreate;
-  const {
-    song: loadedSong,
-    songError,
-    songLoading,
-  } = useSongDetail(isCreate ? null : (songId ?? null));
-  const { savedSong, isSaving, saveError, clearSaveError, save } = useSongSave(isCreate);
-  const song = savedSong?.id === songId ? savedSong : loadedSong;
+  const { song, songError, songLoading } = useSongDetail(isCreate ? null : (songId ?? null));
+  const { isSaving, saveError, clearSaveError, save } = useSongSave(isCreate);
 
   const [isEditing, setIsEditing] = useState(false);
   const [transpose, setTranspose] = useState(0);

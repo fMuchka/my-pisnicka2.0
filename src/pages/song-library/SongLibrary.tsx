@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { SongList } from '../../components/song-list/SongList';
 import { usePageNavigation } from '../../hooks/usePageNavigation';
-import { useSongListData } from '../../hooks/useSongListData';
+import { useSongCatalog } from '../../hooks/useSongCatalog';
+import ErrorMessage from '../../components/_core/error-message/ErrorMessage';
+import LoadingSpinner from '../../components/_core/loading-spinner/LoadingSpinner';
 import { formatResultCount, matchesQuery } from './filter';
 import type { PublicMode, SongLibraryTab } from './types';
 import styles from './SongLibrary.module.css';
@@ -19,9 +21,15 @@ export default function SongLibrary() {
   const [publicMode, setPublicMode] = useState<PublicMode>('private');
   const [activeTab, setActiveTab] = useState<SongLibraryTab>('songs');
   const [query, setQuery] = useState('');
-  const { userSongs } = useSongListData();
+  const { songs: allSongs, isLoading, error } = useSongCatalog();
 
-  const songs = userSongs.filter((song) => matchesQuery(song, query));
+  const songs = allSongs.filter((song) => matchesQuery(song, query));
+
+  const renderSongs = () => {
+    if (isLoading) return <LoadingSpinner label="Načítám písně…" />;
+    if (error) return <ErrorMessage message={error} />;
+    return <SongList songs={songs} />;
+  };
 
   return (
     <section className={styles.container}>
@@ -44,19 +52,19 @@ export default function SongLibrary() {
             query={query}
             onQueryChange={setQuery}
             searchLabel="Hledat interpreta nebo píseň"
-            resultCount={formatResultCount(songs.length, query)}
+            resultCount={isLoading ? '' : formatResultCount(songs.length, query)}
             createLabel="Vytvořit píseň"
             onCreate={() => void navigate(Routes.SongCreate)}
           />
 
-          <SongList songs={songs} />
+          {renderSongs()}
         </>
       )}
 
       {activeTab === 'playlists' && (
         <PlaylistsTab
           mode={publicMode}
-          songs={userSongs}
+          songs={allSongs}
         />
       )}
     </section>

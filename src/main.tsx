@@ -6,7 +6,6 @@ import './styles/global.css';
 // Applies the saved theme on import, before anything renders, so there's no flash of the default one.
 import './hooks/useTheme';
 import { createAppRouter } from './router';
-import { clearExpiredCache } from './lib/songStorage';
 
 // Register service worker for PWA
 const updateSW = registerSW({
@@ -20,14 +19,17 @@ const updateSW = registerSW({
   },
 });
 
-async function init() {
-  await clearExpiredCache();
-
-  createRoot(document.getElementById('app')!).render(
-    <StrictMode>
-      <RouterProvider router={createAppRouter()} />
-    </StrictMode>
-  );
+// The app used to keep songs on the device; they now stay in memory for the visit only.
+// TODO: Drop this once installs from before the switch are gone.
+try {
+  indexedDB.deleteDatabase('mypisnicka');
+  localStorage.removeItem('mypisnicka_cache_ts');
+} catch {
+  // Storage blocked: there's nothing of ours to clean up then.
 }
 
-void init();
+createRoot(document.getElementById('app')!).render(
+  <StrictMode>
+    <RouterProvider router={createAppRouter()} />
+  </StrictMode>
+);

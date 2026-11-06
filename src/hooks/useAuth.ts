@@ -2,6 +2,9 @@ import { onAuthStateChanged, type Unsubscribe, type User } from 'firebase/auth';
 import { create } from 'zustand';
 import { auth } from '../lib/firebase';
 import { signOut as signOutService } from '../lib/authService';
+import { forgetLoadedSongs } from '../stores/loadedSongs';
+import { forgetPlaylists } from '../stores/playlists';
+import { forgetSongCatalog } from '../stores/songCatalog';
 
 type AuthState = {
   user: User | null;
@@ -63,10 +66,16 @@ export function isAuthenticated(): boolean {
  */
 const isGuestUser = (user: User | null) => user == null || user.isAnonymous;
 
-/** Signs out and clears local auth state; the next useAuth() call subscribes again. */
+/**
+ * Signs out and clears local auth state and loaded data; the next useAuth() call subscribes again.
+ * The listeners stop first, as the rules would start refusing them mid-way.
+ */
 export async function logout() {
   unsubscribe?.();
   unsubscribe = null;
+  forgetSongCatalog();
+  forgetLoadedSongs();
+  forgetPlaylists();
   await signOutService();
   useAuthStore.setState({ user: null });
 }

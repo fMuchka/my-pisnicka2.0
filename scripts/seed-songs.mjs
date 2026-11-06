@@ -433,9 +433,6 @@ const main = async () => {
 
   const artists = new Set(artistPool.map((artist) => artist.name));
   console.log(`Seeded ${SONG_COUNT} songs by ${artists.size} artists and ${TAGS.length} tags.`);
-  console.log(
-    'Clear the app’s IndexedDB cache (or site data) to see them: it only refetches when empty.'
-  );
 };
 
 main().catch((error) => {

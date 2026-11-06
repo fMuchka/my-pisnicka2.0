@@ -1,15 +1,16 @@
 import { parseCapo } from './parts/song-editor/draft';
 import type { SongDraft } from './parts/song-editor/types';
 import {
+  createSong,
   createSongCatalogEntry,
   fetchSongCatalogEntryBySourceSongId,
   resolveSongCategoryIds,
+  updateSong,
   updateSongCatalogEntry,
   type CreateSongInput,
   type Song,
 } from '../../lib/song';
 import { extractUniqueChords } from '../../lib/songTextEditor/chords';
-import { useSongStore } from '../../stores/song';
 
 /**
  * Creates the song (no `songId`) or updates it, then mirrors it into the public song catalog.
@@ -29,7 +30,6 @@ export async function saveSong(draft: SongDraft, ownerId: string, songId?: strin
     ownerId,
   };
 
-  const { createSong, updateSong } = useSongStore.getState();
   const saved = songId ? await updateSong(songId, input) : await createSong(input);
 
   const existingEntry = songId ? await fetchSongCatalogEntryBySourceSongId(saved.id) : null;

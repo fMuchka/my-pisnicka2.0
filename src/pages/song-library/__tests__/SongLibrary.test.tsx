@@ -11,8 +11,8 @@ vi.mock('react-router', async (importOriginal) => ({
   useNavigate: () => mocks.navigate,
 }));
 
-vi.mock('../../../hooks/useSongListData', () => ({
-  useSongListData: () => ({ userSongs: [] }),
+vi.mock('../../../hooks/useSongCatalog', () => ({
+  useSongCatalog: () => ({ songs: [], isLoading: false, error: null }),
 }));
 
 vi.mock('../../../components/song-list/SongList', () => ({

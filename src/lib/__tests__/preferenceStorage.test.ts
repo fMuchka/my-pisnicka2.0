@@ -50,15 +50,15 @@ describe('preferenceStorage', () => {
     const storage = await loadStorage('accepted');
     storage.setPreferenceItem(THEME_KEY, 'dark');
     localStorage.setItem('my-pisnicka:feature-preferences', '{}');
-    // The song cache timestamp has no app prefix: it's essential and stays.
-    localStorage.setItem('mypisnicka_cache_ts', '123');
+    // Keys without the app prefix aren't preferences, so they stay.
+    localStorage.setItem('someone-elses-key', '123');
 
     storage.applyStorageConsent('declined');
 
     expect(localStorage.getItem(CONSENT_KEY)).toBe('declined');
     expect(localStorage.getItem(THEME_KEY)).toBeNull();
     expect(localStorage.getItem('my-pisnicka:feature-preferences')).toBeNull();
-    expect(localStorage.getItem('mypisnicka_cache_ts')).toBe('123');
+    expect(localStorage.getItem('someone-elses-key')).toBe('123');
   });
 
   it('keeps later changes in memory only after declining', async () => {

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { generatePath, useNavigate } from 'react-router';
 import { useAuth } from '../../hooks/useAuth';
-import type { Song } from '../../lib/song';
 import Routes from '../../router/Routes';
 import type { SongDraft } from './parts/song-editor/types';
 import { saveSong } from './saveSong';
@@ -14,8 +13,6 @@ export function useSongSave(isCreate: boolean) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // The detail hook does not see saves, so the page shows this one until the next load.
-  const [savedSong, setSavedSong] = useState<Song | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -28,7 +25,6 @@ export function useSongSave(isCreate: boolean) {
 
     try {
       const saved = await saveSong(draft, user.uid, isCreate ? undefined : songId);
-      setSavedSong(saved);
 
       if (isCreate) {
         void navigate(generatePath(Routes.Song, { songId: saved.id }), { replace: true });
@@ -47,5 +43,5 @@ export function useSongSave(isCreate: boolean) {
     }
   };
 
-  return { savedSong, isSaving, saveError, clearSaveError: () => setSaveError(null), save };
+  return { isSaving, saveError, clearSaveError: () => setSaveError(null), save };
 }

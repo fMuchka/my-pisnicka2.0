@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Song } from '../../../lib/song';
-import { useSongStore } from '../../../stores/song';
 import type { SongDraft } from '../parts/song-editor/types';
 import { saveSong } from '../saveSong';
 
@@ -9,6 +8,8 @@ const catalog = vi.hoisted(() => ({
   update: vi.fn(),
   fetchBySource: vi.fn(),
   resolveCategories: vi.fn(),
+  createSong: vi.fn(),
+  updateSong: vi.fn(),
 }));
 
 vi.mock('../../../lib/song', () => ({
@@ -16,6 +17,8 @@ vi.mock('../../../lib/song', () => ({
   updateSongCatalogEntry: catalog.update,
   fetchSongCatalogEntryBySourceSongId: catalog.fetchBySource,
   resolveSongCategoryIds: catalog.resolveCategories,
+  createSong: catalog.createSong,
+  updateSong: catalog.updateSong,
 }));
 
 const draft: SongDraft = {
@@ -35,13 +38,13 @@ const saved: Song = {
 };
 
 describe('saveSong', () => {
-  const createSong = vi.fn(() => Promise.resolve(saved));
-  const updateSong = vi.fn(() => Promise.resolve(saved));
+  const { createSong, updateSong } = catalog;
 
   beforeEach(() => {
     vi.clearAllMocks();
     catalog.resolveCategories.mockResolvedValue(['cat-folk', 'cat-taborak']);
-    useSongStore.setState({ createSong, updateSong });
+    createSong.mockResolvedValue(saved);
+    updateSong.mockResolvedValue(saved);
   });
 
   it('creates a trimmed song with its chords and instrument, and a catalog entry with its tags', async () => {

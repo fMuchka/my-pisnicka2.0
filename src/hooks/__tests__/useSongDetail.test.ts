@@ -1,19 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { useSongDetail } from '../useSongDetail';
 import type { Song } from '../../lib/song';
+import { forgetLoadedSongs, MAX_LOADED_SONGS, useLoadedSongsStore } from '../../stores/loadedSongs';
 
-const mocks = vi.hoisted(() => ({
-  getSong: vi.fn(),
-  refreshSong: vi.fn(),
-}));
+type Listener = {
+  songId: string;
+  onChange: (song: Song | null) => void;
+  onError: (error: Error) => void;
+  unsubscribe: ReturnType<typeof vi.fn>;
+};
 
-vi.mock('../../stores/song', () => ({
-  useSongStore: {
-    getState: () => ({
-      getSong: mocks.getSong,
-      refreshSong: mocks.refreshSong,
-    }),
+const listeners: Listener[] = [];
+
+vi.mock('../../lib/song', () => ({
+  subscribeToSong: (
+    songId: string,
+    onChange: Listener['onChange'],
+    onError: Listener['onError']
+  ) => {
+    const unsubscribe = vi.fn();
+    listeners.push({ songId, onChange, onError, unsubscribe });
+    return unsubscribe;
   },
 }));
 
@@ -25,107 +33,106 @@ const knockin: Song = {
   title: "Knockin on Heaven's Door",
   artist: 'Bob Dylan',
   text: '[verse] [G]Mama',
-  chords: ['G'],
   ownerId: '',
 };
 
 describe('useSongDetail', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.getSong.mockResolvedValue(null);
-    mocks.refreshSong.mockResolvedValue(null);
+    forgetLoadedSongs();
+    listeners.length = 0;
   });
 
-  it('returns null song and no error for empty song id', async () => {
+  it('does not listen without a song id', () => {
     const { result } = renderSongDetail('');
 
-    await waitFor(() => {
-      expect(result.current.song).toBeNull();
-      expect(result.current.songError).toBeNull();
-      expect(result.current.songLoading).toBe(false);
-      expect(mocks.getSong).not.toHaveBeenCalled();
-      expect(mocks.refreshSong).not.toHaveBeenCalled();
-    });
+    expect(result.current).toEqual({ song: null, songError: null, songLoading: false });
+    expect(listeners).toHaveLength(0);
   });
 
-  it('loads song from cache when cached song has text', async () => {
-    mocks.getSong.mockResolvedValue(knockin);
-
+  it('loads until the song arrives, then follows its changes', () => {
     const { result } = renderSongDetail('song-1');
 
-    await waitFor(() => {
-      expect(mocks.getSong).toHaveBeenCalledWith('song-1');
-      expect(mocks.refreshSong).not.toHaveBeenCalled();
-      expect(result.current.song).toEqual(knockin);
-      expect(result.current.songError).toBeNull();
-      expect(result.current.songLoading).toBe(false);
-    });
-  });
-
-  it('fetches full song when cache is missing', async () => {
-    mocks.getSong.mockResolvedValue(null);
-    mocks.refreshSong.mockResolvedValue(knockin);
-
-    const { result } = renderSongDetail('song-1');
-
-    await waitFor(() => {
-      expect(mocks.getSong).toHaveBeenCalledWith('song-1');
-      expect(mocks.refreshSong).toHaveBeenCalledWith('song-1');
-      expect(result.current.song).toEqual(knockin);
-      expect(result.current.songError).toBeNull();
-      expect(result.current.songLoading).toBe(false);
-    });
-  });
-
-  it('fetches full song when cached song has no text', async () => {
-    const { text: _text, chords: _chords, ...cachedSong } = knockin;
-
-    mocks.getSong.mockResolvedValue(cachedSong);
-    mocks.refreshSong.mockResolvedValue(knockin);
-
-    const { result } = renderSongDetail('song-1');
-
-    await waitFor(() => {
-      expect(mocks.getSong).toHaveBeenCalledWith('song-1');
-      expect(mocks.refreshSong).toHaveBeenCalledWith('song-1');
-      expect(result.current.song).toEqual(knockin);
-      expect(result.current.songError).toBeNull();
-      expect(result.current.songLoading).toBe(false);
-    });
-  });
-
-  it('sets formatted error message when fetching fails', async () => {
-    mocks.refreshSong.mockRejectedValue(new Error('network down'));
-
-    const { result } = renderSongDetail('song-1');
-
-    await waitFor(() => {
-      expect(result.current.song).toBeNull();
-      expect(result.current.songError).toContain('Chyba při načítání písně.');
-      expect(result.current.songError).toContain('network down');
-      expect(result.current.songLoading).toBe(false);
-    });
-  });
-
-  it('reloads when song id changes', async () => {
-    const songA: Song = { id: 'song-a', title: 'A', artist: 'Artist A', ownerId: '' };
-    const songB: Song = { id: 'song-b', title: 'B', artist: 'Artist B', ownerId: '' };
-
-    mocks.getSong.mockResolvedValue(null);
-    mocks.refreshSong.mockResolvedValueOnce(songA).mockResolvedValueOnce(songB);
-
-    const { result, rerender } = renderSongDetail('song-a');
-
-    await waitFor(() => {
-      expect(result.current.song?.id).toBe('song-a');
-    });
-
-    rerender({ id: 'song-b' });
+    expect(listeners[0]?.songId).toBe('song-1');
     expect(result.current.songLoading).toBe(true);
 
-    await waitFor(() => {
-      expect(mocks.refreshSong).toHaveBeenNthCalledWith(2, 'song-b');
-      expect(result.current.song?.id).toBe('song-b');
-    });
+    act(() => listeners[0]?.onChange(knockin));
+    expect(result.current).toEqual({ song: knockin, songError: null, songLoading: false });
+
+    act(() => listeners[0]?.onChange({ ...knockin, title: 'Renamed' }));
+    expect(result.current.song?.title).toBe('Renamed');
+  });
+
+  it('reports a song that does not exist as null, not loading', () => {
+    const { result } = renderSongDetail('missing');
+
+    act(() => listeners[0]?.onChange(null));
+
+    expect(result.current).toEqual({ song: null, songError: null, songLoading: false });
+  });
+
+  it('reports a failed load and tries again on the next visit', () => {
+    const { result, unmount } = renderSongDetail('song-1');
+
+    act(() => listeners[0]?.onError(new Error('offline')));
+
+    expect(result.current.songError).toBe('Chyba při načítání písně. offline');
+    expect(result.current.songLoading).toBe(false);
+    expect(listeners[0]?.unsubscribe).toHaveBeenCalled();
+
+    unmount();
+    renderSongDetail('song-1');
+
+    expect(listeners).toHaveLength(2);
+  });
+
+  it('keeps the previous song visible while the next loads', () => {
+    const { result, rerender } = renderSongDetail('song-1');
+    act(() => listeners[0]?.onChange(knockin));
+
+    rerender({ id: 'song-2' });
+
+    expect(listeners[1]?.songId).toBe('song-2');
+    expect(result.current).toEqual({ song: knockin, songError: null, songLoading: true });
+  });
+
+  it('shows a song it already loaded at once and without reading it again', () => {
+    const { result, rerender } = renderSongDetail('song-1');
+    act(() => listeners[0]?.onChange(knockin));
+    rerender({ id: 'song-2' });
+
+    rerender({ id: 'song-1' });
+
+    expect(listeners).toHaveLength(2);
+    expect(listeners[0]?.unsubscribe).not.toHaveBeenCalled();
+    expect(result.current).toEqual({ song: knockin, songError: null, songLoading: false });
+  });
+
+  it('keeps a loaded song current after leaving its page', () => {
+    const { result, rerender } = renderSongDetail('song-1');
+    act(() => listeners[0]?.onChange(knockin));
+    rerender({ id: 'song-2' });
+
+    act(() => listeners[0]?.onChange({ ...knockin, title: 'Renamed' }));
+    rerender({ id: 'song-1' });
+
+    expect(result.current.song?.title).toBe('Renamed');
+  });
+
+  it('forgets the least recently opened song past the limit', () => {
+    const { rerender } = renderSongDetail('song-0');
+    act(() => listeners[0]?.onChange(knockin));
+
+    for (let index = 1; index < MAX_LOADED_SONGS; index++) {
+      rerender({ id: `song-${index}` });
+    }
+    // Opening the first song again makes the second one the oldest.
+    rerender({ id: 'song-0' });
+    expect(listeners).toHaveLength(MAX_LOADED_SONGS);
+
+    rerender({ id: 'one-too-many' });
+
+    expect(listeners[0]?.unsubscribe).not.toHaveBeenCalled();
+    expect(listeners[1]?.unsubscribe).toHaveBeenCalled();
+    expect(useLoadedSongsStore.getState().songs['song-0']).toBeDefined();
   });
 });

@@ -5,15 +5,16 @@ import {
   Timestamp,
   addDoc,
   doc,
-  getDoc,
+  onSnapshot,
   updateDoc,
   type DocumentData,
+  type DocumentSnapshot,
+  type Unsubscribe,
   where,
   limit,
 } from 'firebase/firestore';
 import type { Instrument } from './chords/chords.database';
 import { db } from './firebase';
-import type { QueryDocumentSnapshot } from 'firebase/firestore/lite';
 
 export interface Song {
   id: string;
@@ -131,10 +132,7 @@ export function selectHomeSongs(songs: Song[]): Song[] {
   return result;
 }
 
-const mapSongDoc = (
-  doc: QueryDocumentSnapshot<DocumentData, DocumentData>,
-  data: DocumentData
-): Song => {
+const mapSongDoc = (doc: Pick<DocumentSnapshot, 'id'>, data: DocumentData): Song => {
   const songDoc = data as SongDocument;
 
   return {
@@ -152,7 +150,7 @@ const mapSongDoc = (
 };
 
 const mapSongListDoc = (
-  doc: QueryDocumentSnapshot<DocumentData, DocumentData>,
+  doc: Pick<DocumentSnapshot, 'id'>,
   data: DocumentData
 ): SongCatalogEntry => {
   const categories = Array.isArray(data.categories)
@@ -185,30 +183,76 @@ const normalizeCategoryIds = (categories?: Song['categories']) => {
   return [...uniqueIds];
 };
 
-export async function fetchAllSongs(): Promise<Song[]> {
-  const songsRef = collection(db, 'songs');
-  const q = query(songsRef);
+/** A song as the catalog lists it: everything but the text. */
+const catalogEntryToSong = (entry: SongCatalogEntry): Song => ({
+  id: entry.sourceSongId,
+  title: entry.title,
+  artist: entry.artist,
+  chords: entry.chords,
+  categories: entry.categories,
+  ownerId: entry.ownerId,
+});
 
-  const snapshot = await getDocs(q);
-  const allSongs = snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return mapSongDoc(doc, data);
-  });
-
-  return allSongs;
+/** Keeps `onChange` up to date with every song in the catalog, without their texts. */
+export function subscribeToSongCatalog(
+  onChange: (songs: Song[]) => void,
+  onError: (error: Error) => void
+): Unsubscribe {
+  return onSnapshot(
+    collection(db, 'songCatalog'),
+    (snapshot) => {
+      onChange(
+        snapshot.docs
+          .map((snapshotDoc) => mapSongListDoc(snapshotDoc, snapshotDoc.data()))
+          .filter((entry) => typeof entry.sourceSongId === 'string' && entry.sourceSongId !== '')
+          .map(catalogEntryToSong)
+      );
+    },
+    onError
+  );
 }
 
-export async function fetchAllSongTitlesAndArtists() {
-  const songsRef = collection(db, 'songCatalog');
-  const q = query(songsRef);
+/**
+ * Keeps `onChange` up to date with the whole song: its text from `songs` and its title, artist
+ * and tags from the catalog, which is where those live. Calls back once both have arrived; with
+ * null when the song does not exist.
+ */
+export function subscribeToSong(
+  songId: Song['id'],
+  onChange: (song: Song | null) => void,
+  onError: (error: Error) => void
+): Unsubscribe {
+  let song: Song | null | undefined;
+  let entry: SongCatalogEntry | null | undefined;
 
-  const snapshot = await getDocs(q);
-  const allSongs = snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return mapSongListDoc(doc, data);
-  });
+  const emit = () => {
+    if (song === undefined || entry === undefined) return;
+    onChange(song && entry ? { ...song, ...catalogEntryToSong(entry), text: song.text } : song);
+  };
 
-  return allSongs;
+  const stopSong = onSnapshot(
+    doc(db, 'songs', songId),
+    (snapshot) => {
+      song = snapshot.exists() ? mapSongDoc(snapshot, snapshot.data()) : null;
+      emit();
+    },
+    onError
+  );
+
+  const stopEntry = onSnapshot(
+    query(collection(db, 'songCatalog'), where('sourceSongId', '==', songId), limit(1)),
+    (snapshot) => {
+      const first = snapshot.docs[0];
+      entry = first ? mapSongListDoc(first, first.data()) : null;
+      emit();
+    },
+    onError
+  );
+
+  return () => {
+    stopSong();
+    stopEntry();
+  };
 }
 
 export async function fetchAllSongCategories(): Promise<SongCategory[]> {
@@ -357,19 +401,6 @@ export async function fetchAllUserSongs(ownerId: string): Promise<Song[]> {
   });
 
   return allSongs;
-}
-
-export async function fetchSongById(songId: string): Promise<Song | null> {
-  const songRef = doc(db, 'songs', songId);
-  const songSnapshot = await getDoc(songRef);
-
-  if (!songSnapshot.exists()) {
-    return null;
-  }
-
-  const data = songSnapshot.data();
-
-  return mapSongDoc(songSnapshot, data);
 }
 
 export const createSong = async (input: CreateSongInput): Promise<Song> => {

@@ -1,6 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { selectHomeSongs, fetchSongById, createSong, updateSong } from '../song';
+import {
+  selectHomeSongs,
+  subscribeToSong,
+  subscribeToSongCatalog,
+  createSong,
+  updateSong,
+} from '../song';
 import type { Song } from '../song';
+
+const catalogEntry = {
+  title: 'Catalog title',
+  artist: 'Catalog artist',
+  chords: ['G'],
+  categories: ['tag-1'],
+  ownerId: 'owner-1',
+};
+
+const querySnapshot = (docs: { id: string; data: Record<string, unknown> }[]) => ({
+  docs: docs.map(({ id, data }) => ({ id, data: () => data })),
+});
 
 // Mock Firestore
 const mockGetDocs = vi.fn();
@@ -12,6 +30,8 @@ const mockDoc = vi.fn();
 const mockGetDoc = vi.fn();
 const mockAddDoc = vi.fn();
 const mockUpdateDoc = vi.fn();
+const mockOnSnapshot = vi.fn();
+const mockWhere = vi.fn();
 
 vi.mock('firebase/firestore', async () => {
   const actual = await vi.importActual('firebase/firestore');
@@ -26,6 +46,8 @@ vi.mock('firebase/firestore', async () => {
     addDoc: (...args: unknown[]) => mockAddDoc(...args),
     updateDoc: (...args: unknown[]) => mockUpdateDoc(...args),
     getDocs: (...args: unknown[]) => mockGetDocs(...args),
+    onSnapshot: (...args: unknown[]) => mockOnSnapshot(...args),
+    where: (...args: unknown[]) => mockWhere(...args),
   };
 });
 
@@ -201,43 +223,99 @@ describe('Song Service - Unit Tests', () => {
     });
   });
 
-  describe('fetchSongById', () => {
-    it('returns null when Firestore document does not exist', async () => {
+  describe('subscribeToSongCatalog', () => {
+    it('lists catalog entries as songs, skipping ones without a song', () => {
+      const onChange = vi.fn();
+      subscribeToSongCatalog(onChange, vi.fn());
+
+      const [[, onNext]] = mockOnSnapshot.mock.calls as [[unknown, (snapshot: unknown) => void]];
+      onNext(
+        querySnapshot([
+          { id: 'c1', data: { ...catalogEntry, sourceSongId: 'song-1' } },
+          { id: 'c2', data: { ...catalogEntry, sourceSongId: '' } },
+        ])
+      );
+
+      expect(onChange).toHaveBeenCalledWith([
+        {
+          id: 'song-1',
+          title: 'Catalog title',
+          artist: 'Catalog artist',
+          chords: ['G'],
+          categories: ['tag-1'],
+          ownerId: 'owner-1',
+        },
+      ]);
+    });
+  });
+
+  describe('subscribeToSong', () => {
+    const subscribe = () => {
+      const onChange = vi.fn();
       mockDoc.mockReturnValue('song-doc-ref');
-      mockGetDoc.mockResolvedValue({
-        exists: () => false,
-      });
+      const unsubscribe = subscribeToSong('song-1', onChange, vi.fn());
+      const [[, onSong], [, onEntry]] = mockOnSnapshot.mock.calls as [
+        [unknown, (snapshot: unknown) => void],
+        [unknown, (snapshot: unknown) => void],
+      ];
+      return { onChange, onSong, onEntry, unsubscribe };
+    };
 
-      const result = await fetchSongById('missing-song');
-
-      expect(mockDoc).toHaveBeenCalledWith(expect.anything(), 'songs', 'missing-song');
-      expect(mockGetDoc).toHaveBeenCalledWith('song-doc-ref');
-      expect(result).toBeNull();
+    const songSnapshot = (data: Record<string, unknown> | null) => ({
+      id: 'song-1',
+      exists: () => data !== null,
+      data: () => data,
     });
 
-    it('maps existing Firestore document into Song', async () => {
-      mockDoc.mockReturnValue('song-doc-ref');
-      mockGetDoc.mockResolvedValue({
-        id: 'song-1',
-        exists: () => true,
-        data: () => ({
-          title: 'Song title',
-          artist: 'Artist name',
-          text: '[G] line',
-          createdAt: 'ts',
-        }),
-      });
+    it('waits for both the song and its catalog entry, then takes title and artist from the entry', () => {
+      const { onChange, onSong, onEntry } = subscribe();
 
-      const result = await fetchSongById('song-1');
+      onSong(songSnapshot({ text: '[G]line', ownerId: 'owner-1', capo: 2 }));
+      expect(onChange).not.toHaveBeenCalled();
 
-      expect(result).toEqual({
-        id: 'song-1',
-        title: 'Song title',
-        artist: 'Artist name',
-        text: '[G] line',
-        createdAt: 'ts',
-        ownerId: '',
-      });
+      onEntry(querySnapshot([{ id: 'c1', data: { ...catalogEntry, sourceSongId: 'song-1' } }]));
+
+      expect(mockDoc).toHaveBeenCalledWith(expect.anything(), 'songs', 'song-1');
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'song-1',
+          title: 'Catalog title',
+          artist: 'Catalog artist',
+          text: '[G]line',
+          capo: 2,
+          categories: ['tag-1'],
+        })
+      );
+    });
+
+    it('keeps an older song’s own title when it has no catalog entry', () => {
+      const { onChange, onSong, onEntry } = subscribe();
+
+      onSong(songSnapshot({ title: 'Old title', artist: 'Old artist', text: 'x' }));
+      onEntry(querySnapshot([]));
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Old title', artist: 'Old artist' })
+      );
+    });
+
+    it('reports a song that does not exist as null', () => {
+      const { onChange, onSong, onEntry } = subscribe();
+
+      onSong(songSnapshot(null));
+      onEntry(querySnapshot([]));
+
+      expect(onChange).toHaveBeenCalledWith(null);
+    });
+
+    it('stops both listeners', () => {
+      const stop = vi.fn();
+      mockOnSnapshot.mockReturnValue(stop);
+      const { unsubscribe } = subscribe();
+
+      unsubscribe();
+
+      expect(stop).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -27,8 +27,8 @@ export function CookieNotice() {
         </IconBackdrop>
         <div className={styles.text}>
           <p>
-            Přihlášení a stažené písně si prohlížeč pamatuje vždy, bez nich aplikace nefunguje. Se
-            souhlasem si zapamatujeme i tvoje nastavení, jako motiv, barvu nebo velikost písma.
+            Přihlášení si prohlížeč pamatuje vždy, bez něj aplikace nefunguje. Se souhlasem si
+            zapamatujeme i tvoje nastavení, jako motiv, barvu nebo velikost písma.
           </p>
           <p>Neměříme tě, nesledujeme a nemáme reklamy. Volbu změníš kdykoli v Nastavení.</p>
         </div>

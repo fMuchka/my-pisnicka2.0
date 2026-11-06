@@ -216,7 +216,11 @@ describe('Song page', () => {
 
   it('edits and saves the song, then shows the saved version', async () => {
     const user = userEvent.setup();
-    save.saveSong.mockResolvedValue({ ...song, title: 'Kometa 2' });
+    save.saveSong.mockImplementation(() => {
+      // The detail listener brings the saved song back on its own.
+      detail.song = { ...song, title: 'Kometa 2' };
+      return Promise.resolve(detail.song);
+    });
     renderSong();
 
     await user.click(screen.getByRole('button', { name: 'Upravit píseň' }));
